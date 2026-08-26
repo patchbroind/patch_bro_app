@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Patch Bro — Worker",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "worker",
+                "--dart-define=APP_FLAVOR=worker",
+                "--dart-define=SUPABASE_URL=https://hopysfyqeftrzxigtfad.supabase.co",
+                "--dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_Rj5HeiO5hNeVAvwxEOZAgw_TWjvbx94"
+            ]
+        },
+        {
+            "name": "Patch Bro — Employer",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "employer",
+                "--dart-define=APP_FLAVOR=employer",
+                "--dart-define=SUPABASE_URL=https://hopysfyqeftrzxigtfad.supabase.co",
+                "--dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_Rj5HeiO5hNeVAvwxEOZAgw_TWjvbx94"
+            ]
+        }
+    ]
+}
