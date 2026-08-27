@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_theme.dart';
 
+import '../core/theme/app_theme.dart';
 import 'config/app_config.dart';
+import 'router/app_router.dart';
 
 class PatchBroApp extends StatelessWidget {
   const PatchBroApp({
@@ -13,17 +14,15 @@ class PatchBroApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final router = AppRouter.create(
+      config: config,
+    );
+
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-       theme: AppTheme.fromFlavor(config.flavor),
       title: config.appName,
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            config.appName,
-          ),
-        ),
-      ),
+      theme: AppTheme.fromFlavor(config.flavor),
+      routerConfig: router,
     );
   }
 }

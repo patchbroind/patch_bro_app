@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
@@ -13,18 +14,20 @@ Future<void> main() async {
   if (!SupabaseConfig.isConfigured) {
     throw StateError(
       'Supabase configuration is missing. '
-      'Please provide SUPABASE_URL and SUPABASE_ANON_KEY.',
+      'Please provide SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
     );
   }
 
   await Supabase.initialize(
     url: SupabaseConfig.url,
-    publishableKey: SupabaseConfig.publishableKey,
+    anonKey: SupabaseConfig.publishableKey,
   );
 
   runApp(
-    PatchBroApp(
-      config: config,
+    ProviderScope(
+      child: PatchBroApp(
+        config: config,
+      ),
     ),
   );
 }
