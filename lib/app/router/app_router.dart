@@ -1,6 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../features/auth/domain/entities/auth_user.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/otp_page.dart';
+import '../../features/auth/presentation/pages/profile_details_page.dart';
+import '../../features/auth/presentation/pages/signup_page.dart';
+import '../../features/auth/presentation/pages/splash_page.dart';
 import '../config/app_config.dart';
 import 'route_names.dart';
 
@@ -9,27 +18,130 @@ class AppRouter {
 
   static GoRouter create({
     required AppConfig config,
+    required Stream<AuthUser?> authStateChanges,
+    required AuthUser? Function() currentUser,
   }) {
+    final refreshListenable = _AuthRouterRefreshListenable(
+      authStateChanges,
+    );
+
     return GoRouter(
-      initialLocation: _initialLocation(config),
+      initialLocation: '/splash',
+      refreshListenable: refreshListenable,
+
+      redirect: (context, state) {
+        final location = state.matchedLocation;
+
+        final isSplash = location == '/splash';
+        final isLogin = location == '/login';
+        final isSignup = location == '/signup';
+        final isOtp = location == '/otp';
+
+        final user = currentUser();
+        final isAuthenticated = user != null;
+
+        // ======================================================
+        // Splash
+        // ======================================================
+        //
+        // SplashPage is responsible for the initial
+        // authentication decision.
+        //
+        if (isSplash) {
+          return null;
+        }
+
+        // ======================================================
+        // Public Authentication Routes
+        // ======================================================
+
+        final isAuthRoute =
+            isLogin ||
+            isSignup ||
+            isOtp;
+
+        if (isAuthRoute) {
+          return null;
+        }
+
+        // ======================================================
+        // Protected Routes
+        // ======================================================
+
+        if (!isAuthenticated) {
+          return '/login';
+        }
+
+        // ======================================================
+        // Flavor Protection
+        // ======================================================
+
+        if (location.startsWith('/worker/') && !config.isWorker) {
+          return _homeLocation(config);
+        }
+
+        if (location.startsWith('/employer/') && !config.isEmployer) {
+          return _homeLocation(config);
+        }
+
+        return null;
+      },
+
       routes: [
-        // ========================================================
+        // ======================================================
         // Authentication
-        // ========================================================
+        // ======================================================
+
+        GoRoute(
+          path: '/splash',
+          name: RouteNames.splash,
+          builder: (context, state) {
+            return const SplashPage();
+          },
+        ),
 
         GoRoute(
           path: '/login',
           name: RouteNames.login,
           builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Login',
+            return const LoginPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/signup',
+          builder: (context, state) {
+            return const SignupPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/otp',
+          builder: (context, state) {
+            final phone = state.extra as String?;
+
+            if (phone == null || phone.isEmpty) {
+              return const _PlaceholderPage(
+                title: 'Invalid OTP Request',
+              );
+            }
+
+            return OtpPage(
+              phone: phone,
             );
           },
         ),
 
-        // ========================================================
+        GoRoute(
+          path: '/profile-details',
+          builder: (context, state) {
+            return const ProfileDetailsPage();
+          },
+        ),
+
+        // ======================================================
         // Worker
-        // ========================================================
+        // ======================================================
 
         GoRoute(
           path: '/worker/home',
@@ -91,9 +203,9 @@ class AppRouter {
           },
         ),
 
-        // ========================================================
+        // ======================================================
         // Employer
-        // ========================================================
+        // ======================================================
 
         GoRoute(
           path: '/employer/home',
@@ -168,7 +280,11 @@ class AppRouter {
     );
   }
 
-  static String _initialLocation(AppConfig config) {
+  // ============================================================
+  // Home Location
+  // ============================================================
+
+  static String _homeLocation(AppConfig config) {
     if (config.isWorker) {
       return '/worker/home';
     }
@@ -176,6 +292,34 @@ class AppRouter {
     return '/employer/home';
   }
 }
+
+// ================================================================
+// Authentication Router Refresh
+// ================================================================
+
+class _AuthRouterRefreshListenable extends ChangeNotifier {
+  _AuthRouterRefreshListenable(
+    Stream<AuthUser?> authStateChanges,
+  ) {
+    _subscription = authStateChanges.listen(
+      (_) {
+        notifyListeners();
+      },
+    );
+  }
+
+  late final StreamSubscription<AuthUser?> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
+// ================================================================
+// Temporary Placeholder Page
+// ================================================================
 
 class _PlaceholderPage extends StatelessWidget {
   const _PlaceholderPage({
@@ -186,6 +330,8 @@ class _PlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -193,7 +339,9 @@ class _PlaceholderPage extends StatelessWidget {
       body: Center(
         child: Text(
           title,
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: primaryColor,
+              ),
         ),
       ),
     );
