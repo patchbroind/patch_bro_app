@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/widgets/auth_scaffold.dart';
-import '../providers/auth_providers.dart';
-import '../widgets/auth_primary_button.dart';
-import '../widgets/auth_text_field.dart';
+import 'package:patch_bro/core/widgets/app_primary_button.dart';
+import 'package:patch_bro/core/widgets/app_text_field.dart';
+import 'package:patch_bro/core/widgets/auth_scaffold.dart';
+import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
 
 class ProfileDetailsPage extends ConsumerStatefulWidget {
   const ProfileDetailsPage({super.key});
@@ -37,31 +38,66 @@ class _ProfileDetailsPageState
     super.dispose();
   }
 
-  void _continue() {
+  Future<void> _continue() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final config = ref.read(appConfigProvider);
 
-    if (config.isWorker) {
-      context.go('/worker/home');
-    } else {
-      context.go('/employer/home');
+    try {
+      await ref.read(profileRepositoryProvider).saveProfile(
+            name: _nameController.text,
+            phone: _mobileController.text,
+            address1: _address1Controller.text,
+            address2: _address2Controller.text,
+            pinCode: _pinCodeController.text,
+            state: _stateController.text,
+            isWorker: config.isWorker,
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (config.isWorker) {
+        context.go('/worker/home');
+      } else {
+        context.go('/employer/home');
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to save profile: $e',
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryColor =
+        Theme.of(context).colorScheme.primary;
 
     return AuthScaffold(
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(28, 28, 28, 32),
+          padding: const EdgeInsets.fromLTRB(
+            28,
+            28,
+            28,
+            32,
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Text(
                 'Complete Profile',
@@ -86,68 +122,75 @@ class _ProfileDetailsPageState
 
               const SizedBox(height: 32),
 
-              AuthTextField(
+              AppTextField(
                 controller: _nameController,
                 hintText: 'Name',
                 icon: Icons.person_outline,
-                textInputAction: TextInputAction.next,
+                textInputAction:
+                    TextInputAction.next,
                 validator: _requiredValidator,
               ),
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _mobileController,
                 hintText: 'Mobile Number',
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.next,
+                textInputAction:
+                    TextInputAction.next,
                 validator: _requiredValidator,
               ),
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _address1Controller,
                 hintText: 'Address 1',
                 icon: Icons.location_on_outlined,
-                textInputAction: TextInputAction.next,
+                textInputAction:
+                    TextInputAction.next,
                 validator: _requiredValidator,
               ),
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _address2Controller,
                 hintText: 'Address 2',
                 icon: Icons.location_on_outlined,
-                textInputAction: TextInputAction.next,
+                textInputAction:
+                    TextInputAction.next,
               ),
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _pinCodeController,
                 hintText: 'Pin Code',
                 icon: Icons.pin_drop_outlined,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
+                keyboardType:
+                    TextInputType.number,
+                textInputAction:
+                    TextInputAction.next,
                 validator: _requiredValidator,
               ),
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _stateController,
                 hintText: 'State',
                 icon: Icons.map_outlined,
-                textInputAction: TextInputAction.done,
+                textInputAction:
+                    TextInputAction.done,
                 validator: _requiredValidator,
               ),
 
               const SizedBox(height: 30),
 
-              AuthPrimaryButton(
+              AppPrimaryButton(
                 label: 'Continue',
                 onPressed: _continue,
               ),
@@ -158,8 +201,11 @@ class _ProfileDetailsPageState
     );
   }
 
-  static String? _requiredValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
+  static String? _requiredValidator(
+    String? value,
+  ) {
+    if (value == null ||
+        value.trim().isEmpty) {
       return 'This field is required';
     }
 

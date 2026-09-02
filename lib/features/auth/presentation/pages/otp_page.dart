@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../providers/auth_providers.dart';
-import '../widgets/auth_primary_button.dart';
+import '../../../../core/widgets/app_primary_button.dart';
 import '../widgets/otp_input.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
@@ -194,7 +194,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
 
             const SizedBox(height: 60),
 
-            AuthPrimaryButton(
+            AppPrimaryButton(
               label: 'Verify',
               isLoading: authState.isLoading,
               onPressed: _verifyOtp,

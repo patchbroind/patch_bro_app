@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../core/theme/app_colors.dart';
+import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/profile/presentation/pages/profile_details_page.dart';
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
-import '../../features/auth/presentation/pages/profile_details_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../config/app_config.dart';
@@ -321,7 +321,7 @@ class _AuthRouterRefreshListenable extends ChangeNotifier {
 // Temporary Placeholder Page
 // ================================================================
 
-class _PlaceholderPage extends StatelessWidget {
+class _PlaceholderPage extends ConsumerWidget {
   const _PlaceholderPage({
     required this.title,
   });
@@ -329,7 +329,7 @@ class _PlaceholderPage extends StatelessWidget {
   final String title;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
@@ -337,11 +337,23 @@ class _PlaceholderPage extends StatelessWidget {
         title: Text(title),
       ),
       body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: primaryColor,
-              ),
+        child: Column(
+          spacing: 16,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: primaryColor,
+                  ),
+            ),
+            Center(
+        child: ElevatedButton(
+          onPressed: () async {
+            await ref.read(signOutProvider)();
+          },
+          child: const Text('Temporary Logout'),
+        ))
+          ],
         ),
       ),
     );

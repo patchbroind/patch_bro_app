@@ -8,8 +8,8 @@ import '../providers/auth_providers.dart';
 import '../widgets/auth_bottom_prompt.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/auth_header.dart';
-import '../widgets/auth_primary_button.dart';
-import '../widgets/auth_text_field.dart';
+import '../../../../core/widgets/app_primary_button.dart';
+import '../../../../core/widgets/app_text_field.dart';
 import '../widgets/social_login_button.dart';
 
 class SignupPage extends ConsumerStatefulWidget {
@@ -101,7 +101,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               const SizedBox(height: 45),
 
-              AuthTextField(
+              AppTextField(
                 controller: _phoneController,
                 hintText: 'Phone Number',
                 icon: Icons.phone_outlined,
@@ -112,7 +112,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _emailController,
                 hintText: 'E-mail',
                 icon: Icons.mail_outline,
@@ -123,7 +123,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _passwordController,
                 hintText: 'Password',
                 icon: Icons.lock_outline,
@@ -144,7 +144,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               const SizedBox(height: 18),
 
-              AuthTextField(
+              AppTextField(
                 controller: _confirmPasswordController,
                 hintText: 'Confirm Password',
                 icon: Icons.lock_outline,
@@ -169,7 +169,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               const SizedBox(height: 22),
 
-              AuthPrimaryButton(
+              AppPrimaryButton(
                 label: 'Sign Up',
                 isLoading: authState.isLoading,
                 onPressed: _signUp,

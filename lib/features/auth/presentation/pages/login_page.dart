@@ -8,8 +8,8 @@ import '../../../../core/widgets/auth_scaffold.dart';
 import '../widgets/auth_bottom_prompt.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/auth_header.dart';
-import '../widgets/auth_primary_button.dart';
-import '../widgets/auth_text_field.dart';
+import '../../../../core/widgets/app_primary_button.dart';
+import '../../../../core/widgets/app_text_field.dart';
 import '../widgets/social_login_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -117,7 +117,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               const SizedBox(height: 34),
 
-              AuthPrimaryButton(
+              AppPrimaryButton(
                 label: 'Sign in',
                 isLoading: authState.isLoading,
                 onPressed: _login,
@@ -202,7 +202,7 @@ class _LoginFormCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AuthTextField(
+          AppTextField(
             controller: phoneController,
             hintText: 'Phone Number',
             icon: Icons.phone_outlined,
@@ -211,7 +211,7 @@ class _LoginFormCard extends StatelessWidget {
             validator: Validators.password,
           ),
           const SizedBox(height: 18),
-          AuthTextField(
+          AppTextField(
             controller: passwordController,
             hintText: 'Password',
             icon: Icons.lock_outline,
