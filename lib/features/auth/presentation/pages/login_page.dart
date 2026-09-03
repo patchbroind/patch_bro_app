@@ -64,27 +64,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
 
-     AppSnackbar.error(context, error.toString());
+      AppSnackbar.error(
+        context,
+        error.toString(),
+      );
     }
   }
 
   Future<void> _signInWithGoogle() async {
-  FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
 
-  try {
-    await ref
-        .read(authControllerProvider.notifier)
-        .signInWithGoogle(
-          redirectTo: AuthConstants.googleRedirectUri,
-        );
-  } catch (error) {
-    if (!mounted) {
-      return;
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle(
+            redirectTo: AuthConstants.googleRedirectUri,
+          );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      AppSnackbar.error(
+        context,
+        error.toString(),
+      );
     }
-
-    AppSnackbar.error(context, error.toString());
   }
-}
 
   String _normalizePhone(String value) {
     final phone = value.trim();
@@ -126,7 +132,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   });
                 },
                 onForgotPassword: () {
-                  // Password recovery will be implemented later.
+                  context.push('/forgot-password');
                 },
               ),
 
@@ -151,7 +157,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       provider: SocialProvider.apple,
                       label: 'Log in with Apple',
                       onPressed: () {
-                        ///TODO: Apple Sign-In will be implemented later.
+                        /// TODO: Apple Sign-In will be implemented later.
                       },
                     ),
                   ),
@@ -182,4 +188,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
-

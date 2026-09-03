@@ -1,9 +1,7 @@
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
-
-import '../../domain/entities/auth_user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasource/auth_remote_datasource.dart';
-import '../models/auth_user_model.dart';
+import 'package:patch_bro/features/auth/data/datasource/auth_remote_datasource.dart';
+import 'package:patch_bro/features/auth/data/models/auth_user_model.dart';
+import 'package:patch_bro/features/auth/domain/entities/auth_user.dart';
+import 'package:patch_bro/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource);
@@ -13,14 +11,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<AuthUser?> get authStateChanges {
     return _remoteDataSource.authStateChanges.map(
-      (state) {
-        final user = state.session?.user;
+      (authState) {
+        final user = authState.session?.user;
 
         if (user == null) {
           return null;
         }
 
-        return AuthUserModel.fromSupabaseUser(user).toEntity();
+        return AuthUserModel
+            .fromSupabaseUser(user)
+            .toEntity();
       },
     );
   }
@@ -33,7 +33,9 @@ class AuthRepositoryImpl implements AuthRepository {
       return null;
     }
 
-    return AuthUserModel.fromSupabaseUser(user).toEntity();
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
   }
 
   @override
@@ -53,12 +55,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = response.user;
 
     if (user == null) {
-      throw const AuthException(
-        'Unable to create user.',
+      throw StateError(
+        'Signup completed without returning a user.',
       );
     }
 
-    return AuthUserModel.fromSupabaseUser(user).toEntity();
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
   }
 
   @override
@@ -74,12 +78,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = response.user;
 
     if (user == null) {
-      throw const AuthException(
-        'OTP verification failed.',
+      throw StateError(
+        'OTP verification completed without returning a user.',
       );
     }
 
-    return AuthUserModel.fromSupabaseUser(user).toEntity();
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
   }
 
   @override
@@ -88,6 +94,48 @@ class AuthRepositoryImpl implements AuthRepository {
   }) {
     return _remoteDataSource.resendOtp(
       phone: phone,
+    );
+  }
+
+  @override
+  Future<void> sendPasswordResetOtp({
+    required String phone,
+  }) {
+    return _remoteDataSource.sendPasswordResetOtp(
+      phone: phone,
+    );
+  }
+
+  @override
+  Future<AuthUser> verifyPasswordResetOtp({
+    required String phone,
+    required String token,
+  }) async {
+    final response =
+        await _remoteDataSource.verifyPasswordResetOtp(
+      phone: phone,
+      token: token,
+    );
+
+    final user = response.user;
+
+    if (user == null) {
+      throw StateError(
+        'Password reset OTP verification completed without returning a user.',
+      );
+    }
+
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
+  }
+
+  @override
+  Future<void> updatePassword({
+    required String password,
+  }) {
+    return _remoteDataSource.updatePassword(
+      password: password,
     );
   }
 
@@ -104,12 +152,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = response.user;
 
     if (user == null) {
-      throw const AuthException(
-        'Unable to sign in.',
+      throw StateError(
+        'Login completed without returning a user.',
       );
     }
 
-    return AuthUserModel.fromSupabaseUser(user).toEntity();
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
   }
 
   @override
@@ -135,7 +185,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String token,
   }) async {
-    final response = await _remoteDataSource.verifyPhoneChangeOtp(
+    final response =
+        await _remoteDataSource.verifyPhoneChangeOtp(
       phone: phone,
       token: token,
     );
@@ -143,12 +194,14 @@ class AuthRepositoryImpl implements AuthRepository {
     final user = response.user;
 
     if (user == null) {
-      throw const AuthException(
-        'Phone verification failed.',
+      throw StateError(
+        'Phone change OTP verification completed without returning a user.',
       );
     }
 
-    return AuthUserModel.fromSupabaseUser(user).toEntity();
+    return AuthUserModel
+        .fromSupabaseUser(user)
+        .toEntity();
   }
 
   @override

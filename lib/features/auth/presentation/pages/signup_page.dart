@@ -50,6 +50,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     FocusScope.of(context).unfocus();
 
     try {
+      final config = ref.read(appConfigProvider);
+
       final phone = _normalizePhone(_phoneController.text);
 
       await ref
@@ -58,6 +60,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             phone: phone,
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            appFlavor: config.isWorker ? 'worker' : 'employer',
           );
 
       if (!mounted) {
@@ -66,15 +69,20 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
       context.push(
         '/otp',
-        extra: OtpVerificationArgs(phone: phone, type: OtpVerificationType.signup),
+        extra: OtpVerificationArgs(
+          phone: phone,
+          type: OtpVerificationType.signup,
+        ),
       );
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-          AppSnackbar.error(context, error.toString());
-
+      AppSnackbar.error(
+        context,
+        error.toString(),
+      );
     }
   }
 
@@ -84,14 +92,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .signInWithGoogle(redirectTo: AuthConstants.googleRedirectUri);
+          .signInWithGoogle(
+            redirectTo: AuthConstants.googleRedirectUri,
+          );
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-          AppSnackbar.error(context, error.toString());
-
+      AppSnackbar.error(
+        context,
+        error.toString(),
+      );
     }
   }
 
@@ -161,7 +173,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     });
                   },
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                   ),
                 ),
               ),
@@ -175,12 +189,16 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 obscureText: _obscureConfirmPassword,
                 textInputAction: TextInputAction.done,
                 validator: (value) {
-                  return Validators.confirmPassword(value, _passwordController.text);
+                  return Validators.confirmPassword(
+                    value,
+                    _passwordController.text,
+                  );
                 },
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                      _obscureConfirmPassword =
+                          !_obscureConfirmPassword;
                     });
                   },
                   icon: Icon(

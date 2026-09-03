@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
@@ -39,6 +41,8 @@ class AppRouter {
         final isSplash = location == '/splash';
         final isLogin = location == '/login';
         final isSignup = location == '/signup';
+        final isForgotPassword = location == '/forgot-password';
+        final isResetPassword = location == '/reset-password';
         final isOtp = location == '/otp';
         final isProfileDetails = location == '/profile-details';
 
@@ -58,16 +62,14 @@ class AppRouter {
         // ============================================================
         // NOT AUTHENTICATED
         // ============================================================
-        //
-        // Unauthenticated users can access:
-        // - Login
-        // - Signup
-        // - OTP
-        //
-        // Everything else requires authentication.
+       
         //
         if (!isAuthenticated) {
-          if (isLogin || isSignup || isOtp) {
+          if (isLogin ||
+              isSignup ||
+              isForgotPassword ||
+              isResetPassword ||
+              isOtp) {
             return null;
           }
 
@@ -81,12 +83,30 @@ class AppRouter {
         // OTP can be used for:
         //
         // 1. Phone signup verification
-        // 2. Google user's phone verification
+        // 2. Phone change verification
+        // 3. Password reset verification
         //
-        // Therefore, an authenticated user must be allowed to
-        // access the OTP page.
+        // Therefore, an authenticated user must be allowed to access
+        // the OTP page.
         //
         if (isOtp) {
+          return null;
+        }
+
+        // ============================================================
+        // PASSWORD RECOVERY
+        // ============================================================
+        //
+        // After successful password-reset OTP verification, Supabase
+        // creates an authenticated session.
+        //
+        // The router must NOT immediately send the user to their
+        // Worker/Employer home or Profile Details page.
+        //
+        // The user must first reach ResetPasswordPage and choose a
+        // new password.
+        //
+        if (isForgotPassword || isResetPassword) {
           return null;
         }
 
@@ -187,6 +207,20 @@ class AppRouter {
           path: '/signup',
           builder: (context, state) {
             return const SignupPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/forgot-password',
+          builder: (context, state) {
+            return const ForgotPasswordPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/reset-password',
+          builder: (context, state) {
+            return const ResetPasswordPage();
           },
         ),
 

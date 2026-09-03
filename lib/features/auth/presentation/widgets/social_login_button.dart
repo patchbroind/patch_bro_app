@@ -70,19 +70,24 @@ class _SocialLogo extends StatelessWidget {
         );
 
       case SocialProvider.google:
-        return const _GoogleLogo();
+        return Image.asset(
+          'assets/images/google_logo.png',
+          width: 22,
+          height: 22,
+          fit: BoxFit.contain,
+        );
     }
   }
 }
 
-class _GoogleLogo extends StatelessWidget {
-  const _GoogleLogo();
+// class _GoogleLogo extends StatelessWidget {
+//   const _GoogleLogo();
 
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'G',
-      style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: AppColors.googleBlue),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return const Text(
+//       'G',
+//       style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: AppColors.googleBlue),
+//     );
+//   }
+// }

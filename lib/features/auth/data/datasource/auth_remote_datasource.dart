@@ -49,6 +49,36 @@ class AuthRemoteDataSource {
     );
   }
 
+  Future<void> sendPasswordResetOtp({
+    required String phone,
+  }) async {
+    await _supabase.auth.signInWithOtp(
+      phone: phone,
+      shouldCreateUser: false,
+    );
+  }
+
+  Future<AuthResponse> verifyPasswordResetOtp({
+    required String phone,
+    required String token,
+  }) {
+    return _supabase.auth.verifyOTP(
+      phone: phone,
+      token: token,
+      type: OtpType.sms,
+    );
+  }
+
+  Future<void> updatePassword({
+    required String password,
+  }) async {
+    await _supabase.auth.updateUser(
+      UserAttributes(
+        password: password,
+      ),
+    );
+  }
+
   Future<AuthResponse> signIn({
     required String phone,
     required String password,
@@ -97,6 +127,8 @@ class AuthRemoteDataSource {
   }
 
   Future<void> signOut() {
-    return _supabase.auth.signOut();
+    return _supabase.auth.signOut(
+      scope: SignOutScope.local,
+    );
   }
 }

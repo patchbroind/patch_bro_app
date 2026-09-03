@@ -1,21 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:patch_bro/core/utils/app_snackbar.dart';
-import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/widgets/auth_scaffold.dart';
-import '../../../../core/widgets/app_primary_button.dart';
-import '../providers/auth_providers.dart';
-import '../widgets/otp_input.dart';
-import '../../../profile/presentation/providers/profile_providers.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
-  const OtpPage({super.key, required this.request});
+  const OtpPage({
+    super.key,
+    required this.request,
+  });
 
   final OtpVerificationArgs request;
 
@@ -25,125 +24,224 @@ class OtpPage extends ConsumerStatefulWidget {
 
 class _OtpPageState extends ConsumerState<OtpPage> {
   final _otpController = TextEditingController();
+  final _otpFocusNode = FocusNode();
 
   Timer? _timer;
-  int _remainingSeconds = 59;
+  int _secondsRemaining = 59;
 
   @override
   void initState() {
     super.initState();
+
     _startTimer();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _otpFocusNode.requestFocus();
+      }
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
 
-    _remainingSeconds = 59;
+    setState(() {
+      _secondsRemaining = 59;
+    });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
 
-      if (_remainingSeconds <= 1) {
-        timer.cancel();
+        if (_secondsRemaining <= 1) {
+          timer.cancel();
+
+          setState(() {
+            _secondsRemaining = 0;
+          });
+
+          return;
+        }
 
         setState(() {
-          _remainingSeconds = 0;
+          _secondsRemaining--;
         });
+      },
+    );
+  }
 
-        return;
-      }
+  String get _message {
+    switch (widget.request.type) {
+      case OtpVerificationType.passwordReset:
+        return 'We have sent a password reset code\nto your mobile number.';
 
-      setState(() {
-        _remainingSeconds--;
-      });
-    });
+      case OtpVerificationType.phoneChange:
+        return 'We have sent a verification code\nto your new mobile number.';
+
+      case OtpVerificationType.signup:
+        return 'We have sent a verification code\nto your mobile number.';
+    }
   }
 
   Future<void> _verifyOtp() async {
     final token = _otpController.text.trim();
 
     if (token.length != 6) {
-      AppSnackbar.error(context, 'Please enter the 6-digit OTP');
-
+      AppSnackbar.error(
+        context,
+        'Please enter the 6-digit verification code.',
+      );
       return;
     }
 
     FocusScope.of(context).unfocus();
 
+    final controller =
+        ref.read(authControllerProvider.notifier);
+
     try {
-      final authController = ref.read(authControllerProvider.notifier);
+      switch (widget.request.type) {
+        // ==========================================================
+        // PASSWORD RESET
+        // ==========================================================
 
-      // ======================================================
-      // Phone change verification
-      // ======================================================
+        case OtpVerificationType.passwordReset:
+          await controller.verifyPasswordResetOtp(
+            phone: widget.request.phone,
+            token: token,
+          );
 
-      if (widget.request.type == OtpVerificationType.phoneChange) {
-        await authController.verifyPhoneChangeOtp(phone: widget.request.phone, token: token);
+          if (!mounted) {
+            return;
+          }
 
-        final profileData = widget.request.profileData;
-
-        if (profileData == null) {
-          throw const AuthException('Profile information is missing.');
-        }
-
-        await ref
-            .read(profileRepositoryProvider)
-            .saveProfile(
-              name: profileData.name,
-              phone: profileData.phone,
-              address1: profileData.address1,
-              address2: profileData.address2,
-              pinCode: profileData.pinCode,
-              state: profileData.state,
-              isWorker: profileData.isWorker,
-            );
-
-        if (!mounted) {
+          context.go('/reset-password');
           return;
-        }
 
-        context.go(profileData.isWorker ? '/worker/home' : '/employer/home');
+        // ==========================================================
+        // PHONE CHANGE
+        // ==========================================================
 
-        return;
+        case OtpVerificationType.phoneChange:
+          await controller.verifyPhoneChangeOtp(
+            phone: widget.request.phone,
+            token: token,
+          );
+
+          if (!mounted) {
+            return;
+          }
+
+          final profileData = widget.request.profileData;
+
+          if (profileData == null) {
+            AppSnackbar.error(
+              context,
+              'Profile information is missing. Please try again.',
+            );
+            return;
+          }
+
+          await ref.read(profileRepositoryProvider).saveProfile(
+                name: profileData.name,
+                phone: profileData.phone,
+                address1: profileData.address1,
+                address2: profileData.address2,
+                pinCode: profileData.pinCode,
+                state: profileData.state,
+                isWorker: profileData.isWorker,
+              );
+
+          if (!mounted) {
+            return;
+          }
+
+          context.go(
+            profileData.isWorker
+                ? '/worker/home'
+                : '/employer/home',
+          );
+          return;
+
+        // ==========================================================
+        // SIGNUP
+        // ==========================================================
+
+        case OtpVerificationType.signup:
+          await controller.verifyOtp(
+            phone: widget.request.phone,
+            token: token,
+          );
+
+          if (!mounted) {
+            return;
+          }
+
+          context.go('/profile-details');
+          return;
       }
-
-      // ======================================================
-      // Normal signup OTP
-      // ======================================================
-
-      await authController.verifyOtp(phone: widget.request.phone, token: token);
-
+    } on AuthException catch (error) {
       if (!mounted) {
         return;
       }
 
-      context.go('/profile-details');
+      AppSnackbar.error(
+        context,
+        error.message,
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(context, error.toString());
+      AppSnackbar.error(
+        context,
+        'Unable to verify the OTP. Please try again.',
+      );
     }
   }
 
   Future<void> _resendOtp() async {
-    if (_remainingSeconds > 0) {
+    if (_secondsRemaining > 0) {
       return;
     }
 
+    final controller =
+        ref.read(authControllerProvider.notifier);
+
     try {
-      await ref.read(authControllerProvider.notifier).resendOtp(phone: widget.request.phone);
+      // ============================================================
+      // PASSWORD RESET
+      // ============================================================
+
+      if (widget.request.type ==
+          OtpVerificationType.passwordReset) {
+        await controller.sendPasswordResetOtp(
+          phone: widget.request.phone,
+        );
+      }
+
+      // ============================================================
+      // SIGNUP / PHONE CHANGE
+      // ============================================================
+
+      else {
+        await controller.resendOtp(
+          phone: widget.request.phone,
+        );
+      }
 
       if (!mounted) {
         return;
@@ -152,130 +250,119 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       _otpController.clear();
       _startTimer();
 
-      AppSnackbar.error(context, "OTP sent again");
-    } catch (error) {
+      AppSnackbar.success(
+        context,
+        'A new OTP has been sent.',
+      );
+    } on AuthException catch (error) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(context, error.toString());
+      AppSnackbar.error(
+        context,
+        error.message,
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      AppSnackbar.error(
+        context,
+        'Unable to resend OTP. Please try again.',
+      );
     }
-  }
-
-  String get _formattedTime {
-    final seconds = _remainingSeconds.toString().padLeft(2, '0');
-
-    return '00:$seconds';
-  }
-
-  String get _message {
-    if (widget.request.type == OtpVerificationType.phoneChange) {
-      return 'We have sent a verification code\n'
-          'to your mobile number';
-    }
-
-    return 'We have sent a verification code\n'
-        'to your mobile number';
   }
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
     final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
 
-    return AuthScaffold(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(28, 35, 28, 32),
-        child: Column(
-          children: [
-            Image.asset(
-              'assets/images/otp_image.png',
-              width: 330,
-              height: 330,
-              fit: BoxFit.contain,
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Verification'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 32),
 
-            const SizedBox(height: 10),
-
-            Text(
-              'Verification Code',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: primaryColor, fontSize: 34, fontWeight: FontWeight.w800),
-            ),
-
-            const SizedBox(height: 22),
-
-            Text(
-              _message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, height: 1.45, fontWeight: FontWeight.w500),
-            ),
-
-            const SizedBox(height: 26),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-              decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: primaryColor.withValues(alpha: 0.12)),
+              Text(
+                'Verify your phone',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.access_time_outlined, size: 26),
-                  const SizedBox(width: 10),
-                  Text(
-                    _formattedTime,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-                  ),
-                ],
+
+              const SizedBox(height: 16),
+
+              Text(
+                _message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-            ),
 
-            const SizedBox(height: 55),
+              const SizedBox(height: 32),
 
-            OtpInput(controller: _otpController),
-
-            const SizedBox(height: 60),
-
-            AppPrimaryButton(
-              label: 'Verify',
-              isLoading: authState.isLoading,
-              onPressed: _verifyOtp,
-            ),
-
-            const SizedBox(height: 58),
-
-            Row(
-              children: [
-                const Expanded(child: Divider()),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    "Didn't receive code?",
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 18),
-                  ),
+              TextField(
+                controller: _otpController,
+                focusNode: _otpFocusNode,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                maxLength: 6,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Enter OTP',
+                  counterText: '',
                 ),
-                const Expanded(child: Divider()),
-              ],
-            ),
+                onChanged: (value) {
+                  if (value.length == 6) {
+                    _verifyOtp();
+                  }
+                },
+              ),
 
-            const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-            TextButton(
-              onPressed: authState.isLoading || _remainingSeconds != 0 ? null : _resendOtp,
-              child: Text(
-                'Resend OTP',
-                style: TextStyle(
-                  color: _remainingSeconds == 0 ? primaryColor : AppColors.textDisabled,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : _verifyOtp,
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Verify'),
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 24),
+
+              if (_secondsRemaining > 0)
+                Text(
+                  'Resend OTP in $_secondsRemaining seconds',
+                  textAlign: TextAlign.center,
+                )
+              else
+                TextButton(
+                  onPressed: isLoading ? null : _resendOtp,
+                  child: const Text('Resend OTP'),
+                ),
+            ],
+          ),
         ),
       ),
     );

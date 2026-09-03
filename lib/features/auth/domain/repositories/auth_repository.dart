@@ -21,6 +21,19 @@ abstract interface class AuthRepository {
     required String phone,
   });
 
+  Future<void> sendPasswordResetOtp({
+    required String phone,
+  });
+
+  Future<AuthUser> verifyPasswordResetOtp({
+    required String phone,
+    required String token,
+  });
+
+  Future<void> updatePassword({
+    required String password,
+  });
+
   Future<AuthUser> signIn({
     required String phone,
     required String password,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
@@ -55,7 +56,9 @@ class LoginFormCard extends StatelessWidget {
             suffixIcon: IconButton(
               onPressed: onTogglePassword,
               icon: Icon(
-                obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 color: AppColors.black54,
               ),
             ),
@@ -64,7 +67,12 @@ class LoginFormCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: onForgotPassword,
-              child: const Text('Forget password', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: const Text(
+                'Forgot password?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],

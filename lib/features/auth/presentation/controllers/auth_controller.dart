@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../domain/entities/auth_user.dart';
-import '../providers/auth_providers.dart';
+import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 
 class AuthController extends Notifier<AsyncValue<void>> {
   @override
@@ -9,72 +7,59 @@ class AuthController extends Notifier<AsyncValue<void>> {
     return const AsyncData(null);
   }
 
-  // ============================================================
-  // Sign Up
-  // ============================================================
+  // ================================================================
+  // SIGN UP
+  // ================================================================
 
-  Future<AuthUser> signUp({
+  Future<void> signUp({
     required String phone,
     required String email,
     required String password,
+    required String appFlavor,
   }) async {
     state = const AsyncLoading();
 
     try {
-      final config = ref.read(appConfigProvider);
-
-      final user = await ref.read(signUpProvider).call(
-            phone: phone,
-            email: email,
-            password: password,
-            appFlavor: config.flavor.name,
-          );
-
-      state = const AsyncData(null);
-
-      return user;
-    } catch (error, stackTrace) {
-      state = AsyncError(
-        error,
-        stackTrace,
+      await ref.read(signUpProvider)(
+        phone: phone,
+        email: email,
+        password: password,
+        appFlavor: appFlavor,
       );
 
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
 
-  // ============================================================
-  // Verify OTP
-  // ============================================================
+  // ================================================================
+  // VERIFY SIGNUP OTP
+  // ================================================================
 
-  Future<AuthUser> verifyOtp({
+  Future<void> verifyOtp({
     required String phone,
     required String token,
   }) async {
     state = const AsyncLoading();
 
     try {
-      final user = await ref.read(verifyOtpProvider).call(
-            phone: phone,
-            token: token,
-          );
-
-      state = const AsyncData(null);
-
-      return user;
-    } catch (error, stackTrace) {
-      state = AsyncError(
-        error,
-        stackTrace,
+      await ref.read(verifyOtpProvider)(
+        phone: phone,
+        token: token,
       );
 
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
 
-  // ============================================================
-  // Resend OTP
-  // ============================================================
+  // ================================================================
+  // RESEND OTP
+  // ================================================================
 
   Future<void> resendOtp({
     required String phone,
@@ -82,148 +67,184 @@ class AuthController extends Notifier<AsyncValue<void>> {
     state = const AsyncLoading();
 
     try {
-      await ref.read(resendOtpProvider).call(
-            phone: phone,
-          );
+      await ref.read(resendOtpProvider)(
+        phone: phone,
+      );
 
       state = const AsyncData(null);
     } catch (error, stackTrace) {
-      state = AsyncError(
-        error,
-        stackTrace,
-      );
-
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
 
-  // ============================================================
-  // Sign In
-  // ============================================================
+  // ================================================================
+  // SEND PASSWORD RESET OTP
+  // ================================================================
 
-  Future<AuthUser> signIn({
+  Future<void> sendPasswordResetOtp({
+    required String phone,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(sendPasswordResetOtpProvider)(
+        phone: phone,
+      );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  // ================================================================
+  // VERIFY PASSWORD RESET OTP
+  // ================================================================
+
+  Future<void> verifyPasswordResetOtp({
+    required String phone,
+    required String token,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(verifyPasswordResetOtpProvider)(
+        phone: phone,
+        token: token,
+      );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  // ================================================================
+  // UPDATE PASSWORD
+  // ================================================================
+
+  Future<void> updatePassword({
+    required String password,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(updatePasswordProvider)(
+        password: password,
+      );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  // ================================================================
+  // SIGN IN
+  // ================================================================
+
+  Future<void> signIn({
     required String phone,
     required String password,
   }) async {
     state = const AsyncLoading();
 
     try {
-      final user = await ref.read(signInProvider).call(
-            phone: phone,
-            password: password,
-          );
-
-      state = const AsyncData(null);
-
-      return user;
-    } catch (error, stackTrace) {
-      state = AsyncError(
-        error,
-        stackTrace,
+      await ref.read(signInProvider)(
+        phone: phone,
+        password: password,
       );
 
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
 
-// ============================================================
-// Google Sign In
-// ============================================================
+  // ================================================================
+  // GOOGLE SIGN IN
+  // ================================================================
 
-Future<void> signInWithGoogle({
-  required String redirectTo,
-}) async {
-  state = const AsyncLoading();
+  Future<void> signInWithGoogle({
+    required String redirectTo,
+  }) async {
+    state = const AsyncLoading();
 
-  try {
-    await ref.read(signInWithGoogleProvider).call(
-          redirectTo: redirectTo,
-        );
+    try {
+      await ref.read(signInWithGoogleProvider)(
+        redirectTo: redirectTo,
+      );
 
-    state = const AsyncData(null);
-  } catch (error, stackTrace) {
-    state = AsyncError(
-      error,
-      stackTrace,
-    );
-
-    rethrow;
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
-}
 
-  // ============================================================
-  // Sign Out
-  // ============================================================
+  // ================================================================
+  // UPDATE PHONE
+  // ================================================================
+
+  Future<void> updatePhone({
+    required String phone,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(updatePhoneProvider)(
+        phone: phone,
+      );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  // ================================================================
+  // VERIFY PHONE CHANGE OTP
+  // ================================================================
+
+  Future<void> verifyPhoneChangeOtp({
+    required String phone,
+    required String token,
+  }) async {
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(verifyPhoneChangeOtpProvider)(
+        phone: phone,
+        token: token,
+      );
+
+      state = const AsyncData(null);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  // ================================================================
+  // SIGN OUT
+  // ================================================================
 
   Future<void> signOut() async {
     state = const AsyncLoading();
 
     try {
-      await ref.read(signOutProvider).call();
+      await ref.read(signOutProvider)();
 
       state = const AsyncData(null);
     } catch (error, stackTrace) {
-      state = AsyncError(
-        error,
-        stackTrace,
-      );
-
+      state = AsyncError(error, stackTrace);
       rethrow;
     }
   }
-
-  // ============================================================
-// Update Phone
-// ============================================================
-
-Future<void> updatePhone({
-  required String phone,
-}) async {
-  state = const AsyncLoading();
-
-  try {
-    await ref.read(updatePhoneProvider).call(
-          phone: phone,
-        );
-
-    state = const AsyncData(null);
-  } catch (error, stackTrace) {
-    state = AsyncError(
-      error,
-      stackTrace,
-    );
-
-    rethrow;
-  }
-}
-
-// ============================================================
-// Verify Phone Change OTP
-// ============================================================
-
-Future<AuthUser> verifyPhoneChangeOtp({
-  required String phone,
-  required String token,
-}) async {
-  state = const AsyncLoading();
-
-  try {
-    final user =
-        await ref.read(verifyPhoneChangeOtpProvider).call(
-              phone: phone,
-              token: token,
-            );
-
-    state = const AsyncData(null);
-
-    return user;
-  } catch (error, stackTrace) {
-    state = AsyncError(
-      error,
-      stackTrace,
-    );
-
-    rethrow;
-  }
-}
 }

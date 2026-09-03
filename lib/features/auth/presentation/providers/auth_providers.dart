@@ -1,148 +1,193 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:patch_bro/app/config/app_config.dart';
+import 'package:patch_bro/features/auth/data/datasource/auth_remote_datasource.dart';
+import 'package:patch_bro/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:patch_bro/features/auth/domain/entities/auth_user.dart';
+import 'package:patch_bro/features/auth/domain/repositories/auth_repository.dart';
+import 'package:patch_bro/features/auth/domain/usecases/resend_otp.dart';
+import 'package:patch_bro/features/auth/domain/usecases/send_password_reset_otp.dart';
+import 'package:patch_bro/features/auth/domain/usecases/sign_in.dart';
 import 'package:patch_bro/features/auth/domain/usecases/sign_in_with_google.dart';
+import 'package:patch_bro/features/auth/domain/usecases/sign_out.dart';
+import 'package:patch_bro/features/auth/domain/usecases/sign_up.dart';
+import 'package:patch_bro/features/auth/domain/usecases/update_password.dart';
 import 'package:patch_bro/features/auth/domain/usecases/update_phone.dart';
+import 'package:patch_bro/features/auth/domain/usecases/verify_otp.dart';
+import 'package:patch_bro/features/auth/domain/usecases/verify_password_reset_otp.dart';
 import 'package:patch_bro/features/auth/domain/usecases/verify_phone_change_otp.dart';
+import 'package:patch_bro/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
-import '../../../../app/config/app_config.dart';
-import '../../data/datasource/auth_remote_datasource.dart';
-import '../../data/repositories/auth_repository_impl.dart';
-import '../../domain/entities/auth_user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/resend_otp.dart';
-import '../../domain/usecases/sign_in.dart';
-import '../../domain/usecases/sign_out.dart';
-import '../../domain/usecases/sign_up.dart';
-import '../../domain/usecases/verify_otp.dart';
-import '../controllers/auth_controller.dart';
+// ==================================================================
+// APP CONFIG
+// ==================================================================
 
-// App Configuration........................
+final appConfigProvider = Provider<AppConfig>((ref) {
+  return AppConfig.fromEnvironment();
+});
 
-final appConfigProvider = Provider<AppConfig>(
-  (ref) {
-    return AppConfig.fromEnvironment();
-  },
-);
+// ==================================================================
+// SUPABASE CLIENT
+// ==================================================================
 
-// Supabase.................................
+final supabaseClientProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
+});
 
-final supabaseClientProvider = Provider<SupabaseClient>(
-  (ref) {
-    return Supabase.instance.client;
-  },
-);
+// ==================================================================
+// AUTH REMOTE DATA SOURCE
+// ==================================================================
 
-// Data Source..............................
+final authRemoteDataSourceProvider =
+    Provider<AuthRemoteDataSource>((ref) {
+  return AuthRemoteDataSource(
+    ref.watch(supabaseClientProvider),
+  );
+});
 
-final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>(
-  (ref) {
-    return AuthRemoteDataSource(
-      ref.read(supabaseClientProvider),
-    );
-  },
-);
+// ==================================================================
+// AUTH REPOSITORY
+// ==================================================================
 
-// Repository..............................
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepositoryImpl(
+    ref.watch(authRemoteDataSourceProvider),
+  );
+});
 
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) {
-    return AuthRepositoryImpl(
-      ref.read(authRemoteDataSourceProvider),
-    );
-  },
-);
+// ==================================================================
+// SIGN UP
+// ==================================================================
 
-// Use Cases.................................
+final signUpProvider = Provider<SignUp>((ref) {
+  return SignUp(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final signUpProvider = Provider<SignUp>(
-  (ref) {
-    return SignUp(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+// ==================================================================
+// VERIFY SIGNUP OTP
+// ==================================================================
 
-final verifyOtpProvider = Provider<VerifyOtp>(
-  (ref) {
-    return VerifyOtp(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+final verifyOtpProvider = Provider<VerifyOtp>((ref) {
+  return VerifyOtp(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final resendOtpProvider = Provider<ResendOtp>(
-  (ref) {
-    return ResendOtp(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+// ==================================================================
+// RESEND OTP
+// ==================================================================
 
-final signInProvider = Provider<SignIn>(
-  (ref) {
-    return SignIn(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+final resendOtpProvider = Provider<ResendOtp>((ref) {
+  return ResendOtp(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final signInWithGoogleProvider = Provider<SignInWithGoogle>(
-  (ref) {
-    return SignInWithGoogle(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+// ==================================================================
+// SEND PASSWORD RESET OTP
+// ==================================================================
 
+final sendPasswordResetOtpProvider =
+    Provider<SendPasswordResetOtp>((ref) {
+  return SendPasswordResetOtp(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final updatePhoneProvider = Provider<UpdatePhone>(
-  (ref) {
-    return UpdatePhone(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+// ==================================================================
+// VERIFY PASSWORD RESET OTP
+// ==================================================================
+
+final verifyPasswordResetOtpProvider =
+    Provider<VerifyPasswordResetOtp>((ref) {
+  return VerifyPasswordResetOtp(
+    ref.watch(authRepositoryProvider),
+  );
+});
+
+// ==================================================================
+// UPDATE PASSWORD
+// ==================================================================
+
+final updatePasswordProvider = Provider<UpdatePassword>((ref) {
+  return UpdatePassword(
+    ref.watch(authRepositoryProvider),
+  );
+});
+
+// ==================================================================
+// SIGN IN
+// ==================================================================
+
+final signInProvider = Provider<SignIn>((ref) {
+  return SignIn(
+    ref.watch(authRepositoryProvider),
+  );
+});
+
+// ==================================================================
+// GOOGLE SIGN IN
+// ==================================================================
+
+final signInWithGoogleProvider =
+    Provider<SignInWithGoogle>((ref) {
+  return SignInWithGoogle(
+    ref.watch(authRepositoryProvider),
+  );
+});
+
+// ==================================================================
+// UPDATE PHONE
+// ==================================================================
+
+final updatePhoneProvider = Provider<UpdatePhone>((ref) {
+  return UpdatePhone(
+    ref.watch(authRepositoryProvider),
+  );
+});
+
+// ==================================================================
+// VERIFY PHONE CHANGE OTP
+// ==================================================================
 
 final verifyPhoneChangeOtpProvider =
-    Provider<VerifyPhoneChangeOtp>(
-  (ref) {
-    return VerifyPhoneChangeOtp(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+    Provider<VerifyPhoneChangeOtp>((ref) {
+  return VerifyPhoneChangeOtp(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final signOutProvider = Provider<SignOut>(
-  (ref) {
-    return SignOut(
-      ref.read(authRepositoryProvider),
-    );
-  },
-);
+// ==================================================================
+// SIGN OUT
+// ==================================================================
 
-// Authentication State............................
+final signOutProvider = Provider<SignOut>((ref) {
+  return SignOut(
+    ref.watch(authRepositoryProvider),
+  );
+});
 
-final authStateProvider = StreamProvider<AuthUser?>(
-  (ref) {
-    return ref
-        .watch(authRepositoryProvider)
-        .authStateChanges;
-  },
-);
+// ==================================================================
+// AUTH STATE
+// ==================================================================
 
-// Current Authenticated User.......................
+final authStateProvider = StreamProvider<AuthUser?>((ref) {
+  return ref.watch(authRepositoryProvider).authStateChanges;
+});
 
-final currentUserProvider = Provider<AuthUser?>(
-  (ref) {
-    final authState = ref.watch(authStateProvider);
+// ==================================================================
+// CURRENT USER
+// ==================================================================
 
-    return authState.whenOrNull(
-      data: (user) => user,
-    );
-  },
-);
+final currentUserProvider = Provider<AuthUser?>((ref) {
+  return ref.watch(authRepositoryProvider).currentUser;
+});
 
-// Authentication Controller...........................
+// ==================================================================
+// AUTH CONTROLLER
+// ==================================================================
 
 final authControllerProvider =
     NotifierProvider<AuthController, AsyncValue<void>>(

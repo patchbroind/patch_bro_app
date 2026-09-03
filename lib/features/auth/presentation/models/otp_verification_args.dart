@@ -1,4 +1,10 @@
-import '../../../profile/domain/entities/profile_data.dart';
+import 'package:patch_bro/features/profile/domain/entities/profile_data.dart';
+
+enum OtpVerificationType {
+  signup,
+  phoneChange,
+  passwordReset,
+}
 
 class OtpVerificationArgs {
   const OtpVerificationArgs({
@@ -18,12 +24,16 @@ class OtpVerificationArgs {
     );
   }
 
+  factory OtpVerificationArgs.passwordReset({
+    required String phone,
+  }) {
+    return OtpVerificationArgs(
+      phone: phone,
+      type: OtpVerificationType.passwordReset,
+    );
+  }
+
   final String phone;
   final OtpVerificationType type;
   final ProfileData? profileData;
-}
-
-enum OtpVerificationType {
-  signup,
-  phoneChange,
 }
