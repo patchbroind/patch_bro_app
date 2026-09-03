@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/constants/auth_constants.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/utils/phone_utils.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 import 'package:patch_bro/features/auth/presentation/widgets/login_from_card.dart';
 
@@ -46,7 +47,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final config = ref.read(appConfigProvider);
 
       await ref.read(authControllerProvider.notifier).signIn(
-            phone: _normalizePhone(_phoneController.text),
+            phone: normalizePhone(_phoneController.text),
             password: _passwordController.text,
           );
 
@@ -90,16 +91,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         error.toString(),
       );
     }
-  }
-
-  String _normalizePhone(String value) {
-    final phone = value.trim();
-
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-
-    return '+91$phone';
   }
 
   @override

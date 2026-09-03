@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/constants/auth_constants.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/utils/phone_utils.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 
@@ -52,7 +53,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     try {
       final config = ref.read(appConfigProvider);
 
-      final phone = _normalizePhone(_phoneController.text);
+      final phone = normalizePhone(_phoneController.text);
 
       await ref
           .read(authControllerProvider.notifier)
@@ -105,16 +106,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         error.toString(),
       );
     }
-  }
-
-  String _normalizePhone(String value) {
-    final phone = value.trim();
-
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-
-    return '+91$phone';
   }
 
   @override

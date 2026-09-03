@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/utils/phone_utils.dart';
+import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 
@@ -25,49 +27,12 @@ class _ForgotPasswordPageState
     super.dispose();
   }
 
-  String? _validatePhone(String? value) {
-    final phone = value?.trim() ?? '';
-
-    if (phone.isEmpty) {
-      return 'Phone number is required';
-    }
-
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-
-    final localDigits =
-        digits.startsWith('91') && digits.length == 12
-            ? digits.substring(2)
-            : digits;
-
-    if (localDigits.length != 10) {
-      return 'Enter a valid 10-digit mobile number';
-    }
-
-    return null;
-  }
-
-  String _normalizePhone(String value) {
-    final phone = value.trim();
-
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-
-    if (digits.startsWith('91') && digits.length == 12) {
-      return '+$digits';
-    }
-
-    return '+91$digits';
-  }
-
   Future<void> _sendOtp() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final phone = _normalizePhone(_phoneController.text);
+    final phone = normalizePhone(_phoneController.text);
 
     FocusScope.of(context).unfocus();
 
@@ -153,7 +118,7 @@ class _ForgotPasswordPageState
                     hintText: 'Enter your mobile number',
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
-                  validator: _validatePhone,
+                  validator: Validators.phone,
                   onFieldSubmitted: (_) {
                     if (!isLoading) {
                       _sendOtp();

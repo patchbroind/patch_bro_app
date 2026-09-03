@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/utils/phone_utils.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
@@ -103,7 +104,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
       // ======================================================
 
       if (!_isPhoneLocked) {
-        await ref.read(authControllerProvider.notifier).updatePhone(phone: _normalizePhone(phone));
+        await ref.read(authControllerProvider.notifier).updatePhone(phone: normalizePhone(phone));
 
         if (!mounted) {
           return;
@@ -112,10 +113,10 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
         context.push(
           '/otp',
           extra: OtpVerificationArgs.phoneChange(
-            phone: _normalizePhone(phone),
+            phone: normalizePhone(phone),
             profileData: ProfileData(
               name: _nameController.text.trim(),
-              phone: _normalizePhone(phone),
+              phone: normalizePhone(phone),
               address1: _address1Controller.text.trim(),
               address2: _address2Controller.text.trim(),
               pinCode: _pinCodeController.text.trim(),
@@ -156,16 +157,6 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
       AppSnackbar.error(context, 'Failed to continue: $error');
     }
-  }
-
-  String _normalizePhone(String value) {
-    final phone = value.trim();
-
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-
-    return '+91$phone';
   }
 
   @override
