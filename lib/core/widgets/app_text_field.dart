@@ -13,6 +13,7 @@ class AppTextField extends StatelessWidget {
     this.onChanged,
     this.suffixIcon,
     this.maxLength,
+    this.isReadOnly
   });
 
   final TextEditingController controller;
@@ -25,6 +26,7 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final Widget? suffixIcon;
   final int? maxLength;
+  final bool? isReadOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +40,7 @@ class AppTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       maxLength: maxLength,
+      readOnly: isReadOnly ?? false,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w500,

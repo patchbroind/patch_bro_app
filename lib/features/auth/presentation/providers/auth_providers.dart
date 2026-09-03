@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:patch_bro/features/auth/domain/usecases/sign_in_with_google.dart';
+import 'package:patch_bro/features/auth/domain/usecases/update_phone.dart';
+import 'package:patch_bro/features/auth/domain/usecases/verify_phone_change_otp.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../../../../app/config/app_config.dart';
@@ -78,6 +81,32 @@ final resendOtpProvider = Provider<ResendOtp>(
 final signInProvider = Provider<SignIn>(
   (ref) {
     return SignIn(
+      ref.read(authRepositoryProvider),
+    );
+  },
+);
+
+final signInWithGoogleProvider = Provider<SignInWithGoogle>(
+  (ref) {
+    return SignInWithGoogle(
+      ref.read(authRepositoryProvider),
+    );
+  },
+);
+
+
+final updatePhoneProvider = Provider<UpdatePhone>(
+  (ref) {
+    return UpdatePhone(
+      ref.read(authRepositoryProvider),
+    );
+  },
+);
+
+final verifyPhoneChangeOtpProvider =
+    Provider<VerifyPhoneChangeOtp>(
+  (ref) {
+    return VerifyPhoneChangeOtp(
       ref.read(authRepositoryProvider),
     );
   },

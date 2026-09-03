@@ -3,16 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/auth_scaffold.dart';
-import '../providers/auth_providers.dart';
 import '../../../../core/widgets/app_primary_button.dart';
+import '../providers/auth_providers.dart';
 import '../widgets/otp_input.dart';
+import '../../../profile/presentation/providers/profile_providers.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
-  const OtpPage({super.key, required this.phone});
+  const OtpPage({super.key, required this.request});
 
-  final String phone;
+  final OtpVerificationArgs request;
 
   @override
   ConsumerState<OtpPage> createState() => _OtpPageState();
@@ -68,9 +72,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
     final token = _otpController.text.trim();
 
     if (token.length != 6) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter the 6-digit OTP')));
+      AppSnackbar.error(context, 'Please enter the 6-digit OTP');
 
       return;
     }
@@ -78,19 +80,51 @@ class _OtpPageState extends ConsumerState<OtpPage> {
     FocusScope.of(context).unfocus();
 
     try {
-      await ref.read(authControllerProvider.notifier).verifyOtp(phone: widget.phone, token: token);
+      final authController = ref.read(authControllerProvider.notifier);
+
+      // ======================================================
+      // Phone change verification
+      // ======================================================
+
+      if (widget.request.type == OtpVerificationType.phoneChange) {
+        await authController.verifyPhoneChangeOtp(phone: widget.request.phone, token: token);
+
+        final profileData = widget.request.profileData;
+
+        if (profileData == null) {
+          throw const AuthException('Profile information is missing.');
+        }
+
+        await ref
+            .read(profileRepositoryProvider)
+            .saveProfile(
+              name: profileData.name,
+              phone: profileData.phone,
+              address1: profileData.address1,
+              address2: profileData.address2,
+              pinCode: profileData.pinCode,
+              state: profileData.state,
+              isWorker: profileData.isWorker,
+            );
+
+        if (!mounted) {
+          return;
+        }
+
+        context.go(profileData.isWorker ? '/worker/home' : '/employer/home');
+
+        return;
+      }
+
+      // ======================================================
+      // Normal signup OTP
+      // ======================================================
+
+      await authController.verifyOtp(phone: widget.request.phone, token: token);
 
       if (!mounted) {
         return;
       }
-
-      final user = await ref
-          .read(authControllerProvider.notifier)
-          .verifyOtp(phone: widget.phone, token: _otpController.text);
-
-      debugPrint('AUTH USER ID: ${user.id}');
-      debugPrint('AUTH PHONE: ${user.phone}');
-      debugPrint('AUTH EMAIL: ${user.email}');
 
       context.go('/profile-details');
     } catch (error) {
@@ -98,7 +132,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+      AppSnackbar.error(context, error.toString());
     }
   }
 
@@ -108,7 +142,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
     }
 
     try {
-      await ref.read(authControllerProvider.notifier).resendOtp(phone: widget.phone);
+      await ref.read(authControllerProvider.notifier).resendOtp(phone: widget.request.phone);
 
       if (!mounted) {
         return;
@@ -117,24 +151,38 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       _otpController.clear();
       _startTimer();
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP sent again')));
+          AppSnackbar.error(context, "OTP sent again");
+
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+         AppSnackbar.error(context, error.toString());
+
     }
   }
 
   String get _formattedTime {
     final seconds = _remainingSeconds.toString().padLeft(2, '0');
+
     return '00:$seconds';
+  }
+
+  String get _message {
+    if (widget.request.type == OtpVerificationType.phoneChange) {
+      return 'We have sent a verification code\n'
+          'to your mobile number';
+    }
+
+    return 'We have sent a verification code\n'
+        'to your mobile number';
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+
     final authState = ref.watch(authControllerProvider);
 
     return AuthScaffold(
@@ -159,11 +207,10 @@ class _OtpPageState extends ConsumerState<OtpPage> {
 
             const SizedBox(height: 22),
 
-            const Text(
-              'We have sent a verification code\n'
-              'to your mobile number',
+            Text(
+              _message,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, height: 1.45, fontWeight: FontWeight.w500),
+              style: const TextStyle(fontSize: 20, height: 1.45, fontWeight: FontWeight.w500),
             ),
 
             const SizedBox(height: 26),

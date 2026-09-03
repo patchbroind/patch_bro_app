@@ -59,6 +59,43 @@ class AuthRemoteDataSource {
     );
   }
 
+  Future<void> signInWithGoogle({
+    required String redirectTo,
+  }) async {
+    final launched = await _supabase.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo,
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
+
+    if (!launched) {
+      throw const AuthException(
+        'Unable to start Google Sign-In.',
+      );
+    }
+  }
+
+  Future<void> updatePhone({
+    required String phone,
+  }) async {
+    await _supabase.auth.updateUser(
+      UserAttributes(
+        phone: phone,
+      ),
+    );
+  }
+
+  Future<AuthResponse> verifyPhoneChangeOtp({
+    required String phone,
+    required String token,
+  }) {
+    return _supabase.auth.verifyOTP(
+      phone: phone,
+      token: token,
+      type: OtpType.phoneChange,
+    );
+  }
+
   Future<void> signOut() {
     return _supabase.auth.signOut();
   }

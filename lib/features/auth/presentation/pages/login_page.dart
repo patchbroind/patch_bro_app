@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:patch_bro/core/validators/validators.dart';
+import 'package:patch_bro/core/constants/auth_constants.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/auth/presentation/widgets/login_from_card.dart';
 
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../widgets/auth_bottom_prompt.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/auth_header.dart';
 import '../../../../core/widgets/app_primary_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
 import '../widgets/social_login_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -63,13 +64,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-        ),
-      );
+     AppSnackbar.error(context, error.toString());
     }
   }
+
+  Future<void> _signInWithGoogle() async {
+  FocusScope.of(context).unfocus();
+
+  try {
+    await ref
+        .read(authControllerProvider.notifier)
+        .signInWithGoogle(
+          redirectTo: AuthConstants.googleRedirectUri,
+        );
+  } catch (error) {
+    if (!mounted) {
+      return;
+    }
+
+    AppSnackbar.error(context, error.toString());
+  }
+}
 
   String _normalizePhone(String value) {
     final phone = value.trim();
@@ -101,7 +116,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               const SizedBox(height: 55),
 
-              _LoginFormCard(
+              LoginFormCard(
                 phoneController: _phoneController,
                 passwordController: _passwordController,
                 obscurePassword: _obscurePassword,
@@ -136,7 +151,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       provider: SocialProvider.apple,
                       label: 'Log in with Apple',
                       onPressed: () {
-                        // Apple Sign-In will be implemented later.
+                        ///TODO: Apple Sign-In will be implemented later.
                       },
                     ),
                   ),
@@ -145,9 +160,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.google,
                       label: 'Log in with Google',
-                      onPressed: () {
-                        // Google Sign-In will be implemented later.
-                      },
+                      onPressed: _signInWithGoogle,
                     ),
                   ),
                 ],
@@ -170,79 +183,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-class _LoginFormCard extends StatelessWidget {
-  const _LoginFormCard({
-    required this.phoneController,
-    required this.passwordController,
-    required this.obscurePassword,
-    required this.onTogglePassword,
-    required this.onForgotPassword,
-  });
-
-  final TextEditingController phoneController;
-  final TextEditingController passwordController;
-  final bool obscurePassword;
-  final VoidCallback onTogglePassword;
-  final VoidCallback onForgotPassword;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 30,
-            spreadRadius: 2,
-            color: Colors.black.withValues(alpha: 0.04),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          AppTextField(
-            controller: phoneController,
-            hintText: 'Phone Number',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.next,
-            validator: Validators.password,
-          ),
-          const SizedBox(height: 18),
-          AppTextField(
-            controller: passwordController,
-            hintText: 'Password',
-            icon: Icons.lock_outline,
-            obscureText: obscurePassword,
-            textInputAction: TextInputAction.done,
-            validator: Validators.password,
-            suffixIcon: IconButton(
-              onPressed: onTogglePassword,
-              icon: Icon(
-                obscurePassword
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: Colors.black54,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: onForgotPassword,
-              child: const Text(
-                'Forget password',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-}

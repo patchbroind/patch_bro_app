@@ -12,13 +12,32 @@ abstract interface class AuthRepository {
     required String appFlavor,
   });
 
-  Future<AuthUser> verifyOtp({required String phone, required String token});
+  Future<AuthUser> verifyOtp({
+    required String phone,
+    required String token,
+  });
 
-  Future<void> resendOtp({required String phone});
+  Future<void> resendOtp({
+    required String phone,
+  });
 
-  Future<AuthUser> signIn({required String phone, required String password});
+  Future<AuthUser> signIn({
+    required String phone,
+    required String password,
+  });
+
+  Future<void> signInWithGoogle({
+    required String redirectTo,
+  });
+
+  Future<void> updatePhone({
+    required String phone,
+  });
+
+  Future<AuthUser> verifyPhoneChangeOtp({
+    required String phone,
+    required String token,
+  });
 
   Future<void> signOut();
-
-
 }

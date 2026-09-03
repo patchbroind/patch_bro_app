@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
+import '../features/profile/presentation/providers/profile_providers.dart';
 import 'config/app_config.dart';
 import 'router/app_router.dart';
 
@@ -30,10 +31,15 @@ class _PatchBroAppState extends ConsumerState<PatchBroApp> {
       authRepositoryProvider,
     );
 
+    final profileRepository = ref.read(
+      profileRepositoryProvider,
+    );
+
     _appRouter = AppRouter.create(
       config: widget.config,
       authStateChanges: authRepository.authStateChanges,
       currentUser: () => authRepository.currentUser,
+      profileRepository: profileRepository,
     );
   }
 

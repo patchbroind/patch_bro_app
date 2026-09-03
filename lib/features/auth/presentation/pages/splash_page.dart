@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/config/app_config.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../profile/presentation/providers/profile_providers.dart';
 import '../../domain/entities/auth_user.dart';
 import '../providers/auth_providers.dart';
 
@@ -28,7 +29,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   bool _authStateResolved = false;
   bool _hasNavigated = false;
 
-  bool? _isAuthenticated;
+  AuthUser? _currentUser;
 
   @override
   void initState() {
@@ -40,16 +41,16 @@ class _SplashPageState extends ConsumerState<SplashPage> {
         next.when(
           data: (user) {
             _authStateResolved = true;
-            _isAuthenticated = user != null;
+            _currentUser = user;
 
             _tryNavigate();
           },
           loading: () {
-            // Keep showing the splash screen.
+            // Keep showing splash.
           },
           error: (_, _) {
             _authStateResolved = true;
-            _isAuthenticated = false;
+            _currentUser = null;
 
             _tryNavigate();
           },
@@ -76,12 +77,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     );
   }
 
-  void _tryNavigate() {
+  Future<void> _tryNavigate() async {
     if (!mounted ||
         _hasNavigated ||
         !_minimumDurationCompleted ||
-        !_authStateResolved ||
-        _isAuthenticated == null) {
+        !_authStateResolved) {
       return;
     }
 
@@ -89,14 +89,41 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
     final config = ref.read(appConfigProvider);
 
-    if (_isAuthenticated!) {
-      context.go(
-        _homeLocation(config),
-      );
-    } else {
+    // User is not authenticated.
+    if (_currentUser == null) {
+      if (!mounted) return;
+
       context.goNamed(
         RouteNames.login,
       );
+
+      return;
+    }
+
+    try {
+      final profileRepository = ref.read(
+        profileRepositoryProvider,
+      );
+
+      final hasProfile = config.isWorker
+          ? await profileRepository.hasWorkerProfile()
+          : await profileRepository.hasEmployerProfile();
+
+      if (!mounted) return;
+
+      if (hasProfile) {
+        context.go(
+          _homeLocation(config),
+        );
+      } else {
+        context.go('/profile-details');
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      // If the profile check fails, don't incorrectly send the
+      // authenticated user to Home. Resume profile completion.
+      context.go('/profile-details');
     }
   }
 

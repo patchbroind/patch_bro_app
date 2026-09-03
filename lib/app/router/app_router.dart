@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
-import 'package:patch_bro/features/profile/presentation/pages/profile_details_page.dart';
+import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/presentation/pages/profile_details_page.dart';
 import '../config/app_config.dart';
 import 'route_names.dart';
 
@@ -20,6 +23,7 @@ class AppRouter {
     required AppConfig config,
     required Stream<AuthUser?> authStateChanges,
     required AuthUser? Function() currentUser,
+    required ProfileRepository profileRepository,
   }) {
     final refreshListenable = _AuthRouterRefreshListenable(
       authStateChanges,
@@ -29,57 +33,124 @@ class AppRouter {
       initialLocation: '/splash',
       refreshListenable: refreshListenable,
 
-      redirect: (context, state) {
+      redirect: (context, state) async {
         final location = state.matchedLocation;
 
         final isSplash = location == '/splash';
         final isLogin = location == '/login';
         final isSignup = location == '/signup';
         final isOtp = location == '/otp';
+        final isProfileDetails = location == '/profile-details';
 
         final user = currentUser();
         final isAuthenticated = user != null;
 
-        // ======================================================
-        // Splash
-        // ======================================================
+        // ============================================================
+        // SPLASH
+        // ============================================================
         //
-        // SplashPage is responsible for the initial
-        // authentication decision.
+        // SplashPage handles the initial authentication/profile check.
         //
         if (isSplash) {
           return null;
         }
 
-        // ======================================================
-        // Public Authentication Routes
-        // ======================================================
-
-        final isAuthRoute =
-            isLogin ||
-            isSignup ||
-            isOtp;
-
-        if (isAuthRoute) {
-          return null;
-        }
-
-        // ======================================================
-        // Protected Routes
-        // ======================================================
-
+        // ============================================================
+        // NOT AUTHENTICATED
+        // ============================================================
+        //
+        // Unauthenticated users can access:
+        // - Login
+        // - Signup
+        // - OTP
+        //
+        // Everything else requires authentication.
+        //
         if (!isAuthenticated) {
+          if (isLogin || isSignup || isOtp) {
+            return null;
+          }
+
           return '/login';
         }
 
-        // ======================================================
-        // Flavor Protection
-        // ======================================================
+        // ============================================================
+        // OTP
+        // ============================================================
+        //
+        // OTP can be used for:
+        //
+        // 1. Phone signup verification
+        // 2. Google user's phone verification
+        //
+        // Therefore, an authenticated user must be allowed to
+        // access the OTP page.
+        //
+        if (isOtp) {
+          return null;
+        }
 
+        // ============================================================
+        // PROFILE DETAILS
+        // ============================================================
+        //
+        // An authenticated user without the required role profile
+        // must be allowed to complete Profile Details.
+        //
+        if (isProfileDetails) {
+          return null;
+        }
+
+        // ============================================================
+        // AUTHENTICATED USER ON LOGIN / SIGNUP
+        // ============================================================
+        //
+        // This can happen after OAuth authentication or if an already
+        // authenticated user manually navigates to Login/Signup.
+        //
+        // Check whether the required Worker/Employer profile exists.
+        //
+        if (isLogin || isSignup) {
+          final hasProfile = await _hasRequiredProfile(
+            config: config,
+            profileRepository: profileRepository,
+          );
+
+          if (hasProfile) {
+            return _homeLocation(config);
+          }
+
+          return '/profile-details';
+        }
+
+        // ============================================================
+        // PROTECTED APPLICATION ROUTES
+        // ============================================================
+        //
+        // Every authenticated application route requires the
+        // role-specific profile.
+        //
+        final hasProfile = await _hasRequiredProfile(
+          config: config,
+          profileRepository: profileRepository,
+        );
+
+        if (!hasProfile) {
+          return '/profile-details';
+        }
+
+        // ============================================================
+        // FLAVOR PROTECTION
+        // ============================================================
+        //
+        // Worker flavor cannot access Employer routes.
+        //
         if (location.startsWith('/worker/') && !config.isWorker) {
           return _homeLocation(config);
         }
 
+        // Employer flavor cannot access Worker routes.
+        //
         if (location.startsWith('/employer/') && !config.isEmployer) {
           return _homeLocation(config);
         }
@@ -87,10 +158,14 @@ class AppRouter {
         return null;
       },
 
+      // ============================================================
+      // ROUTES
+      // ============================================================
+
       routes: [
-        // ======================================================
-        // Authentication
-        // ======================================================
+        // ==========================================================
+        // AUTHENTICATION
+        // ==========================================================
 
         GoRoute(
           path: '/splash',
@@ -115,22 +190,31 @@ class AppRouter {
           },
         ),
 
+        // ==========================================================
+        // OTP
+        // ==========================================================
+
         GoRoute(
           path: '/otp',
+          name: RouteNames.otp,
           builder: (context, state) {
-            final phone = state.extra as String?;
+            final request = state.extra as OtpVerificationArgs?;
 
-            if (phone == null || phone.isEmpty) {
+            if (request == null || request.phone.isEmpty) {
               return const _PlaceholderPage(
                 title: 'Invalid OTP Request',
               );
             }
 
             return OtpPage(
-              phone: phone,
+              request: request,
             );
           },
         ),
+
+        // ==========================================================
+        // PROFILE DETAILS
+        // ==========================================================
 
         GoRoute(
           path: '/profile-details',
@@ -139,9 +223,9 @@ class AppRouter {
           },
         ),
 
-        // ======================================================
-        // Worker
-        // ======================================================
+        // ==========================================================
+        // WORKER
+        // ==========================================================
 
         GoRoute(
           path: '/worker/home',
@@ -203,9 +287,9 @@ class AppRouter {
           },
         ),
 
-        // ======================================================
-        // Employer
-        // ======================================================
+        // ==========================================================
+        // EMPLOYER
+        // ==========================================================
 
         GoRoute(
           path: '/employer/home',
@@ -280,9 +364,24 @@ class AppRouter {
     );
   }
 
-  // ============================================================
-  // Home Location
-  // ============================================================
+  // ================================================================
+  // PROFILE CHECK
+  // ================================================================
+
+  static Future<bool> _hasRequiredProfile({
+    required AppConfig config,
+    required ProfileRepository profileRepository,
+  }) async {
+    if (config.isWorker) {
+      return profileRepository.hasWorkerProfile();
+    }
+
+    return profileRepository.hasEmployerProfile();
+  }
+
+  // ================================================================
+  // HOME LOCATION
+  // ================================================================
 
   static String _homeLocation(AppConfig config) {
     if (config.isWorker) {
@@ -293,9 +392,9 @@ class AppRouter {
   }
 }
 
-// ================================================================
-// Authentication Router Refresh
-// ================================================================
+// ==================================================================
+// AUTHENTICATION ROUTER REFRESH
+// ==================================================================
 
 class _AuthRouterRefreshListenable extends ChangeNotifier {
   _AuthRouterRefreshListenable(
@@ -317,9 +416,9 @@ class _AuthRouterRefreshListenable extends ChangeNotifier {
   }
 }
 
-// ================================================================
-// Temporary Placeholder Page
-// ================================================================
+// ==================================================================
+// TEMPORARY PLACEHOLDER PAGE
+// ==================================================================
 
 class _PlaceholderPage extends ConsumerWidget {
   const _PlaceholderPage({
@@ -338,21 +437,24 @@ class _PlaceholderPage extends ConsumerWidget {
       ),
       body: Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           spacing: 16,
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(
                     color: primaryColor,
                   ),
             ),
-            Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await ref.read(signOutProvider)();
-          },
-          child: const Text('Temporary Logout'),
-        ))
+            ElevatedButton(
+              onPressed: () async {
+                await ref.read(signOutProvider)();
+              },
+              child: const Text('Temporary Logout'),
+            ),
           ],
         ),
       ),

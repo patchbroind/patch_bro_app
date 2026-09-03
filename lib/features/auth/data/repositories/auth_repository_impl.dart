@@ -113,6 +113,45 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> signInWithGoogle({
+    required String redirectTo,
+  }) {
+    return _remoteDataSource.signInWithGoogle(
+      redirectTo: redirectTo,
+    );
+  }
+
+  @override
+  Future<void> updatePhone({
+    required String phone,
+  }) {
+    return _remoteDataSource.updatePhone(
+      phone: phone,
+    );
+  }
+
+  @override
+  Future<AuthUser> verifyPhoneChangeOtp({
+    required String phone,
+    required String token,
+  }) async {
+    final response = await _remoteDataSource.verifyPhoneChangeOtp(
+      phone: phone,
+      token: token,
+    );
+
+    final user = response.user;
+
+    if (user == null) {
+      throw const AuthException(
+        'Phone verification failed.',
+      );
+    }
+
+    return AuthUserModel.fromSupabaseUser(user).toEntity();
+  }
+
+  @override
   Future<void> signOut() {
     return _remoteDataSource.signOut();
   }

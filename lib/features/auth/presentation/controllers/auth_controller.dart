@@ -126,6 +126,31 @@ class AuthController extends Notifier<AsyncValue<void>> {
     }
   }
 
+// ============================================================
+// Google Sign In
+// ============================================================
+
+Future<void> signInWithGoogle({
+  required String redirectTo,
+}) async {
+  state = const AsyncLoading();
+
+  try {
+    await ref.read(signInWithGoogleProvider).call(
+          redirectTo: redirectTo,
+        );
+
+    state = const AsyncData(null);
+  } catch (error, stackTrace) {
+    state = AsyncError(
+      error,
+      stackTrace,
+    );
+
+    rethrow;
+  }
+}
+
   // ============================================================
   // Sign Out
   // ============================================================
@@ -146,4 +171,59 @@ class AuthController extends Notifier<AsyncValue<void>> {
       rethrow;
     }
   }
+
+  // ============================================================
+// Update Phone
+// ============================================================
+
+Future<void> updatePhone({
+  required String phone,
+}) async {
+  state = const AsyncLoading();
+
+  try {
+    await ref.read(updatePhoneProvider).call(
+          phone: phone,
+        );
+
+    state = const AsyncData(null);
+  } catch (error, stackTrace) {
+    state = AsyncError(
+      error,
+      stackTrace,
+    );
+
+    rethrow;
+  }
+}
+
+// ============================================================
+// Verify Phone Change OTP
+// ============================================================
+
+Future<AuthUser> verifyPhoneChangeOtp({
+  required String phone,
+  required String token,
+}) async {
+  state = const AsyncLoading();
+
+  try {
+    final user =
+        await ref.read(verifyPhoneChangeOtpProvider).call(
+              phone: phone,
+              token: token,
+            );
+
+    state = const AsyncData(null);
+
+    return user;
+  } catch (error, stackTrace) {
+    state = AsyncError(
+      error,
+      stackTrace,
+    );
+
+    rethrow;
+  }
+}
 }

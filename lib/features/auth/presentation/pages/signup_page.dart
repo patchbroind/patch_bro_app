@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:patch_bro/core/constants/auth_constants.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/validators/validators.dart';
+import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../providers/auth_providers.dart';
@@ -61,13 +64,34 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         return;
       }
 
-      context.push('/otp', extra: phone);
+      context.push(
+        '/otp',
+        extra: OtpVerificationArgs(phone: phone, type: OtpVerificationType.signup),
+      );
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
+          AppSnackbar.error(context, error.toString());
+
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    FocusScope.of(context).unfocus();
+
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle(redirectTo: AuthConstants.googleRedirectUri);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+          AppSnackbar.error(context, error.toString());
+
     }
   }
 
@@ -197,9 +221,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.google,
                       label: 'Sign up with Google',
-                      onPressed: () {
-                        // Google Sign-In will be implemented later.
-                      },
+                      onPressed: _signInWithGoogle,
                     ),
                   ),
                 ],
