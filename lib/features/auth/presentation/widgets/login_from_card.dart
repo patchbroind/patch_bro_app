@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
 
 class LoginFormCard extends StatelessWidget {
-  const LoginFormCard({super.key, 
+  const LoginFormCard({
+    super.key,
     required this.phoneController,
     required this.passwordController,
     required this.obscurePassword,
@@ -22,13 +24,13 @@ class LoginFormCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
             blurRadius: 30,
             spreadRadius: 2,
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
           ),
         ],
       ),
@@ -53,10 +55,8 @@ class LoginFormCard extends StatelessWidget {
             suffixIcon: IconButton(
               onPressed: onTogglePassword,
               icon: Icon(
-                obscurePassword
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: Colors.black54,
+                obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                color: AppColors.black54,
               ),
             ),
           ),
@@ -64,17 +64,11 @@ class LoginFormCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: onForgotPassword,
-              child: const Text(
-                'Forget password',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: const Text('Forget password', style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         ],
       ),
     );
   }
-
 }

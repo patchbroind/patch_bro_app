@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -48,7 +49,7 @@ class AppTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(
-          color: Color(0xFF8B8E9D),
+          color: AppColors.textHint,
           fontSize: 18,
           fontWeight: FontWeight.w400,
         ),

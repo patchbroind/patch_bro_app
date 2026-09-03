@@ -1,56 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 
 class AppSnackbar {
   AppSnackbar._();
 
   static const Duration _defaultDuration = Duration(seconds: 3);
 
-  static void success(
-    BuildContext context,
-    String message,
-  ) {
+  static void success(BuildContext context, String message) {
     _show(
       context,
       message: message,
       icon: Icons.check_circle_outline,
-      backgroundColor: Colors.green,
+      backgroundColor: AppColors.success,
     );
   }
 
-  static void error(
-    BuildContext context,
-    String message,
-  ) {
-    _show(
-      context,
-      message: message,
-      icon: Icons.error_outline,
-      backgroundColor: Colors.red,
-    );
+  static void error(BuildContext context, String message) {
+    _show(context, message: message, icon: Icons.error_outline, backgroundColor: AppColors.error);
   }
 
-  static void warning(
-    BuildContext context,
-    String message,
-  ) {
+  static void warning(BuildContext context, String message) {
     _show(
       context,
       message: message,
       icon: Icons.warning_amber_rounded,
-      backgroundColor: Colors.orange,
+      backgroundColor: AppColors.warning,
     );
   }
 
-  static void info(
-    BuildContext context,
-    String message,
-  ) {
-    _show(
-      context,
-      message: message,
-      icon: Icons.info_outline,
-      backgroundColor: Colors.blue,
-    );
+  static void info(BuildContext context, String message) {
+    _show(context, message: message, icon: Icons.info_outline, backgroundColor: AppColors.info);
   }
 
   static void _show(
@@ -68,19 +47,10 @@ class AppSnackbar {
         SnackBar(
           content: Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.white,
-              ),
+              Icon(icon, color: AppColors.white),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
+                child: Text(message, style: const TextStyle(color: AppColors.white, fontSize: 14)),
               ),
             ],
           ),
@@ -88,9 +58,7 @@ class AppSnackbar {
           behavior: SnackBarBehavior.floating,
           duration: duration,
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
   }

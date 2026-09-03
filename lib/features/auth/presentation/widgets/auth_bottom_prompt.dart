@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 
 class AuthBottomPrompt extends StatelessWidget {
   const AuthBottomPrompt({
@@ -19,22 +20,12 @@ class AuthBottomPrompt extends StatelessWidget {
     return Wrap(
       alignment: WrapAlignment.center,
       children: [
-        Text(
-          message,
-          style: const TextStyle(
-            color: Color(0xFF737685),
-            fontSize: 16,
-          ),
-        ),
+        Text(message, style: const TextStyle(color: AppColors.textTertiary, fontSize: 16)),
         GestureDetector(
           onTap: onAction,
           child: Text(
             actionText,
-            style: TextStyle(
-              color: primaryColor,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ],

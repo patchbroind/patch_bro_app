@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/validators/validators.dart';
-
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
 import 'package:patch_bro/core/widgets/auth_scaffold.dart';
@@ -192,7 +192,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const Text(
                 'Please provide your details to continue.',
-                style: TextStyle(color: Color(0xFF6B7280), fontSize: 17),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 17),
               ),
 
               const SizedBox(height: 32),
@@ -281,4 +281,3 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 }
 
 enum OtpVerificationType { signup, phoneChange }
-

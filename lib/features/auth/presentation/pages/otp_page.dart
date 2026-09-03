@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
@@ -151,15 +152,13 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       _otpController.clear();
       _startTimer();
 
-          AppSnackbar.error(context, "OTP sent again");
-
+      AppSnackbar.error(context, "OTP sent again");
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-         AppSnackbar.error(context, error.toString());
-
+      AppSnackbar.error(context, error.toString());
     }
   }
 
@@ -256,7 +255,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     "Didn't receive code?",
-                    style: TextStyle(color: Color(0xFF777B88), fontSize: 18),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 18),
                   ),
                 ),
                 const Expanded(child: Divider()),
@@ -270,7 +269,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
               child: Text(
                 'Resend OTP',
                 style: TextStyle(
-                  color: _remainingSeconds == 0 ? primaryColor : Colors.grey,
+                  color: _remainingSeconds == 0 ? primaryColor : AppColors.textDisabled,
                   fontSize: 19,
                   fontWeight: FontWeight.w700,
                 ),

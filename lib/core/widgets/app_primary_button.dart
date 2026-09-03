@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
 
 class AppPrimaryButton extends StatelessWidget {
   const AppPrimaryButton({
@@ -23,18 +24,9 @@ class AppPrimaryButton extends StatelessWidget {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.white),
               )
-            : Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            : Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
       ),
     );
   }
