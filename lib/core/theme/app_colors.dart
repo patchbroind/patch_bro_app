@@ -12,6 +12,8 @@ abstract final class AppColors {
   static const black87 = Color(0xDE000000);
   static const black54 = Color(0x8A000000);
 
+  static const transparent = Colors.transparent;
+
   static const background = Color(0xFFFFFFFF);
 
   static const textPrimary = Color(0xFF111827);
