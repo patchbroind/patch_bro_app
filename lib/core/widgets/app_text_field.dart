@@ -12,9 +12,11 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.validator,
     this.onChanged,
+    this.onFieldSubmitted,
     this.suffixIcon,
     this.maxLength,
-    this.isReadOnly
+    this.isReadOnly = false,
+    this.autofillHints,
   });
 
   final TextEditingController controller;
@@ -25,9 +27,11 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onFieldSubmitted;
   final Widget? suffixIcon;
   final int? maxLength;
-  final bool? isReadOnly;
+  final bool isReadOnly;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +44,10 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       validator: validator,
       onChanged: onChanged,
+      onFieldSubmitted: onFieldSubmitted,
       maxLength: maxLength,
-      readOnly: isReadOnly ?? false,
+      readOnly: isReadOnly,
+      autofillHints: autofillHints,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w500,

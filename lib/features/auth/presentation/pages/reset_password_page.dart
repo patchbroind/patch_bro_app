@@ -4,18 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/validators/validators.dart';
+import 'package:patch_bro/core/widgets/app_primary_button.dart';
+import 'package:patch_bro/core/widgets/app_text_field.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({super.key});
 
   @override
-  ConsumerState<ResetPasswordPage> createState() =>
-      _ResetPasswordPageState();
+  ConsumerState<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
 
-class _ResetPasswordPageState
-    extends ConsumerState<ResetPasswordPage> {
+class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _passwordController = TextEditingController();
@@ -31,20 +31,6 @@ class _ResetPasswordPageState
     super.dispose();
   }
 
-  String? _validateConfirmPassword(String? value) {
-    final passwordError = Validators.password(value);
-
-    if (passwordError != null) {
-      return passwordError;
-    }
-
-    if (value != _passwordController.text) {
-      return 'Passwords do not match';
-    }
-
-    return null;
-  }
-
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -55,9 +41,7 @@ class _ResetPasswordPageState
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .updatePassword(
-            password: _passwordController.text,
-          );
+          .updatePassword(password: _passwordController.text);
 
       if (!mounted) return;
 
@@ -66,25 +50,17 @@ class _ResetPasswordPageState
        * We immediately sign out after changing the password so the user
        * has to log in again with the newly created password.
        */
-      await ref
-          .read(authControllerProvider.notifier)
-          .signOut();
+      await ref.read(authControllerProvider.notifier).signOut();
 
       if (!mounted) return;
 
       context.go('/login');
 
-      AppSnackbar.success(
-        context,
-        'Password updated successfully. Please log in.',
-      );
+      AppSnackbar.success(context, 'Password updated successfully. Please log in.');
     } catch (_) {
       if (!mounted) return;
 
-      AppSnackbar.error(
-        context,
-        'Unable to update your password. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to update your password. Please try again.');
     }
   }
 
@@ -94,10 +70,7 @@ class _ResetPasswordPageState
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reset Password'),
-        automaticallyImplyLeading: false,
-      ),
+      appBar: AppBar(title: const Text('Reset Password'), automaticallyImplyLeading: false),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -108,19 +81,16 @@ class _ResetPasswordPageState
               children: [
                 const SizedBox(height: 32),
 
-                const Icon(
-                  Icons.password_rounded,
-                  size: 72,
-                ),
+                const Icon(Icons.password_rounded, size: 72),
 
                 const SizedBox(height: 24),
 
                 Text(
                   'Create a new password',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
 
                 const SizedBox(height: 12),
@@ -134,86 +104,63 @@ class _ResetPasswordPageState
 
                 const SizedBox(height: 32),
 
-                TextFormField(
+                AppTextField(
                   controller: _passwordController,
+                  hintText: 'New password',
+                  icon: Icons.lock_outline_rounded,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
-                  autofillHints: const [
-                    AutofillHints.newPassword,
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'New password',
-                    prefixIcon: const Icon(
-                      Icons.lock_outline_rounded,
-                    ),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
+                  autofillHints: const [AutofillHints.newPassword],
+                  validator: Validators.password,
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                     ),
                   ),
-                  validator: Validators.password,
                 ),
 
                 const SizedBox(height: 16),
 
-                TextFormField(
+                AppTextField(
                   controller: _confirmPasswordController,
+                  hintText: 'Confirm new password',
+                  icon: Icons.lock_outline_rounded,
                   obscureText: _obscureConfirmPassword,
                   textInputAction: TextInputAction.done,
-                  autofillHints: const [
-                    AutofillHints.newPassword,
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'Confirm new password',
-                    prefixIcon: const Icon(
-                      Icons.lock_outline_rounded,
-                    ),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword =
-                              !_obscureConfirmPassword;
-                        });
-                      },
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                    ),
-                  ),
-                  validator: _validateConfirmPassword,
+                  autofillHints: const [AutofillHints.newPassword],
+                  validator: (value) {
+                    return Validators.confirmPassword(value, _passwordController.text);
+                  },
                   onFieldSubmitted: (_) {
                     if (!isLoading) {
                       _resetPassword();
                     }
                   },
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 24),
 
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _resetPassword,
-                    child: isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text('Update Password'),
-                  ),
+                AppPrimaryButton(
+                  label: 'Update Password',
+                  isLoading: isLoading,
+                  onPressed: _resetPassword,
                 ),
               ],
             ),
