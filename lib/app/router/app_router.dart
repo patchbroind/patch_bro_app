@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -13,6 +14,7 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
+import '../../features/navigation/presentation/pages/main_navigation_page.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/presentation/pages/profile_details_page.dart';
 import '../config/app_config.dart';
@@ -27,9 +29,7 @@ class AppRouter {
     required AuthUser? Function() currentUser,
     required ProfileRepository profileRepository,
   }) {
-    final refreshListenable = _AuthRouterRefreshListenable(
-      authStateChanges,
-    );
+    final refreshListenable = _AuthRouterRefreshListenable(authStateChanges);
 
     return GoRouter(
       initialLocation: '/splash',
@@ -49,87 +49,42 @@ class AppRouter {
         final user = currentUser();
         final isAuthenticated = user != null;
 
-        // ============================================================
         // SPLASH
-        // ============================================================
-        //
-        // SplashPage handles the initial authentication/profile check.
-        //
+
         if (isSplash) {
           return null;
         }
 
-        // ============================================================
         // NOT AUTHENTICATED
-        // ============================================================
-       
-        //
+
         if (!isAuthenticated) {
-          if (isLogin ||
-              isSignup ||
-              isForgotPassword ||
-              isResetPassword ||
-              isOtp) {
+          if (isLogin || isSignup || isForgotPassword || isResetPassword || isOtp) {
             return null;
           }
 
           return '/login';
         }
 
-        // ============================================================
         // OTP
-        // ============================================================
-        //
-        // OTP can be used for:
-        //
-        // 1. Phone signup verification
-        // 2. Phone change verification
-        // 3. Password reset verification
-        //
-        // Therefore, an authenticated user must be allowed to access
-        // the OTP page.
-        //
+
         if (isOtp) {
           return null;
         }
 
-        // ============================================================
         // PASSWORD RECOVERY
-        // ============================================================
-        //
-        // After successful password-reset OTP verification, Supabase
-        // creates an authenticated session.
-        //
-        // The router must NOT immediately send the user to their
-        // Worker/Employer home or Profile Details page.
-        //
-        // The user must first reach ResetPasswordPage and choose a
-        // new password.
-        //
+
         if (isForgotPassword || isResetPassword) {
           return null;
         }
 
-        // ============================================================
         // PROFILE DETAILS
-        // ============================================================
-        //
-        // An authenticated user without the required role profile
-        // must be allowed to complete Profile Details.
-        //
+
         if (isProfileDetails) {
           return null;
         }
 
-        // ============================================================
         // AUTHENTICATED USER ON LOGIN / SIGNUP
-        // ============================================================
-        //
-        // This can happen after OAuth authentication or if an already
-        // authenticated user manually navigates to Login/Signup.
-        //
-        // Check whether the required Worker/Employer profile exists.
-        //
+
         if (isLogin || isSignup) {
           final hasProfile = await _hasRequiredProfile(
             config: config,
@@ -143,13 +98,8 @@ class AppRouter {
           return '/profile-details';
         }
 
-        // ============================================================
         // PROTECTED APPLICATION ROUTES
-        // ============================================================
-        //
-        // Every authenticated application route requires the
-        // role-specific profile.
-        //
+
         final hasProfile = await _hasRequiredProfile(
           config: config,
           profileRepository: profileRepository,
@@ -159,18 +109,10 @@ class AppRouter {
           return '/profile-details';
         }
 
-        // ============================================================
-        // FLAVOR PROTECTION
-        // ============================================================
-        //
-        // Worker flavor cannot access Employer routes.
-        //
         if (location.startsWith('/worker/') && !config.isWorker) {
           return _homeLocation(config);
         }
 
-        // Employer flavor cannot access Worker routes.
-        //
         if (location.startsWith('/employer/') && !config.isEmployer) {
           return _homeLocation(config);
         }
@@ -178,15 +120,7 @@ class AppRouter {
         return null;
       },
 
-      // ============================================================
-      // ROUTES
-      // ============================================================
-
       routes: [
-        // ==========================================================
-        // AUTHENTICATION
-        // ==========================================================
-
         GoRoute(
           path: '/splash',
           name: RouteNames.splash,
@@ -205,6 +139,7 @@ class AppRouter {
 
         GoRoute(
           path: '/signup',
+          name: RouteNames.signup,
           builder: (context, state) {
             return const SignupPage();
           },
@@ -212,6 +147,7 @@ class AppRouter {
 
         GoRoute(
           path: '/forgot-password',
+          name: 'forgot-password',
           builder: (context, state) {
             return const ForgotPasswordPage();
           },
@@ -219,14 +155,11 @@ class AppRouter {
 
         GoRoute(
           path: '/reset-password',
+          name: 'reset-password',
           builder: (context, state) {
             return const ResetPasswordPage();
           },
         ),
-
-        // ==========================================================
-        // OTP
-        // ==========================================================
 
         GoRoute(
           path: '/otp',
@@ -235,172 +168,183 @@ class AppRouter {
             final request = state.extra as OtpVerificationArgs?;
 
             if (request == null || request.phone.isEmpty) {
-              return const _PlaceholderPage(
-                title: 'Invalid OTP Request',
-              );
+              return const _PlaceholderPage(title: 'Invalid OTP Request');
             }
 
-            return OtpPage(
-              request: request,
-            );
+            return OtpPage(request: request);
           },
         ),
 
-        // ==========================================================
-        // PROFILE DETAILS
-        // ==========================================================
-
         GoRoute(
           path: '/profile-details',
+          name: RouteNames.profileDetails,
           builder: (context, state) {
             return const ProfileDetailsPage();
           },
         ),
 
-        // ==========================================================
-        // WORKER
-        // ==========================================================
+        if (config.isWorker) _buildWorkerShell(),
 
-        GoRoute(
-          path: '/worker/home',
-          name: RouteNames.workerHome,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Home',
-            );
-          },
+        if (config.isEmployer) _buildEmployerShell(),
+      ],
+    );
+  }
+
+  // WORKER SHELL
+
+  static StatefulShellRoute _buildWorkerShell() {
+    return StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainNavigationPage(
+          navigationShell: navigationShell,
+          destinations: const [
+            AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
+            AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
+            AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
+            AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
+            AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
+          ],
+        );
+      },
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/home',
+              name: RouteNames.workerHome,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Worker Home');
+              },
+            ),
+          ],
         ),
 
-        GoRoute(
-          path: '/worker/jobs',
-          name: RouteNames.workerJobs,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Jobs',
-            );
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/jobs',
+              name: RouteNames.workerJobs,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Worker Jobs');
+              },
+            ),
+          ],
         ),
 
-        GoRoute(
-          path: '/worker/profile',
-          name: RouteNames.workerProfile,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Profile',
-            );
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/availability',
+              name: RouteNames.workerAvailability,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Worker Availability');
+              },
+            ),
+          ],
         ),
 
-        GoRoute(
-          path: '/worker/earnings',
-          name: RouteNames.workerEarnings,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Earnings',
-            );
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/earnings',
+              name: RouteNames.workerEarnings,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Worker Earnings');
+              },
+            ),
+          ],
         ),
 
-        GoRoute(
-          path: '/worker/availability',
-          name: RouteNames.workerAvailability,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Availability',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/worker/notifications',
-          name: RouteNames.workerNotifications,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Worker Notifications',
-            );
-          },
-        ),
-
-        // ==========================================================
-        // EMPLOYER
-        // ==========================================================
-
-        GoRoute(
-          path: '/employer/home',
-          name: RouteNames.employerHome,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Home',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/jobs',
-          name: RouteNames.employerJobs,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Jobs',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/post-job',
-          name: RouteNames.employerPostJob,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Post Job',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/workers',
-          name: RouteNames.employerWorkers,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Workers',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/payments',
-          name: RouteNames.employerPayments,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Payments',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/profile',
-          name: RouteNames.employerProfile,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Profile',
-            );
-          },
-        ),
-
-        GoRoute(
-          path: '/employer/notifications',
-          name: RouteNames.employerNotifications,
-          builder: (context, state) {
-            return const _PlaceholderPage(
-              title: 'Employer Notifications',
-            );
-          },
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/profile',
+              name: RouteNames.workerProfile,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Worker Profile');
+              },
+            ),
+          ],
         ),
       ],
     );
   }
 
-  // ================================================================
+  // EMPLOYER SHELL
+
+  static StatefulShellRoute _buildEmployerShell() {
+    return StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainNavigationPage(
+          navigationShell: navigationShell,
+          destinations: const [
+            AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
+            AppBottomNavDestination(icon: Icons.work_outline, label: 'Jobs'),
+            AppBottomNavDestination(icon: Icons.add_circle_outline, label: 'Post Job'),
+            AppBottomNavDestination(icon: Icons.people_outline, label: 'Workers'),
+            AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
+          ],
+        );
+      },
+
+      branches: [
+        // EMPLOYER HOME
+
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/employer/home',
+              name: RouteNames.employerHome,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Employer Home');
+              },
+            ),
+          ],
+        ),
+
+        // EMPLOYER JOBS
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/employer/jobs',
+              name: RouteNames.employerJobs,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Employer Jobs');
+              },
+            ),
+          ],
+        ),
+
+        // EMPLOYER POST JOB
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/employer/post-job',
+              name: RouteNames.employerPostJob,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Post Job');
+              },
+            ),
+          ],
+        ),
+
+        // EMPLOYER PROFILE
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/employer/profile',
+              name: RouteNames.employerProfile,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Employer Profile');
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   // PROFILE CHECK
-  // ================================================================
 
   static Future<bool> _hasRequiredProfile({
     required AppConfig config,
@@ -413,9 +357,7 @@ class AppRouter {
     return profileRepository.hasEmployerProfile();
   }
 
-  // ================================================================
   // HOME LOCATION
-  // ================================================================
 
   static String _homeLocation(AppConfig config) {
     if (config.isWorker) {
@@ -426,19 +368,13 @@ class AppRouter {
   }
 }
 
-// ==================================================================
 // AUTHENTICATION ROUTER REFRESH
-// ==================================================================
 
 class _AuthRouterRefreshListenable extends ChangeNotifier {
-  _AuthRouterRefreshListenable(
-    Stream<AuthUser?> authStateChanges,
-  ) {
-    _subscription = authStateChanges.listen(
-      (_) {
-        notifyListeners();
-      },
-    );
+  _AuthRouterRefreshListenable(Stream<AuthUser?> authStateChanges) {
+    _subscription = authStateChanges.listen((_) {
+      notifyListeners();
+    });
   }
 
   late final StreamSubscription<AuthUser?> _subscription;
@@ -450,14 +386,10 @@ class _AuthRouterRefreshListenable extends ChangeNotifier {
   }
 }
 
-// ==================================================================
 // TEMPORARY PLACEHOLDER PAGE
-// ==================================================================
 
 class _PlaceholderPage extends ConsumerWidget {
-  const _PlaceholderPage({
-    required this.title,
-  });
+  const _PlaceholderPage({required this.title});
 
   final String title;
 
@@ -466,9 +398,7 @@ class _PlaceholderPage extends ConsumerWidget {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -476,12 +406,7 @@ class _PlaceholderPage extends ConsumerWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(
-                    color: primaryColor,
-                  ),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: primaryColor),
             ),
             ElevatedButton(
               onPressed: () async {
