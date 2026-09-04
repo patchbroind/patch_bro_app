@@ -1,0 +1,93 @@
+import 'package:flutter/material.dart';
+import 'package:patch_bro/core/theme/app_colors.dart';
+
+enum SocialProvider { apple, google }
+
+class SocialLoginButton extends StatelessWidget {
+  const SocialLoginButton({
+    super.key,
+    required this.provider,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final SocialProvider provider;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isApple = provider == SocialProvider.apple;
+
+    return SizedBox(
+      height: 58,
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: isApple ? AppColors.black : AppColors.white,
+          foregroundColor: isApple ? AppColors.white : AppColors.black87,
+          side: BorderSide(color: isApple ? AppColors.black : AppColors.socialBorder),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _SocialLogo(provider: provider),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialLogo extends StatelessWidget {
+  const _SocialLogo({required this.provider});
+
+  final SocialProvider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (provider) {
+      case SocialProvider.apple:
+        return Image.asset(
+          'assets/images/apple_logo.png',
+          width: 22,
+          height: 22,
+          fit: BoxFit.contain,
+          color: AppColors.white,
+        );
+
+      case SocialProvider.google:
+        return Image.asset(
+          'assets/images/google_logo.png',
+          width: 22,
+          height: 22,
+          fit: BoxFit.contain,
+        );
+    }
+  }
+}
+
+// class _GoogleLogo extends StatelessWidget {
+//   const _GoogleLogo();
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return const Text(
+//       'G',
+//       style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: AppColors.googleBlue),
+//     );
+//   }
+// }

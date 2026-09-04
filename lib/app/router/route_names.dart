@@ -2,11 +2,14 @@ abstract final class RouteNames {
   RouteNames._();
 
   // ============================================================
-  // Common
+  // Authentication
   // ============================================================
 
   static const splash = 'splash';
   static const login = 'login';
+  static const signup = 'signup';
+  static const otp = 'otp';
+  static const profileDetails = 'profile-details';
 
   // ============================================================
   // Worker
