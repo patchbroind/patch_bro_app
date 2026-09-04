@@ -32,6 +32,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   Future<void> _resetPassword() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -56,21 +60,31 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
       context.go('/login');
 
-      AppSnackbar.success(context, 'Password updated successfully. Please log in.');
+      AppSnackbar.success(
+        context,
+        'Password updated successfully. Please log in.',
+      );
     } catch (_) {
       if (!mounted) return;
 
-      AppSnackbar.error(context, 'Unable to update your password. Please try again.');
+      AppSnackbar.error(
+        context,
+        'Unable to update your password. Please try again.',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Reset Password'),
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -88,9 +102,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 Text(
                   'Create a new password',
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -119,7 +133,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                       });
                     },
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
@@ -134,7 +150,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.newPassword],
                   validator: (value) {
-                    return Validators.confirmPassword(value, _passwordController.text);
+                    return Validators.confirmPassword(
+                      value,
+                      _passwordController.text,
+                    );
                   },
                   onFieldSubmitted: (_) {
                     if (!isLoading) {
@@ -160,7 +179,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 AppPrimaryButton(
                   label: 'Update Password',
                   isLoading: isLoading,
-                  onPressed: _resetPassword,
+                  onPressed: isLoading ? null : _resetPassword,
                 ),
               ],
             ),

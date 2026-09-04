@@ -12,10 +12,7 @@ import 'package:patch_bro/features/auth/presentation/providers/auth_providers.da
 import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
 
 class OtpPage extends ConsumerStatefulWidget {
-  const OtpPage({
-    super.key,
-    required this.request,
-  });
+  const OtpPage({super.key, required this.request});
 
   final OtpVerificationArgs request;
 
@@ -61,21 +58,20 @@ class _OtpPageState extends ConsumerState<OtpPage> {
   }
 
   Future<void> _verifyOtp() async {
+    if (ref.read(authControllerProvider).isLoading || _isResending) {
+      return;
+    }
+
     final token = _otpController.text.trim();
 
     if (token.length != 6) {
-      AppSnackbar.error(
-        context,
-        'Please enter the 6-digit verification code.',
-      );
+      AppSnackbar.error(context, 'Please enter the 6-digit verification code.');
       return;
     }
 
     FocusScope.of(context).unfocus();
 
-    final controller = ref.read(
-      authControllerProvider.notifier,
-    );
+    final controller = ref.read(authControllerProvider.notifier);
 
     try {
       switch (widget.request.type) {
@@ -112,7 +108,9 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             return;
           }
 
-          await ref.read(profileRepositoryProvider).saveProfile(
+          await ref
+              .read(profileRepositoryProvider)
+              .saveProfile(
                 name: profileData.name,
                 phone: profileData.phone,
                 address1: profileData.address1,
@@ -126,18 +124,11 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             return;
           }
 
-          context.go(
-            profileData.isWorker
-                ? '/worker/home'
-                : '/employer/home',
-          );
+          context.go(profileData.isWorker ? '/worker/home' : '/employer/home');
           return;
 
         case OtpVerificationType.signup:
-          await controller.verifyOtp(
-            phone: widget.request.phone,
-            token: token,
-          );
+          await controller.verifyOtp(phone: widget.request.phone, token: token);
 
           if (!mounted) {
             return;
@@ -151,24 +142,18 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.message,
-      );
+      AppSnackbar.error(context, error.message);
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to verify the OTP. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to verify the OTP. Please try again.');
     }
   }
 
   Future<void> _resendOtp() async {
-    if (_isResending) {
+    if (_isResending || ref.read(authControllerProvider).isLoading) {
       return;
     }
 
@@ -176,20 +161,13 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       _isResending = true;
     });
 
-    final controller = ref.read(
-      authControllerProvider.notifier,
-    );
+    final controller = ref.read(authControllerProvider.notifier);
 
     try {
-      if (widget.request.type ==
-          OtpVerificationType.passwordReset) {
-        await controller.sendPasswordResetOtp(
-          phone: widget.request.phone,
-        );
+      if (widget.request.type == OtpVerificationType.passwordReset) {
+        await controller.sendPasswordResetOtp(phone: widget.request.phone);
       } else {
-        await controller.resendOtp(
-          phone: widget.request.phone,
-        );
+        await controller.resendOtp(phone: widget.request.phone);
       }
 
       if (!mounted) {
@@ -198,28 +176,19 @@ class _OtpPageState extends ConsumerState<OtpPage> {
 
       _otpController.clear();
 
-      AppSnackbar.success(
-        context,
-        'A new OTP has been sent.',
-      );
+      AppSnackbar.success(context, 'A new OTP has been sent.');
     } on AuthException catch (error) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.message,
-      );
+      AppSnackbar.error(context, error.message);
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to resend OTP. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to resend OTP. Please try again.');
     } finally {
       if (mounted) {
         setState(() {
@@ -231,13 +200,13 @@ class _OtpPageState extends ConsumerState<OtpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading || _isResending;
+    final authIsLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
+    final isLoading = authIsLoading || _isResending;
 
     return AuthScaffold(
-      appBar: AppBar(
-        title: const Text('Verification'),
-      ),
+      appBar: AppBar(title: const Text('Verification')),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -247,12 +216,9 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             Text(
               'Verify your phone',
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
             Text(
@@ -292,14 +258,10 @@ class _OtpPageState extends ConsumerState<OtpPage> {
               onPressed: isLoading ? null : _verifyOtp,
             ),
             const SizedBox(height: 24),
-            OtpResendSection(
-              onResend: _resendOtp,
-              enabled: !isLoading,
-            ),
+            OtpResendSection(onResend: _resendOtp, enabled: !isLoading),
           ],
         ),
       ),
     );
   }
 }
-

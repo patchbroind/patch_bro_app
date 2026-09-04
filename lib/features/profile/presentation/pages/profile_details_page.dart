@@ -34,12 +34,23 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
   bool _isPhoneLocked = false;
   bool _isEmailLocked = false;
   bool _isInitialized = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
 
+    ref.listenManual(authStateProvider, (previous, next) {
+      if (next.hasValue) {
+        _initializeFromAuthUser();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
       _initializeFromAuthUser();
     });
   }
@@ -88,9 +99,17 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
   }
 
   Future<void> _continue() async {
+    if (_isSubmitting || ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
+
+    setState(() {
+      _isSubmitting = true;
+    });
 
     FocusScope.of(context).unfocus();
 
@@ -104,7 +123,9 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
       // ======================================================
 
       if (!_isPhoneLocked) {
-        await ref.read(authControllerProvider.notifier).updatePhone(phone: normalizePhone(phone));
+        await ref
+            .read(authControllerProvider.notifier)
+            .updatePhone(phone: normalizePhone(phone));
 
         if (!mounted) {
           return;
@@ -156,12 +177,22 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
       }
 
       AppSnackbar.error(context, 'Failed to continue: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final authIsLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
+    final isLoading = _isSubmitting || authIsLoading;
 
     return AuthScaffold(
       child: Form(
@@ -262,7 +293,11 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 30),
 
-              AppPrimaryButton(label: 'Continue', onPressed: _continue),
+              AppPrimaryButton(
+                label: 'Continue',
+                isLoading: isLoading,
+                onPressed: isLoading ? null : _continue,
+              ),
             ],
           ),
         ),

@@ -37,6 +37,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _login() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -46,7 +50,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       final config = ref.read(appConfigProvider);
 
-      await ref.read(authControllerProvider.notifier).signIn(
+      await ref
+          .read(authControllerProvider.notifier)
+          .signIn(
             phone: normalizePhone(_phoneController.text),
             password: _passwordController.text,
           );
@@ -65,37 +71,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.toString(),
-      );
+      AppSnackbar.error(context, error.toString());
     }
   }
 
   Future<void> _signInWithGoogle() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     FocusScope.of(context).unfocus();
 
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .signInWithGoogle(
-            redirectTo: AuthConstants.googleRedirectUri,
-          );
+          .signInWithGoogle(redirectTo: AuthConstants.googleRedirectUri);
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.toString(),
-      );
+      AppSnackbar.error(context, error.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
+    final isLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
 
     return AuthScaffold(
       child: Form(
@@ -131,8 +135,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               AppPrimaryButton(
                 label: 'Sign in',
-                isLoading: authState.isLoading,
-                onPressed: _login,
+                isLoading: isLoading,
+                onPressed: isLoading ? null : _login,
               ),
 
               const SizedBox(height: 28),
@@ -147,9 +151,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.apple,
                       label: 'Log in with Apple',
-                      onPressed: () {
-                        /// TODO: Apple Sign-In will be implemented later.
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              /// TODO: Apple Sign-In will be implemented later.
+                            },
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -157,7 +163,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.google,
                       label: 'Log in with Google',
-                      onPressed: _signInWithGoogle,
+                      onPressed: isLoading ? null : _signInWithGoogle,
                     ),
                   ),
                 ],

@@ -44,6 +44,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   }
 
   Future<void> _signUp() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -80,37 +84,35 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.toString(),
-      );
+      AppSnackbar.error(context, error.toString());
     }
   }
 
   Future<void> _signInWithGoogle() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     FocusScope.of(context).unfocus();
 
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .signInWithGoogle(
-            redirectTo: AuthConstants.googleRedirectUri,
-          );
+          .signInWithGoogle(redirectTo: AuthConstants.googleRedirectUri);
     } catch (error) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        error.toString(),
-      );
+      AppSnackbar.error(context, error.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
+    final isLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
 
     return AuthScaffold(
       child: Form(
@@ -188,8 +190,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      _obscureConfirmPassword =
-                          !_obscureConfirmPassword;
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
                     });
                   },
                   icon: Icon(
@@ -204,8 +205,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
               AppPrimaryButton(
                 label: 'Sign Up',
-                isLoading: authState.isLoading,
-                onPressed: _signUp,
+                isLoading: isLoading,
+                onPressed: isLoading ? null : _signUp,
               ),
 
               const SizedBox(height: 28),
@@ -220,9 +221,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.apple,
                       label: 'Sign up with Apple',
-                      onPressed: () {
-                        // Apple Sign-In will be implemented later.
-                      },
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              // Apple Sign-In will be implemented later.
+                            },
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -230,7 +233,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     child: SocialLoginButton(
                       provider: SocialProvider.google,
                       label: 'Sign up with Google',
-                      onPressed: _signInWithGoogle,
+                      onPressed: isLoading ? null : _signInWithGoogle,
                     ),
                   ),
                 ],

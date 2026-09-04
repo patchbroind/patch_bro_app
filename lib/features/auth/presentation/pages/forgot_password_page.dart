@@ -15,12 +15,10 @@ class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  ConsumerState<ForgotPasswordPage> createState() =>
-      _ForgotPasswordPageState();
+  ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _ForgotPasswordPageState
-    extends ConsumerState<ForgotPasswordPage> {
+class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
 
@@ -31,6 +29,10 @@ class _ForgotPasswordPageState
   }
 
   Future<void> _sendOtp() async {
+    if (ref.read(authControllerProvider).isLoading) {
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -42,9 +44,7 @@ class _ForgotPasswordPageState
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .sendPasswordResetOtp(
-            phone: phone,
-          );
+          .sendPasswordResetOtp(phone: phone);
 
       if (!mounted) {
         return;
@@ -52,9 +52,7 @@ class _ForgotPasswordPageState
 
       context.push(
         '/otp',
-        extra: OtpVerificationArgs.passwordReset(
-          phone: phone,
-        ),
+        extra: OtpVerificationArgs.passwordReset(phone: phone),
       );
     } catch (_) {
       if (!mounted) {
@@ -70,8 +68,9 @@ class _ForgotPasswordPageState
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(
+      authControllerProvider.select((state) => state.isLoading),
+    );
 
     return AuthScaffold(
       child: SingleChildScrollView(
@@ -83,10 +82,7 @@ class _ForgotPasswordPageState
             children: [
               const SizedBox(height: 24),
 
-              const Icon(
-                Icons.lock_reset_rounded,
-                size: 72,
-              ),
+              const Icon(Icons.lock_reset_rounded, size: 72),
 
               const SizedBox(height: 24),
 
@@ -94,8 +90,8 @@ class _ForgotPasswordPageState
                 'Reset your password',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
 
               const SizedBox(height: 12),
@@ -115,9 +111,7 @@ class _ForgotPasswordPageState
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.done,
-                autofillHints: const [
-                  AutofillHints.telephoneNumber,
-                ],
+                autofillHints: const [AutofillHints.telephoneNumber],
                 validator: Validators.phone,
                 onFieldSubmitted: (_) {
                   if (!isLoading) {
@@ -131,7 +125,7 @@ class _ForgotPasswordPageState
               AppPrimaryButton(
                 label: 'Send OTP',
                 isLoading: isLoading,
-                onPressed: _sendOtp,
+                onPressed: isLoading ? null : _sendOtp,
               ),
 
               const SizedBox(height: 16),

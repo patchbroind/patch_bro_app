@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class OtpResendSection extends StatefulWidget {
-  const OtpResendSection({super.key, 
+  const OtpResendSection({
+    super.key,
     required this.onResend,
     required this.enabled,
   });
 
-  final VoidCallback onResend;
+  final Future<void> Function() onResend;
   final bool enabled;
 
   @override
@@ -47,38 +48,37 @@ class _OtpResendSectionState extends State<OtpResendSection> {
       _secondsRemaining = 59;
     });
 
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (timer) {
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
 
-        if (_secondsRemaining <= 1) {
-          timer.cancel();
-
-          setState(() {
-            _secondsRemaining = 0;
-          });
-
-          return;
-        }
+      if (_secondsRemaining <= 1) {
+        timer.cancel();
 
         setState(() {
-          _secondsRemaining--;
+          _secondsRemaining = 0;
         });
-      },
-    );
+
+        return;
+      }
+
+      setState(() {
+        _secondsRemaining--;
+      });
+    });
   }
 
-  void _handleResend() {
+  Future<void> _handleResend() async {
     if (_secondsRemaining > 0 || !widget.enabled) {
       return;
     }
 
-    widget.onResend();
-    _startTimer();
+    await widget.onResend();
+    if (mounted) {
+      _startTimer();
+    }
   }
 
   @override
