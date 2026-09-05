@@ -10,8 +10,8 @@
                 "--flavor",
                 "worker",
                 "--dart-define=APP_FLAVOR=worker",
-                // "--dart-define=SUPABASE_URL=http://10.0.2.2:54321",
-                "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
+                "--dart-define=SUPABASE_URL=http://10.0.2.2:54321",
+                // "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
                 "--dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
             ]
         },
@@ -24,8 +24,8 @@
                 "--flavor",
                 "employer",
                 "--dart-define=APP_FLAVOR=employer",
-                // "--dart-define=SUPABASE_URL=http://10.0.2.2:54321",
-                "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
+                "--dart-define=SUPABASE_URL=http://10.0.2.2:54321",
+                // "--dart-define=SUPABASE_URL=http://127.0.0.1:54321",
                 "--dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
             ]
         }

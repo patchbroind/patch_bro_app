@@ -14,6 +14,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String? address2,
     required String pinCode,
     required String state,
+    required double latitude,
+    required double longitude,
+    required String locationAddress,
     required bool isWorker,
   }) {
     return _remoteDataSource.saveProfile(
@@ -23,6 +26,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
       address2: address2,
       pinCode: pinCode,
       state: state,
+      latitude: latitude,
+      longitude: longitude,
+      locationAddress: locationAddress,
       isWorker: isWorker,
     );
   }

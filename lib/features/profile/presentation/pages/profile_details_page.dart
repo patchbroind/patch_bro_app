@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:patch_bro/core/utils/app_snackbar.dart';
+
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/phone_utils.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
 import 'package:patch_bro/core/widgets/auth_scaffold.dart';
+
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
-import 'package:patch_bro/features/profile/domain/entities/profile_data.dart';
-import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
+
+import '../../domain/entities/profile_data.dart';
+import '../../domain/entities/profile_location.dart';
+import '../providers/profile_providers.dart';
+import '../widgets/profile_location_section.dart';
 
 class ProfileDetailsPage extends ConsumerStatefulWidget {
   const ProfileDetailsPage({super.key});
@@ -30,6 +35,8 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
   final _address2Controller = TextEditingController();
   final _pinCodeController = TextEditingController();
   final _stateController = TextEditingController();
+
+  ProfileLocation? _selectedLocation;
 
   bool _isPhoneLocked = false;
   bool _isEmailLocked = false;
@@ -95,6 +102,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
     _address2Controller.dispose();
     _pinCodeController.dispose();
     _stateController.dispose();
+
     super.dispose();
   }
 
@@ -107,6 +115,11 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
       return;
     }
 
+    if (_selectedLocation == null) {
+      AppSnackbar.error(context, 'Please select your location.');
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -116,16 +129,24 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
     final config = ref.read(appConfigProvider);
 
     final phone = _mobileController.text.trim();
+    final normalizedPhone = normalizePhone(phone);
+
+    final profileData = ProfileData(
+      name: _nameController.text.trim(),
+      phone: normalizedPhone,
+      address1: _address1Controller.text.trim(),
+      address2: _address2Controller.text.trim(),
+      pinCode: _pinCodeController.text.trim(),
+      state: _stateController.text.trim(),
+      location: _selectedLocation!,
+      isWorker: config.isWorker,
+    );
 
     try {
-      // ======================================================
-      // Google user without a verified phone
-      // ======================================================
+      // GOOGLE USER WITHOUT VERIFIED PHONE
 
       if (!_isPhoneLocked) {
-        await ref
-            .read(authControllerProvider.notifier)
-            .updatePhone(phone: normalizePhone(phone));
+        await ref.read(authControllerProvider.notifier).updatePhone(phone: normalizedPhone);
 
         if (!mounted) {
           return;
@@ -133,37 +154,27 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
         context.push(
           '/otp',
-          extra: OtpVerificationArgs.phoneChange(
-            phone: normalizePhone(phone),
-            profileData: ProfileData(
-              name: _nameController.text.trim(),
-              phone: normalizePhone(phone),
-              address1: _address1Controller.text.trim(),
-              address2: _address2Controller.text.trim(),
-              pinCode: _pinCodeController.text.trim(),
-              state: _stateController.text.trim(),
-              isWorker: config.isWorker,
-            ),
-          ),
+          extra: OtpVerificationArgs.phoneChange(phone: normalizedPhone, profileData: profileData),
         );
 
         return;
       }
 
-      // ======================================================
-      // Existing verified phone
-      // ======================================================
+      // EXISTING VERIFIED PHONE
 
       await ref
           .read(profileRepositoryProvider)
           .saveProfile(
-            name: _nameController.text,
-            phone: phone,
-            address1: _address1Controller.text,
-            address2: _address2Controller.text,
-            pinCode: _pinCodeController.text,
-            state: _stateController.text,
-            isWorker: config.isWorker,
+            name: profileData.name,
+            phone: profileData.phone,
+            address1: profileData.address1,
+            address2: profileData.address2,
+            pinCode: profileData.pinCode,
+            state: profileData.state,
+            latitude: profileData.location.latitude,
+            longitude: profileData.location.longitude,
+            locationAddress: profileData.location.address,
+            isWorker: profileData.isWorker,
           );
 
       if (!mounted) {
@@ -189,9 +200,9 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final authIsLoading = ref.watch(
-      authControllerProvider.select((state) => state.isLoading),
-    );
+
+    final authIsLoading = ref.watch(authControllerProvider.select((state) => state.isLoading));
+
     final isLoading = _isSubmitting || authIsLoading;
 
     return AuthScaffold(
@@ -219,6 +230,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 32),
 
+              // NAME
               AppTextField(
                 controller: _nameController,
                 hintText: 'Name',
@@ -229,6 +241,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // EMAIL
               AppTextField(
                 controller: _emailController,
                 hintText: 'E-mail',
@@ -241,6 +254,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // MOBILE
               AppTextField(
                 controller: _mobileController,
                 hintText: 'Mobile Number',
@@ -253,6 +267,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // ADDRESS 1
               AppTextField(
                 controller: _address1Controller,
                 hintText: 'Address 1',
@@ -263,6 +278,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // ADDRESS 2
               AppTextField(
                 controller: _address2Controller,
                 hintText: 'Address 2',
@@ -272,6 +288,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // PIN CODE
               AppTextField(
                 controller: _pinCodeController,
                 hintText: 'Pin Code',
@@ -283,6 +300,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
 
               const SizedBox(height: 18),
 
+              // STATE
               AppTextField(
                 controller: _stateController,
                 hintText: 'State',
@@ -291,8 +309,21 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
                 validator: Validators.required,
               ),
 
+              const SizedBox(height: 28),
+
+              // LOCATION
+              ProfileLocationSection(
+                location: _selectedLocation,
+                onLocationSelected: (location) {
+                  setState(() {
+                    _selectedLocation = location;
+                  });
+                },
+              ),
+
               const SizedBox(height: 30),
 
+              // CONTINUE
               AppPrimaryButton(
                 label: 'Continue',
                 isLoading: isLoading,
@@ -305,5 +336,3 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
     );
   }
 }
-
-enum OtpVerificationType { signup, phoneChange }
