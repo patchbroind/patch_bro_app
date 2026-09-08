@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:patch_bro/core/location/location_permission_service.dart';
+import 'package:patch_bro/core/location/location_service.dart';
+import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 
-import '../../../../core/location/location_service.dart';
-import '../../domain/entities/profile_location.dart';
-import '../../../../core/location/location_permission_service.dart';
 
 class LocationPickerPage extends StatefulWidget {
   const LocationPickerPage({

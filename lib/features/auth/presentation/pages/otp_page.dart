@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/auth_scaffold.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/auth/presentation/widgets/otp_input.dart';
 import 'package:patch_bro/features/auth/presentation/widgets/otp_resend_section.dart';
 import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,27 +25,8 @@ class OtpPage extends ConsumerStatefulWidget {
 
 class _OtpPageState extends ConsumerState<OtpPage> {
   final _otpController = TextEditingController();
-  final _otpFocusNode = FocusNode();
 
   bool _isResending = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _otpFocusNode.requestFocus();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _otpController.dispose();
-    _otpFocusNode.dispose();
-    super.dispose();
-  }
 
   String get _message {
     switch (widget.request.type) {
@@ -59,6 +40,10 @@ class _OtpPageState extends ConsumerState<OtpPage> {
         return 'We have sent a verification code\nto your mobile number.';
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // VERIFY OTP
+  // ---------------------------------------------------------------------------
 
   Future<void> _verifyOtp() async {
     if (ref.read(authControllerProvider).isLoading ||
@@ -115,7 +100,8 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             return;
           }
 
-          final profileData = widget.request.profileData;
+          final profileData =
+              widget.request.profileData;
 
           if (profileData == null) {
             AppSnackbar.error(
@@ -124,13 +110,6 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             );
             return;
           }
-
-          // --------------------------------------------------------
-          // The phone has now been verified.
-          //
-          // Save the complete profile, including the selected
-          // latitude, longitude and human-readable location.
-          // --------------------------------------------------------
 
           await ref
               .read(profileRepositoryProvider)
@@ -141,10 +120,14 @@ class _OtpPageState extends ConsumerState<OtpPage> {
                 address2: profileData.address2,
                 pinCode: profileData.pinCode,
                 state: profileData.state,
-                latitude: profileData.location.latitude,
-                longitude: profileData.location.longitude,
-                locationAddress: profileData.location.address,
-                isWorker: profileData.isWorker,
+                latitude:
+                    profileData.location.latitude,
+                longitude:
+                    profileData.location.longitude,
+                locationAddress:
+                    profileData.location.address,
+                isWorker:
+                    profileData.isWorker,
               );
 
           if (!mounted) {
@@ -196,6 +179,10 @@ class _OtpPageState extends ConsumerState<OtpPage> {
       );
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // RESEND OTP
+  // ---------------------------------------------------------------------------
 
   Future<void> _resendOtp() async {
     if (_isResending ||
@@ -260,6 +247,10 @@ class _OtpPageState extends ConsumerState<OtpPage> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // BUILD
+  // ---------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final authIsLoading = ref.watch(
@@ -271,88 +262,164 @@ class _OtpPageState extends ConsumerState<OtpPage> {
     final isLoading =
         authIsLoading || _isResending;
 
+    final theme = Theme.of(context);
+    final size = MediaQuery.sizeOf(context);
+
     return AuthScaffold(
       appBar: AppBar(
         title: const Text('Verification'),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 32),
-
-            Text(
-              'Verify your phone',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Text(
-              _message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium,
-            ),
-
-            const SizedBox(height: 32),
-
-            TextField(
-              controller: _otpController,
-              focusNode: _otpFocusNode,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              textAlign: TextAlign.center,
-              maxLength: 6,
-              autofocus: true,
-              enabled: !isLoading,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: const InputDecoration(
-                labelText: 'Enter OTP',
-                counterText: '',
+      child: SafeArea(
+        top: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
               ),
-              onChanged: (value) {
-                if (value.length == 6 &&
-                    !isLoading) {
-                  _verifyOtp();
-                }
-              },
-              onSubmitted: (_) {
-                if (!isLoading) {
-                  _verifyOtp();
-                }
-              },
-            ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 24,
+                ),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.stretch,
+                  children: [
+                    // --------------------------------------------------------
+                    // OTP IMAGE
+                    // --------------------------------------------------------
 
-            const SizedBox(height: 24),
+                    SizedBox(
+                      height: _imageHeight(
+                        size.height,
+                        size.width,
+                      ),
+                      child: Image.asset(
+                        'assets/images/otp_image.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
 
-            AppPrimaryButton(
-              label: 'Verify',
-              isLoading: isLoading,
-              onPressed:
-                  isLoading ? null : _verifyOtp,
-            ),
+                    const SizedBox(height: 4),
 
-            const SizedBox(height: 24),
+                    // --------------------------------------------------------
+                    // TITLE
+                    // --------------------------------------------------------
 
-            OtpResendSection(
-              onResend: _resendOtp,
-              enabled: !isLoading,
-            ),
-          ],
+                    Text(
+                      'Verification Code',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // --------------------------------------------------------
+                    // MESSAGE
+                    // --------------------------------------------------------
+
+                    Text(
+                      _message,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(
+                        height: 1.45,
+                        color: theme
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withValues(
+                              alpha: 0.7,
+                            ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // --------------------------------------------------------
+                    // OTP INPUT
+                    // --------------------------------------------------------
+
+                    OtpInput(
+                      controller: _otpController,
+                      length: 6,
+                      enabled: !isLoading,
+                      onCompleted: (_) {
+                        if (!isLoading) {
+                          _verifyOtp();
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // --------------------------------------------------------
+                    // VERIFY BUTTON
+                    // --------------------------------------------------------
+
+                    AppPrimaryButton(
+                      label: 'Verify',
+                      isLoading: isLoading,
+                      onPressed:
+                          isLoading ? null : _verifyOtp,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // --------------------------------------------------------
+                    // RESEND
+                    // --------------------------------------------------------
+
+                    OtpResendSection(
+                      onResend: _resendOtp,
+                      enabled: !isLoading,
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // RESPONSIVE IMAGE HEIGHT
+  // ---------------------------------------------------------------------------
+
+  double _imageHeight(
+    double screenHeight,
+    double screenWidth,
+  ) {
+    final calculated = screenWidth * 0.60;
+
+    if (screenHeight < 700) {
+      return calculated.clamp(
+        145.0,
+        185.0,
+      );
+    }
+
+    if (screenHeight < 850) {
+      return calculated.clamp(
+        165.0,
+        215.0,
+      );
+    }
+
+    return calculated.clamp(
+      180.0,
+      240.0,
     );
   }
 }
