@@ -1,3 +1,5 @@
+import 'profile_location.dart';
+
 class ProfileData {
   const ProfileData({
     required this.name,
@@ -6,6 +8,7 @@ class ProfileData {
     required this.address2,
     required this.pinCode,
     required this.state,
+    required this.location,
     required this.isWorker,
   });
 
@@ -15,5 +18,6 @@ class ProfileData {
   final String address2;
   final String pinCode;
   final String state;
+  final ProfileLocation location;
   final bool isWorker;
 }

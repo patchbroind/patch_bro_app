@@ -6,6 +6,9 @@ abstract interface class ProfileRepository {
     String? address2,
     required String pinCode,
     required String state,
+    required double latitude,
+    required double longitude,
+    required String locationAddress,
     required bool isWorker,
   });
 
