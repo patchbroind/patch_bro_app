@@ -1,7 +1,24 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+/*
+ * Load values from android/local.properties.
+ *
+ * This keeps the Google Maps API key out of the source code.
+ */
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: ""
 
 android {
     namespace = "com.example.patch_bro"
@@ -9,8 +26,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     buildFeatures {
-    buildConfig = true
-    resValues = true
+        buildConfig = true
+        resValues = true
     }
 
     compileOptions {
@@ -25,6 +42,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        /*
+         * Pass the Maps API key to AndroidManifest.xml.
+         */
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     flavorDimensions += "app"
