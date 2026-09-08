@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,6 +70,8 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
     }
 
     final user = ref.read(currentUserProvider);
+    log("it is user: ${user?.toString()}");
+    log("it is user: ${user?.email}");
 
     if (user == null) {
       return;
