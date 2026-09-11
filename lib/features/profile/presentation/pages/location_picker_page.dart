@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:patch_bro/core/location/location_permission_service.dart';
 import 'package:patch_bro/core/location/location_service.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 
-
 class LocationPickerPage extends StatefulWidget {
-  const LocationPickerPage({
-    super.key,
-    this.initialLocation,
-  });
+  const LocationPickerPage({super.key, this.initialLocation});
 
   final ProfileLocation? initialLocation;
 
@@ -26,10 +23,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   bool _isLoadingAddress = false;
 
   // Default location: Kerala.
-  static const LatLng _defaultLocation = LatLng(
-    10.8505,
-    76.2711,
-  );
+  static const LatLng _defaultLocation = LatLng(10.8505, 76.2711);
 
   @override
   void initState() {
@@ -42,10 +36,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     final location = widget.initialLocation;
 
     if (location != null) {
-      return LatLng(
-        location.latitude,
-        location.longitude,
-      );
+      return LatLng(location.latitude, location.longitude);
     }
 
     return _defaultLocation;
@@ -80,13 +71,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       });
 
       await _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(
-            result.latitude,
-            result.longitude,
-          ),
-          16,
-        ),
+        CameraUpdate.newLatLngZoom(LatLng(result.latitude, result.longitude), 16),
       );
     } on LocationServiceDisabledException catch (error) {
       _showError(error.toString());
@@ -95,9 +80,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     } on LocationPermissionPermanentlyDeniedException catch (error) {
       _showError(error.toString());
     } catch (error) {
-      _showError(
-        'Unable to get your current location: $error',
-      );
+      _showError('Unable to get your current location: $error');
     } finally {
       if (mounted) {
         setState(() {
@@ -156,9 +139,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     final location = _selectedLocation;
 
     if (location == null) {
-      _showError(
-        'Please select a location on the map.',
-      );
+      _showError('Please select a location on the map.');
       return;
     }
 
@@ -170,11 +151,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    AppSnackbar.error(context, message);
   }
 
   @override
@@ -182,9 +159,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     final selectedLocation = _selectedLocation;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Location'),
-      ),
+      appBar: AppBar(title: const Text('Select Location')),
       body: Stack(
         children: [
           GoogleMap(
@@ -204,13 +179,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                 ? {}
                 : {
                     Marker(
-                      markerId: const MarkerId(
-                        'selected_location',
-                      ),
-                      position: LatLng(
-                        selectedLocation.latitude,
-                        selectedLocation.longitude,
-                      ),
+                      markerId: const MarkerId('selected_location'),
+                      position: LatLng(selectedLocation.latitude, selectedLocation.longitude),
                     ),
                   },
           ),
@@ -224,9 +194,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               borderRadius: BorderRadius.circular(14),
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
-                onTap: _isGettingCurrentLocation
-                    ? null
-                    : _useCurrentLocation,
+                onTap: _isGettingCurrentLocation ? null : _useCurrentLocation,
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -237,13 +205,9 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(
-                          Icons.my_location,
-                        ),
+                      : const Icon(Icons.my_location),
                 ),
               ),
             ),
@@ -269,28 +233,18 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               right: 24,
               bottom: 32,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                      color: Colors.black26,
-                    ),
+                    BoxShadow(blurRadius: 12, offset: Offset(0, 4), color: Colors.black26),
                   ],
                 ),
                 child: const Text(
                   'Tap anywhere on the map to select your location.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -326,31 +280,19 @@ class _LocationConfirmationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 16,
-            offset: Offset(0, 5),
-            color: Colors.black26,
-          ),
-        ],
+        boxShadow: const [BoxShadow(blurRadius: 16, offset: Offset(0, 5), color: Colors.black26)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.location_on,
-                color: primaryColor,
-              ),
+              Icon(Icons.location_on, color: primaryColor),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
                   'Selected Location',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -362,18 +304,13 @@ class _LocationConfirmationCard extends StatelessWidget {
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Text(
                   location.address,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
 
           const SizedBox(height: 14),
@@ -382,9 +319,7 @@ class _LocationConfirmationCard extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: isLoadingAddress ? null : onConfirm,
-              child: const Text(
-                'Confirm Location',
-              ),
+              child: const Text('Confirm Location'),
             ),
           ),
         ],

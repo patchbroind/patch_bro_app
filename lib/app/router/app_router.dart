@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -296,7 +297,7 @@ class AppRouter {
               path: '/employer/home',
               name: RouteNames.employerHome,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Employer Home');
+                return const EmployerHomePage();
               },
             ),
           ],
@@ -323,6 +324,18 @@ class AppRouter {
               name: RouteNames.employerPostJob,
               builder: (context, state) {
                 return const _PlaceholderPage(title: 'Post Job');
+              },
+            ),
+          ],
+        ),
+        // EMPLOYER POST JOB
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/employer/workers',
+              name: RouteNames.employerWorkers,
+              builder: (context, state) {
+                return const _PlaceholderPage(title: 'Workers');
               },
             ),
           ],

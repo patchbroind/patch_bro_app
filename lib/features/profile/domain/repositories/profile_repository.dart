@@ -12,6 +12,14 @@ abstract interface class ProfileRepository {
     required bool isWorker,
   });
 
+  Future<Map<String, dynamic>?> getCurrentProfile();
+
+  Future<void> updateProfileLocation({
+    required double latitude,
+    required double longitude,
+    required String locationAddress,
+  });
+
   Future<bool> hasWorkerProfile();
 
   Future<bool> hasEmployerProfile();
