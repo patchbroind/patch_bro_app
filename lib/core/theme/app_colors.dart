@@ -23,6 +23,13 @@ abstract final class AppColors {
   static const textMuted = Color(0xFF777B88);
   static const textTertiary = Color(0xFF737685);
 
+  static const surface = Color(0xFFFFFFFF);
+  static const shadow = Color(0x1F000000);
+  static const imagePlaceholder = Color(0xFFF3F4F6);
+  static const imagePlaceholderIcon = Color(0xFF9CA3AF);
+  static const carouselOverlay = Color(0xB8000000);
+  static const carouselSubtitle = Color(0xE6FFFFFF);
+
   static const border = Color(0xFFE5E7EB);
   static const divider = Color(0xFFE5E7EB);
 

@@ -34,6 +34,24 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Map<String, dynamic>?> getCurrentProfile() {
+    return _remoteDataSource.getCurrentProfile();
+  }
+
+  @override
+  Future<void> updateProfileLocation({
+    required double latitude,
+    required double longitude,
+    required String locationAddress,
+  }) {
+    return _remoteDataSource.updateProfileLocation(
+      latitude: latitude,
+      longitude: longitude,
+      locationAddress: locationAddress,
+    );
+  }
+
+  @override
   Future<bool> hasWorkerProfile() {
     return _remoteDataSource.hasWorkerProfile();
   }

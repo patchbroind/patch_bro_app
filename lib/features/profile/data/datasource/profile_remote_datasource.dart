@@ -31,17 +31,11 @@ class ProfileRemoteDataSource {
 
     final userId = user.id;
 
-    // PostGIS geography point.
-    //
-    // IMPORTANT:
     // PostGIS uses:
+    //
     // POINT(longitude latitude)
     //
-    // NOT:
-    // POINT(latitude longitude)
-    //
-    final location =
-        'POINT($longitude $latitude)';
+    final location = 'POINT($longitude $latitude)';
 
     await _supabase.from('profiles').upsert(
       {
@@ -83,6 +77,55 @@ class ProfileRemoteDataSource {
             onConflict: 'id',
           );
     }
+  }
+
+  // ================================================================
+  // GET CURRENT PROFILE
+  // ================================================================
+
+  Future<Map<String, dynamic>?> getCurrentProfile() async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    return _supabase
+        .from('profiles')
+        .select(
+          'id, name, phone, address_1, address_2, '
+          'pin_code, state, location, location_address',
+        )
+        .eq('id', user.id)
+        .maybeSingle();
+  }
+
+  // ================================================================
+  // UPDATE PROFILE LOCATION
+  // ================================================================
+
+  Future<void> updateProfileLocation({
+    required double latitude,
+    required double longitude,
+    required String locationAddress,
+  }) async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      throw const AuthException(
+        'No authenticated user found.',
+      );
+    }
+
+    final location = 'POINT($longitude $latitude)';
+
+    await _supabase
+        .from('profiles')
+        .update({
+          'location': location,
+          'location_address': locationAddress.trim(),
+        })
+        .eq('id', user.id);
   }
 
   // ================================================================
