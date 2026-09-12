@@ -10,6 +10,8 @@ abstract final class RouteNames {
   static const signup = 'signup';
   static const otp = 'otp';
   static const profileDetails = 'profile-details';
+  static const forgotPassword = 'forgot-password';
+  static const resetPassword = 'reset-password';
 
   // ============================================================
   // Worker
@@ -32,5 +34,7 @@ abstract final class RouteNames {
   static const employerWorkers = 'employer-workers';
   static const employerPayments = 'employer-payments';
   static const employerProfile = 'employer-profile';
+  static const employerTrust = 'employer-trust';
+  static const employerBenefit = 'employer-benefit';
   static const employerNotifications = 'employer-notifications';
 }

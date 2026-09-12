@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/constants/auth_constants.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/phone_utils.dart';
@@ -127,7 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   });
                 },
                 onForgotPassword: () {
-                  context.push('/forgot-password');
+                  context.push(RouteNames.forgotPassword);
                 },
               ),
 
