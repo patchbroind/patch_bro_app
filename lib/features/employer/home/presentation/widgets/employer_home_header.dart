@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
 import '../../domain/entities/employer_home_entity.dart';
 
 class EmployerHomeHeader extends StatelessWidget {
@@ -22,7 +23,7 @@ class EmployerHomeHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ProfileAvatar(name: data.name, imageUrl: data.avatarUrl),
+        ProfileAvatarWidget(size: 44, name: data.name, imageUrl: data.avatarUrl),
 
         const SizedBox(width: 12),
 
@@ -99,61 +100,6 @@ class EmployerHomeHeader extends StatelessWidget {
   }
 }
 
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.name, required this.imageUrl});
 
-  final String name;
-  final String? imageUrl;
 
-  @override
-  Widget build(BuildContext context) {
-    final firstLetter = name.trim().isEmpty
-        ? 'U'
-        : name.trim()[0].toUpperCase();
 
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: const BoxDecoration(shape: BoxShape.circle),
-      clipBehavior: Clip.antiAlias,
-      child: imageUrl != null
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return _FallbackAvatar(
-                  letter: firstLetter,
-                  color: AppColors.employerPrimary,
-                );
-              },
-            )
-          : _FallbackAvatar(
-              letter: firstLetter,
-              color: AppColors.employerPrimary,
-            ),
-    );
-  }
-}
-
-class _FallbackAvatar extends StatelessWidget {
-  const _FallbackAvatar({required this.letter, required this.color});
-
-  final String letter;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: color.withValues(alpha: 0.10),
-      alignment: Alignment.center,
-      child: Text(
-        letter,
-        style: TextStyle(
-          color: color,
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}

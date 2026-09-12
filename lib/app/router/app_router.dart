@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
+import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -342,17 +343,19 @@ class AppRouter {
         ),
 
         // EMPLOYER PROFILE
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/employer/profile',
-              name: RouteNames.employerProfile,
-              builder: (context, state) {
-                return const _PlaceholderPage(title: 'Employer Profile');
-              },
-            ),
-          ],
-        ),
+        // EMPLOYER PROFILE
+
+StatefulShellBranch(
+  routes: [
+    GoRoute(
+      path: '/employer/profile',
+      name: RouteNames.employerProfile,
+      builder: (context, state) {
+        return const EmployerProfilePage();
+      },
+    ),
+  ],
+),
       ],
     );
   }
