@@ -144,7 +144,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 
   void _onFavouriteWorkers() {
-    _showComingSoon('Favourite Workers');
+    context.pushNamed(RouteNames.employerFavouriteWorkers);
   }
 
   void _onMyReviews() {
