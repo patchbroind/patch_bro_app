@@ -96,23 +96,35 @@ class _JobsContent extends StatelessWidget {
         final horizontalPadding = constraints.maxWidth >= 600 ? 24.0 : 16.0;
         final jobs = state.filteredJobs;
 
-        return ListView(
+        final hasJobs = jobs.isNotEmpty;
+
+        return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 28),
-          children: [
-            EmployerJobFilterTabs(selectedFilter: state.filter, onSelected: onFilterSelected),
-            const SizedBox(height: 18),
-            if (jobs.isEmpty)
-              _JobsEmptyState(filter: state.filter)
-            else
-              ...jobs.map(
-                (job) => Padding(
-                  key: ValueKey(job.id),
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: EmployerJobCard(job: job),
-                ),
-              ),
-          ],
+          itemCount: hasJobs ? jobs.length + 2 : 3,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return EmployerJobFilterTabs(
+                selectedFilter: state.filter,
+                onSelected: onFilterSelected,
+              );
+            }
+
+            if (index == 1) {
+              return const SizedBox(height: 18);
+            }
+
+            if (!hasJobs) {
+              return _JobsEmptyState(filter: state.filter);
+            }
+
+            final job = jobs[index - 2];
+            return Padding(
+              key: ValueKey(job.id),
+              padding: const EdgeInsets.only(bottom: 12),
+              child: EmployerJobCard(job: job),
+            );
+          },
         );
       },
     );
