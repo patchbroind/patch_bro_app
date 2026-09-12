@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/widgets/app_tappable_card.dart';
 
 import '../../domain/entities/employer_job_entity.dart';
 import 'employer_job_image.dart';
