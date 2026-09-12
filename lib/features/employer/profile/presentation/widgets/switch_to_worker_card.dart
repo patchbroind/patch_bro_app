@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/widgets/app_tappable_card.dart';
 
 class SwitchToWorkerCard extends StatelessWidget {
   const SwitchToWorkerCard({super.key, required this.onTap});
@@ -8,15 +9,11 @@ class SwitchToWorkerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return AppTappableCard(
+      onTap: onTap,
       color: AppColors.employerLight.withValues(alpha: 0.55),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
             children: [
               Container(
                 width: 38,
@@ -46,8 +43,6 @@ class SwitchToWorkerCard extends StatelessWidget {
               ),
               const Icon(Icons.chevron_right_rounded, size: 21, color: AppColors.employerPrimary),
             ],
-          ),
-        ),
       ),
     );
   }
