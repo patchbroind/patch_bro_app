@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
+import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
+import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
+import 'package:patch_bro/features/employer/trust/presentation/pages/employer_trust_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -148,7 +151,7 @@ class AppRouter {
 
         GoRoute(
           path: '/forgot-password',
-          name: 'forgot-password',
+          name: RouteNames.forgotPassword,
           builder: (context, state) {
             return const ForgotPasswordPage();
           },
@@ -156,7 +159,7 @@ class AppRouter {
 
         GoRoute(
           path: '/reset-password',
-          name: 'reset-password',
+          name: RouteNames.resetPassword,
           builder: (context, state) {
             return const ResetPasswordPage();
           },
@@ -181,6 +184,22 @@ class AppRouter {
           name: RouteNames.profileDetails,
           builder: (context, state) {
             return const ProfileDetailsPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/employer/trust',
+          name: RouteNames.employerTrust,
+          builder: (context, state) {
+            return const EmployerTrustPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/employer/benefit',
+          name: RouteNames.employerBenefit,
+          builder: (context, state) {
+            return const EmployerBenefitPage();
           },
         ),
 
@@ -342,13 +361,14 @@ class AppRouter {
         ),
 
         // EMPLOYER PROFILE
+        // EMPLOYER PROFILE
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/employer/profile',
               name: RouteNames.employerProfile,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Employer Profile');
+                return const EmployerProfilePage();
               },
             ),
           ],

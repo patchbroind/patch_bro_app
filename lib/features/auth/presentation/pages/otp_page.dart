@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/auth_scaffold.dart';
@@ -83,7 +84,7 @@ class _OtpPageState extends ConsumerState<OtpPage> {
             return;
           }
 
-          context.go('/reset-password');
+          context.go(RouteNames.resetPassword);
           return;
 
         // ==========================================================

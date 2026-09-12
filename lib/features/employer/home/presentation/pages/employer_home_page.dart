@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_dialog.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/widgets/app_error_view.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
 
@@ -76,8 +77,7 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
     final shouldChooseLocation = await AppDialog.confirm(
       context,
       title: 'Choose your location',
-      message:
-          'Set your location to find nearby workers and get better service recommendations.',
+      message: 'Set your location to find nearby workers and get better service recommendations.',
       confirmLabel: 'Choose Location',
       cancelLabel: 'Skip for now',
     );
@@ -95,9 +95,7 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
     final currentLocation = ref.read(employerHomeProvider).value?.location;
 
     final result = await Navigator.of(context).push<ProfileLocation>(
-      MaterialPageRoute(
-        builder: (_) => LocationPickerPage(initialLocation: currentLocation),
-      ),
+      MaterialPageRoute(builder: (_) => LocationPickerPage(initialLocation: currentLocation)),
     );
 
     if (result == null || !mounted) {
@@ -131,10 +129,7 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to update location. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to update location. Please try again.');
     } finally {
       if (mounted) {
         setState(() {
@@ -206,7 +201,10 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
             return const EmployerHomeLoading();
           },
           error: (error, stackTrace) {
-            return EmployerHomeError(
+            return AppErrorView(
+              title: 'Unable to load Home',
+              message: 'Please check your connection and try again.',
+              icon: Icons.cloud_off_outlined,
               onRetry: () {
                 ref.invalidate(employerHomeProvider);
               },
