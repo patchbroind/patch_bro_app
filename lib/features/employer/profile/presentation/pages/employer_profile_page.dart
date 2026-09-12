@@ -128,7 +128,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 
   void _onTrustDetails() {
-    _showComingSoon('Trust & Reliability');
+    context.pushNamed(RouteNames.employerTrust);
   }
 
   void _onBenefitDetails() {
@@ -231,8 +231,6 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 }
 
-
-
 class _ProfileContent extends StatelessWidget {
   const _ProfileContent({
     required this.profile,
@@ -291,7 +289,6 @@ class _ProfileContent extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 32),
           children: [
-
             EmployerProfileHeader(profile: profile, onEditPressed: onEditProfile),
 
             const SizedBox(height: 18),
