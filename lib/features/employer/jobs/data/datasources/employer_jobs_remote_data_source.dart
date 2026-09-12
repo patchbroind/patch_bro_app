@@ -20,6 +20,11 @@ class EmployerJobsRemoteDataSource {
      * that schema is defined rather than guessing table or column names.
      * Replace only this method when the backend contract is available.
      */
-    return const <EmployerJobEntity>[];
+    return  <EmployerJobEntity>[
+      //...............Temporary data.....................
+      EmployerJobEntity(id:"55" , title: "Maintain roof", category: "Building", date: DateTime.now(), status:  EmployerJobStatus.active, amount: 100.0, currency: "USD")
+      //...............Temporary data.....................
+
+      ];
   }
 }

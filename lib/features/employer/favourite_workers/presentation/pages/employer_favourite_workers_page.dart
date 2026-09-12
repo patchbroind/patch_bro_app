@@ -71,7 +71,7 @@ class _EmployerFavouriteWorkersPageState extends ConsumerState<EmployerFavourite
     final state = ref.watch(employerFavouriteWorkersControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favourite Workers')),
+      appBar: AppBar(title: const Text('Favourite Workers'),centerTitle: true,leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: () => context.pop()),),
       body: _buildBody(state),
     );
   }

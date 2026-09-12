@@ -156,7 +156,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 
   void _onPersonalInformation() {
-    _showComingSoon('Personal Information');
+    context.pushNamed(RouteNames.employerPersonalInformation);
   }
 
   void _onAddresses() {

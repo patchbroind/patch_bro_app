@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
 
@@ -44,7 +45,7 @@ class _EmployerTrustPageState extends ConsumerState<EmployerTrustPage> {
     final state = ref.watch(employerTrustControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Trust & Reliability')),
+      appBar: AppBar(title: const Text('Trust & Reliability'),centerTitle: true,leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: () => context.pop()),),
       body: _buildBody(state),
     );
   }

@@ -51,7 +51,7 @@ class _EmployerBenefitPageState extends ConsumerState<EmployerBenefitPage> {
     final state = ref.watch(employerBenefitControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Employer Benefit')),
+      appBar: AppBar(title: const Text('Employer Benefit'),centerTitle: true,leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: () => context.pop()),),
       body: _buildBody(state),
     );
   }
