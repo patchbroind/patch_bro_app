@@ -132,7 +132,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 
   void _onBenefitDetails() {
-    _showComingSoon('Employer Benefit');
+    context.pushNamed(RouteNames.employerBenefit);
   }
 
   void _onMyJobs() {

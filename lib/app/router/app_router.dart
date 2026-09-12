@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
+import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
 import 'package:patch_bro/features/employer/trust/presentation/pages/employer_trust_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
@@ -191,6 +192,14 @@ class AppRouter {
           name: RouteNames.employerTrust,
           builder: (context, state) {
             return const EmployerTrustPage();
+          },
+        ),
+
+        GoRoute(
+          path: '/employer/benefit',
+          name: RouteNames.employerBenefit,
+          builder: (context, state) {
+            return const EmployerBenefitPage();
           },
         ),
 
