@@ -22,81 +22,154 @@ class EmployerJobCard extends StatelessWidget {
       EmployerJobStatus.active => AppColors.info,
       EmployerJobStatus.cancelled => AppColors.textSecondary,
     };
-    final dateLabel = MaterialLocalizations.of(context).formatMediumDate(job.date);
+
+    final dateLabel =
+        MaterialLocalizations.of(context).formatMediumDate(job.date);
+
     final amountLabel = '${job.currency} ${job.amount.toStringAsFixed(2)}';
 
-    return AppTappableCard(
-      onTap: onTap,
-      color: AppColors.white,
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          EmployerJobImage(imageUrl: job.imageUrl),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    return Container(
+      decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.border,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+      child: AppTappableCard(
+        onTap: onTap,
+        color: AppColors.white,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 9,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // -----------------------------------------------------------------
+            // Job Image
+            // -----------------------------------------------------------------
+            EmployerJobImage(
+              imageUrl: job.imageUrl,
+            ),
+      
+            const SizedBox(width: 10),
+      
+            // -----------------------------------------------------------------
+            // Main Content
+            // -----------------------------------------------------------------
+            Expanded(
+              child: SizedBox(
+                height: 56,
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Text(
-                        job.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  job.category,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  dateLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
+                    // Job title
                     Text(
-                      amountLabel,
+                      job.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
+                            fontSize: 12,
                           ),
                     ),
-                    _StatusBadge(label: job.statusLabel, color: statusColor),
+      
+                    const SizedBox(height: 3),
+      
+                    // Category
+                    Text(
+                      job.category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 10,
+                          ),
+                    ),
+      
+                    const SizedBox(height: 2),
+      
+                    // Date
+                    Text(
+                      dateLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 10,
+                          ),
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+      
+            const SizedBox(width: 8),
+      
+            // -----------------------------------------------------------------
+            // Right Side
+            // -----------------------------------------------------------------
+            SizedBox(
+              width: 72,
+              height: 56,
+              child: Stack(
+                children: [
+                  // Status badge - Top Right
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: _StatusBadge(
+                      label: job.statusLabel,
+                      color: statusColor,
+                    ),
+                  ),
+      
+                  // Amount - Bottom Right
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Text(
+                      amountLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      
+            const SizedBox(width: 5),
+      
+            // -----------------------------------------------------------------
+            // Chevron
+            // -----------------------------------------------------------------
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.color});
+  const _StatusBadge({
+    required this.label,
+    required this.color,
+  });
 
   final String label;
   final Color color;
@@ -104,17 +177,28 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 110),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      constraints: const BoxConstraints(
+        maxWidth: 72,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          height: 1.1,
+        ),
       ),
     );
   }
