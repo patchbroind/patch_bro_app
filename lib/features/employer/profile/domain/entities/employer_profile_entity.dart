@@ -16,6 +16,11 @@ class EmployerProfileEntity {
     required this.requiredWorkerJobs,
     this.avatarUrl,
     this.platformFeeBenefitEligible = false,
+    this.phone,
+    this.phoneVerified = false,
+    this.email,
+    this.emailVerified = false,
+    this.locationAddress,
   });
 
   final String id;
@@ -36,22 +41,21 @@ class EmployerProfileEntity {
   final int requiredWorkerJobs;
 
   final bool platformFeeBenefitEligible;
+  final String? phone;
+  final bool phoneVerified;
+  final String? email;
+  final bool emailVerified;
+  final String? locationAddress;
 
   double get workerBenefitProgress {
     if (requiredWorkerJobs <= 0) {
       return 0;
     }
 
-    return (qualifyingWorkerJobs / requiredWorkerJobs).clamp(
-      0.0,
-      1.0,
-    );
+    return (qualifyingWorkerJobs / requiredWorkerJobs).clamp(0.0, 1.0);
   }
 
   int get remainingWorkerJobs {
-    return (requiredWorkerJobs - qualifyingWorkerJobs).clamp(
-      0,
-      requiredWorkerJobs,
-    );
+    return (requiredWorkerJobs - qualifyingWorkerJobs).clamp(0, requiredWorkerJobs);
   }
 }

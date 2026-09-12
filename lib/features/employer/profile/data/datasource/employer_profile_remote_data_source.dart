@@ -14,32 +14,40 @@ class EmployerProfileRemoteDataSource {
       throw Exception('User is not authenticated.');
     }
 
-    /*
-     * ------------------------------------------------------------
-     * TEMPORARY PROFILE DATA
-     * ------------------------------------------------------------
-     *
-     * The actual employer_profiles table/query will be connected
-     * once the final Supabase schema for employer_profiles and
-     * its aggregate statistics is available.
-     *
-     * Do not remove this abstraction. The repository/controller
-     * architecture is already ready for the real data source.
-     */
+    final profile = await _supabase
+        .from('profiles')
+        .select('id, name, phone, location_address')
+        .eq('id', user.id)
+        .maybeSingle();
 
-    return const EmployerProfileEntity(
-      id: 'demo-employer',
-      fullName: 'Mohammed Shafi',
+    if (profile == null) {
+      throw const PostgrestException(message: 'Employer profile not found.');
+    }
+
+    final avatarUrl =
+        user.userMetadata?['avatar_url'] ??
+        user.userMetadata?['picture'] ??
+        user.userMetadata?['avatar'];
+
+    return EmployerProfileEntity(
+      id: user.id,
+      fullName: (profile['name'] as String?)?.trim() ?? '',
       roleLabel: 'Employer',
-      isTrusted: true,
-      jobsPosted: 18,
-      jobsCompleted: 15,
-      cancelledJobs: 2,
-      successfulJobs: 12,
-      hasWorkerProfile: true,
-      qualifyingWorkerJobs: 7,
-      requiredWorkerJobs: 10,
+      isTrusted: false,
+      jobsPosted: 0,
+      jobsCompleted: 0,
+      cancelledJobs: 0,
+      successfulJobs: 0,
+      hasWorkerProfile: false,
+      qualifyingWorkerJobs: 0,
+      requiredWorkerJobs: 0,
       platformFeeBenefitEligible: false,
+      phone: (profile['phone'] as String?)?.trim(),
+      avatarUrl: avatarUrl is String && avatarUrl.trim().isNotEmpty ? avatarUrl.trim() : null,
+      phoneVerified: user.phoneConfirmedAt != null,
+      email: user.email,
+      emailVerified: user.emailConfirmedAt != null,
+      locationAddress: (profile['location_address'] as String?)?.trim(),
     );
   }
 }
