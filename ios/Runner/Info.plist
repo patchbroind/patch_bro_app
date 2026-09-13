@@ -38,6 +38,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Patch Bro needs microphone access to record your job description.</string>
+
 	<!-- ========================================================= -->
 	<!-- LOCATION PERMISSION                                      -->
 	<!-- ========================================================= -->

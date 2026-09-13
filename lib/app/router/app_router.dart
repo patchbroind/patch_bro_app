@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_settings_and_support.dart';
@@ -385,7 +386,7 @@ class AppRouter {
               path: '/employer/post-job',
               name: RouteNames.employerPostJob,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Post Job');
+                return const EmployerPostJobPage();
               },
             ),
           ],
