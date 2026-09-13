@@ -45,7 +45,7 @@ class EmployerSettingsAndSupportPage extends ConsumerWidget {
     }
 
     void onAddresses() {
-      showComingSoon('Addresses');
+      context.pushNamed(RouteNames.employerAddresses);
     }
 
     void onNotifications() {

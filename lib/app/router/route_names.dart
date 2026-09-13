@@ -38,6 +38,7 @@ abstract final class RouteNames {
   static const employerBenefit = 'employer-benefit';
   static const employerFavouriteWorkers = 'employer-favourite-workers';
   static const employerPersonalInformation = 'employer-personal-information';
+  static const employerAddresses = 'employer-addresses';
   static const employerNotifications = 'employer-notifications';
   static const employerSettings = 'employer-settings';
 }

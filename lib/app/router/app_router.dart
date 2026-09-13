@@ -12,6 +12,7 @@ import 'package:patch_bro/features/employer/trust/presentation/pages/employer_tr
 import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
 import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
+import 'package:patch_bro/features/employer/addresses/presentation/pages/employer_addresses_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -220,6 +221,13 @@ class AppRouter {
           name: RouteNames.employerPersonalInformation,
           builder: (context, state) {
             return const EmployerPersonalInformationPage();
+          },
+        ),
+        GoRoute(
+          path: '/employer/addresses',
+          name: RouteNames.employerAddresses,
+          builder: (context, state) {
+            return const EmployerAddressesPage();
           },
         ),
         GoRoute(
