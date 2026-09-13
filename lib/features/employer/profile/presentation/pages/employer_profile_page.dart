@@ -3,12 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
-import 'package:patch_bro/core/utils/app_dialog.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
-import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
-import 'package:patch_bro/features/employer/profile/presentation/widgets/switch_to_worker_card.dart';
-
 import '../../domain/entities/employer_profile_entity.dart';
 import '../controllers/employer_profile_state.dart';
 import '../providers/employer_profile_providers.dart';
@@ -32,7 +28,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
+      if (!context.mounted) {
         return;
       }
 
@@ -55,7 +51,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
         actions: [
           IconButton(
             tooltip: 'Settings',
-            onPressed: _onSecurity,
+            onPressed: () => context.pushNamed(RouteNames.employerSettings),
             icon: const Icon(Icons.settings_outlined),
           ),
         ],
@@ -106,15 +102,6 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
         onFavouriteWorkers: _onFavouriteWorkers,
         onMyReviews: _onMyReviews,
         onPaymentHistory: _onPaymentHistory,
-        onPersonalInformation: _onPersonalInformation,
-        onAddresses: _onAddresses,
-        onNotifications: _onNotifications,
-        onSecurity: _onSecurity,
-        onSwitchToWorker: _onSwitchToWorker,
-        onHelp: _onHelp,
-        onTerms: _onTerms,
-        onPrivacy: _onPrivacy,
-        onLogout: _onLogout,
       ),
     );
   }
@@ -155,73 +142,6 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
     _showComingSoon('Payment History');
   }
 
-  void _onPersonalInformation() {
-    context.pushNamed(RouteNames.employerPersonalInformation);
-  }
-
-  void _onAddresses() {
-    _showComingSoon('Addresses');
-  }
-
-  void _onNotifications() {
-    context.pushNamed(RouteNames.employerNotifications);
-  }
-
-  void _onSecurity() {
-    _showComingSoon('Security & Privacy');
-  }
-
-  void _onSwitchToWorker() {
-    _showComingSoon('Switch to Worker');
-  }
-
-  void _onHelp() {
-    _showComingSoon('Help & Support');
-  }
-
-  void _onTerms() {
-    _showComingSoon('Terms & Conditions');
-  }
-
-  void _onPrivacy() {
-    _showComingSoon('Privacy Policy');
-  }
-
-  // ============================================================
-  // Logout
-  // ============================================================
-
-  Future<void> _onLogout() async {
-    final confirmed = await AppDialog.confirm(
-      context,
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      confirmLabel: 'Logout',
-      cancelLabel: 'Cancel',
-      icon: Icons.logout_rounded,
-    );
-
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    try {
-      await ref.read(signOutProvider)();
-
-      if (!mounted) {
-        return;
-      }
-
-      AppSnackbar.success(context, 'Logged out successfully.');
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      AppSnackbar.error(context, 'Unable to logout. Please try again.');
-    }
-  }
-
   // ============================================================
   // Temporary Action
   // ============================================================
@@ -242,15 +162,6 @@ class _ProfileContent extends StatelessWidget {
     required this.onFavouriteWorkers,
     required this.onMyReviews,
     required this.onPaymentHistory,
-    required this.onPersonalInformation,
-    required this.onAddresses,
-    required this.onNotifications,
-    required this.onSecurity,
-    required this.onSwitchToWorker,
-    required this.onHelp,
-    required this.onTerms,
-    required this.onPrivacy,
-    required this.onLogout,
   });
 
   final EmployerProfileEntity profile;
@@ -264,20 +175,6 @@ class _ProfileContent extends StatelessWidget {
   final VoidCallback onFavouriteWorkers;
   final VoidCallback onMyReviews;
   final VoidCallback onPaymentHistory;
-
-  final VoidCallback onPersonalInformation;
-  final VoidCallback onAddresses;
-
-  final VoidCallback onNotifications;
-  final VoidCallback onSecurity;
-
-  final VoidCallback onSwitchToWorker;
-
-  final VoidCallback onHelp;
-  final VoidCallback onTerms;
-  final VoidCallback onPrivacy;
-
-  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
@@ -343,82 +240,6 @@ class _ProfileContent extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
-
-            EmployerProfileSection(
-              title: 'Personal',
-              items: [
-                EmployerProfileMenuItem(
-                  icon: Icons.person_outline_rounded,
-                  title: 'Personal Information',
-                  onTap: onPersonalInformation,
-                ),
-                EmployerProfileMenuItem(
-                  icon: Icons.location_on_outlined,
-                  title: 'Addresses',
-                  onTap: onAddresses,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 18),
-
-            EmployerProfileSection(
-              title: 'Preferences',
-              items: [
-                EmployerProfileMenuItem(
-                  icon: Icons.notifications_none_rounded,
-                  title: 'Notifications',
-                  onTap: onNotifications,
-                ),
-                EmployerProfileMenuItem(
-                  icon: Icons.lock_outline_rounded,
-                  title: 'Security & Privacy',
-                  onTap: onSecurity,
-                ),
-              ],
-            ),
-
-            if (profile.hasWorkerProfile) ...[
-              const SizedBox(height: 18),
-              SwitchToWorkerCard(onTap: onSwitchToWorker),
-            ],
-
-            const SizedBox(height: 18),
-
-            EmployerProfileSection(
-              title: 'Support',
-              items: [
-                EmployerProfileMenuItem(
-                  icon: Icons.help_outline_rounded,
-                  title: 'Help & Support',
-                  onTap: onHelp,
-                ),
-                EmployerProfileMenuItem(
-                  icon: Icons.description_outlined,
-                  title: 'Terms & Conditions',
-                  onTap: onTerms,
-                ),
-                EmployerProfileMenuItem(
-                  icon: Icons.shield_outlined,
-                  title: 'Privacy Policy',
-                  onTap: onPrivacy,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 18),
-
-            EmployerProfileSection(
-              title: '',
-              items: [
-                EmployerProfileMenuItem(
-                  icon: Icons.logout_rounded,
-                  title: 'Logout',
-                  onTap: onLogout,
-                  isDestructive: true,
-                ),
-              ],
-            ),
           ],
         );
       },
