@@ -98,7 +98,7 @@ class _NotificationSwitch extends StatelessWidget {
     return Switch(
       value: value,
       onChanged: enabled ? onChanged : null,
-      activeColor: AppColors.white,
+      activeThumbColor: AppColors.white,
       activeTrackColor: AppColors.employerPrimary,
       inactiveThumbColor: AppColors.white,
       inactiveTrackColor: AppColors.border,
