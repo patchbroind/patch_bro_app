@@ -7,6 +7,7 @@ import 'package:patch_bro/features/auth/presentation/models/otp_verification_arg
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
+import 'package:patch_bro/features/employer/profile/presentation/pages/employer_settings_and_support.dart';
 import 'package:patch_bro/features/employer/trust/presentation/pages/employer_trust_page.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
 import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
@@ -219,6 +220,13 @@ class AppRouter {
           name: RouteNames.employerPersonalInformation,
           builder: (context, state) {
             return const EmployerPersonalInformationPage();
+          },
+        ),
+        GoRoute(
+          path: '/employer/settings',
+          name: RouteNames.employerSettings,
+          builder: (context, state) {
+            return const EmployerSettingsAndSupportPage();
           },
         ),
 
