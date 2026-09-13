@@ -1,11 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../domain/entities/employer_notification_preferences.dart';
-import '../../domain/repository/employer_notifications_repository.dart';
+import '../../domain/entities/notification_preferences.dart';
+import '../../domain/repository/notifications_repository.dart';
 
-class EmployerNotificationsLocalDataSource {
-  EmployerNotificationsLocalDataSource(this._supabase);
+class NotificationsLocalDataSource {
+  NotificationsLocalDataSource(this._supabase);
 
   final SupabaseClient _supabase;
 
@@ -21,11 +21,11 @@ class EmployerNotificationsLocalDataSource {
     return 'employer_notifications_${user.id}_';
   }
 
-  Future<EmployerNotificationPreferences> getPreferences() async {
+  Future<NotificationPreferences> getPreferences() async {
     final preferences = await _preferences();
     final prefix = _prefix;
 
-    return EmployerNotificationPreferences(
+    return NotificationPreferences(
       pushNotifications: preferences.getBool('${prefix}push') ?? true,
       jobUpdates: preferences.getBool('${prefix}jobs') ?? true,
       messages: preferences.getBool('${prefix}messages') ?? true,
@@ -35,16 +35,16 @@ class EmployerNotificationsLocalDataSource {
     );
   }
 
-  Future<void> setPreference(EmployerNotificationSetting setting, bool enabled) async {
+  Future<void> setPreference(NotificationSetting setting, bool enabled) async {
     final preferences = await _preferences();
     final prefix = _prefix;
     final key = switch (setting) {
-      EmployerNotificationSetting.pushNotifications => '${prefix}push',
-      EmployerNotificationSetting.jobUpdates => '${prefix}jobs',
-      EmployerNotificationSetting.messages => '${prefix}messages',
-      EmployerNotificationSetting.reminders => '${prefix}reminders',
-      EmployerNotificationSetting.offersAndPromotions => '${prefix}offers',
-      EmployerNotificationSetting.appAnnouncements => '${prefix}announcements',
+      NotificationSetting.pushNotifications => '${prefix}push',
+      NotificationSetting.jobUpdates => '${prefix}jobs',
+      NotificationSetting.messages => '${prefix}messages',
+      NotificationSetting.reminders => '${prefix}reminders',
+      NotificationSetting.offersAndPromotions => '${prefix}offers',
+      NotificationSetting.appAnnouncements => '${prefix}announcements',
     };
 
     if (!await preferences.setBool(key, enabled)) {

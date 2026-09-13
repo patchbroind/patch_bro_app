@@ -13,7 +13,7 @@ import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_job
 import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
 import 'package:patch_bro/features/employer/addresses/presentation/pages/employer_addresses_page.dart';
-import 'package:patch_bro/features/employer/notifications/presentation/pages/employer_notifications_page.dart';
+import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -242,7 +242,7 @@ class AppRouter {
           path: '/employer/notifications',
           name: RouteNames.employerNotifications,
           builder: (context, state) {
-            return const EmployerNotificationsPage();
+            return const NotificationsPage();
           },
         ),
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
-import '../../domain/entities/employer_notification_preferences.dart';
-import '../../domain/repository/employer_notifications_repository.dart';
+import '../../domain/entities/notification_preferences.dart';
+import '../../domain/repository/notifications_repository.dart';
 import 'notification_setting_row.dart';
 
 class NotificationTypesCard extends StatelessWidget {
@@ -13,15 +13,15 @@ class NotificationTypesCard extends StatelessWidget {
     required this.onChanged,
   });
 
-  final EmployerNotificationPreferences preferences;
-  final EmployerNotificationSetting? updatingSetting;
-  final void Function(EmployerNotificationSetting setting, bool value) onChanged;
+  final NotificationPreferences preferences;
+  final NotificationSetting? updatingSetting;
+  final void Function(NotificationSetting setting, bool value) onChanged;
 
   @override
   Widget build(BuildContext context) {
     final rows = [
       (
-        setting: EmployerNotificationSetting.jobUpdates,
+        setting: NotificationSetting.jobUpdates,
         icon: Icons.work_outline_rounded,
         color: AppColors.info,
         title: 'Job Updates',
@@ -29,7 +29,7 @@ class NotificationTypesCard extends StatelessWidget {
         value: preferences.jobUpdates,
       ),
       (
-        setting: EmployerNotificationSetting.messages,
+        setting: NotificationSetting.messages,
         icon: Icons.chat_bubble_outline_rounded,
         color: AppColors.success,
         title: 'Messages',
@@ -37,7 +37,7 @@ class NotificationTypesCard extends StatelessWidget {
         value: preferences.messages,
       ),
       (
-        setting: EmployerNotificationSetting.reminders,
+        setting: NotificationSetting.reminders,
         icon: Icons.notifications_none_rounded,
         color: AppColors.warning,
         title: 'Reminders',
@@ -45,7 +45,7 @@ class NotificationTypesCard extends StatelessWidget {
         value: preferences.reminders,
       ),
       (
-        setting: EmployerNotificationSetting.offersAndPromotions,
+        setting: NotificationSetting.offersAndPromotions,
         icon: Icons.local_offer_outlined,
         color: AppColors.error,
         title: 'Offers & Promotions',
@@ -53,7 +53,7 @@ class NotificationTypesCard extends StatelessWidget {
         value: preferences.offersAndPromotions,
       ),
       (
-        setting: EmployerNotificationSetting.appAnnouncements,
+        setting: NotificationSetting.appAnnouncements,
         icon: Icons.campaign_outlined,
         color: AppColors.employerSecondary,
         title: 'App Announcements',

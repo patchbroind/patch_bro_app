@@ -4,20 +4,20 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
 
-import '../../domain/repository/employer_notifications_repository.dart';
-import '../controllers/employer_notifications_state.dart';
+import '../../domain/repository/notifications_repository.dart';
+import '../controllers/notifications_state.dart';
 import '../providers/employer_notifications_providers.dart';
 import '../widgets/notification_master_card.dart';
 import '../widgets/notification_types_card.dart';
 
-class EmployerNotificationsPage extends ConsumerStatefulWidget {
-  const EmployerNotificationsPage({super.key});
+class NotificationsPage extends ConsumerStatefulWidget {
+  const NotificationsPage({super.key});
 
   @override
-  ConsumerState<EmployerNotificationsPage> createState() => _EmployerNotificationsPageState();
+  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
 }
 
-class _EmployerNotificationsPageState extends ConsumerState<EmployerNotificationsPage> {
+class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   @override
   void initState() {
     super.initState();
@@ -44,7 +44,7 @@ class _EmployerNotificationsPageState extends ConsumerState<EmployerNotification
     ref.read(employerNotificationsControllerProvider.notifier).loadNotificationPreferences();
   }
 
-  Future<void> _updateSetting(EmployerNotificationSetting setting, bool value) async {
+  Future<void> _updateSetting(NotificationSetting setting, bool value) async {
     try {
       await ref
           .read(employerNotificationsControllerProvider.notifier)
@@ -66,7 +66,7 @@ class _EmployerNotificationsPageState extends ConsumerState<EmployerNotification
     );
   }
 
-  Widget _buildBody(EmployerNotificationsState state) {
+  Widget _buildBody(NotificationsState state) {
     if (state.isLoading && !state.hasPreferences) {
       return const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary));
     }
@@ -103,9 +103,9 @@ class _EmployerNotificationsPageState extends ConsumerState<EmployerNotification
             children: [
               NotificationMasterCard(
                 value: preferences.pushNotifications,
-                isUpdating: state.updatingSetting == EmployerNotificationSetting.pushNotifications,
+                isUpdating: state.updatingSetting == NotificationSetting.pushNotifications,
                 onChanged: (value) =>
-                    _updateSetting(EmployerNotificationSetting.pushNotifications, value),
+                    _updateSetting(NotificationSetting.pushNotifications, value),
               ),
               const SizedBox(height: 24),
               Text(

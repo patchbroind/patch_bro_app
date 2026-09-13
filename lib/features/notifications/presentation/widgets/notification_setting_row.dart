@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
-import '../../domain/repository/employer_notifications_repository.dart';
+import '../../domain/repository/notifications_repository.dart';
 
 class NotificationSettingRow extends StatelessWidget {
   const NotificationSettingRow({
@@ -21,7 +21,7 @@ class NotificationSettingRow extends StatelessWidget {
   final String title;
   final String description;
   final bool value;
-  final EmployerNotificationSetting setting;
+  final NotificationSetting setting;
   final ValueChanged<bool> onChanged;
   final bool isUpdating;
 

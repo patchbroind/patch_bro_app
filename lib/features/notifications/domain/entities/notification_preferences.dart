@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
-class EmployerNotificationPreferences {
-  const EmployerNotificationPreferences({
+class NotificationPreferences {
+  const NotificationPreferences({
     this.pushNotifications = true,
     this.jobUpdates = true,
     this.messages = true,
@@ -18,7 +18,7 @@ class EmployerNotificationPreferences {
   final bool offersAndPromotions;
   final bool appAnnouncements;
 
-  EmployerNotificationPreferences copyWith({
+  NotificationPreferences copyWith({
     bool? pushNotifications,
     bool? jobUpdates,
     bool? messages,
@@ -26,7 +26,7 @@ class EmployerNotificationPreferences {
     bool? offersAndPromotions,
     bool? appAnnouncements,
   }) {
-    return EmployerNotificationPreferences(
+    return NotificationPreferences(
       pushNotifications: pushNotifications ?? this.pushNotifications,
       jobUpdates: jobUpdates ?? this.jobUpdates,
       messages: messages ?? this.messages,

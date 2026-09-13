@@ -1,34 +1,34 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/employer_notification_preferences.dart';
-import '../../domain/repository/employer_notifications_repository.dart';
+import '../../domain/entities/notification_preferences.dart';
+import '../../domain/repository/notifications_repository.dart';
 import '../providers/employer_notifications_providers.dart';
-import 'employer_notifications_state.dart';
+import 'notifications_state.dart';
 
-class EmployerNotificationsController extends Notifier<EmployerNotificationsState> {
-  EmployerNotificationsRepository get _repository {
+class NotificationsController extends Notifier<NotificationsState> {
+  NotificationsRepository get _repository {
     return ref.read(employerNotificationsRepositoryProvider);
   }
 
   @override
-  EmployerNotificationsState build() {
-    return const EmployerNotificationsState();
+  NotificationsState build() {
+    return const NotificationsState();
   }
 
   Future<void> loadNotificationPreferences() async {
     if (state.isLoading) return;
 
-    state = state.copyWith(status: EmployerNotificationsStatus.loading, clearError: true);
+    state = state.copyWith(status: NotificationsStatus.loading, clearError: true);
     try {
       final preferences = await _repository.getPreferences();
       state = state.copyWith(
-        status: EmployerNotificationsStatus.success,
+        status: NotificationsStatus.success,
         preferences: preferences,
         clearError: true,
       );
     } catch (error) {
       state = state.copyWith(
-        status: EmployerNotificationsStatus.failure,
+        status: NotificationsStatus.failure,
         errorMessage: error.toString(),
       );
     }
@@ -38,22 +38,22 @@ class EmployerNotificationsController extends Notifier<EmployerNotificationsStat
     try {
       final preferences = await _repository.getPreferences();
       state = state.copyWith(
-        status: EmployerNotificationsStatus.success,
+        status: NotificationsStatus.success,
         preferences: preferences,
         clearError: true,
       );
     } catch (error) {
       state = state.copyWith(
         status: state.hasPreferences
-            ? EmployerNotificationsStatus.success
-            : EmployerNotificationsStatus.failure,
+            ? NotificationsStatus.success
+            : NotificationsStatus.failure,
         errorMessage: error.toString(),
       );
       rethrow;
     }
   }
 
-  Future<void> updatePreference(EmployerNotificationSetting setting, bool enabled) async {
+  Future<void> updatePreference(NotificationSetting setting, bool enabled) async {
     final current = state.preferences;
     if (current == null || state.updatingSetting != null) return;
 
@@ -73,20 +73,20 @@ class EmployerNotificationsController extends Notifier<EmployerNotificationsStat
     }
   }
 
-  EmployerNotificationPreferences _copyPreference(
-    EmployerNotificationPreferences current,
-    EmployerNotificationSetting setting,
+  NotificationPreferences _copyPreference(
+    NotificationPreferences current,
+    NotificationSetting setting,
     bool enabled,
   ) {
     return switch (setting) {
-      EmployerNotificationSetting.pushNotifications => current.copyWith(pushNotifications: enabled),
-      EmployerNotificationSetting.jobUpdates => current.copyWith(jobUpdates: enabled),
-      EmployerNotificationSetting.messages => current.copyWith(messages: enabled),
-      EmployerNotificationSetting.reminders => current.copyWith(reminders: enabled),
-      EmployerNotificationSetting.offersAndPromotions => current.copyWith(
+      NotificationSetting.pushNotifications => current.copyWith(pushNotifications: enabled),
+      NotificationSetting.jobUpdates => current.copyWith(jobUpdates: enabled),
+      NotificationSetting.messages => current.copyWith(messages: enabled),
+      NotificationSetting.reminders => current.copyWith(reminders: enabled),
+      NotificationSetting.offersAndPromotions => current.copyWith(
         offersAndPromotions: enabled,
       ),
-      EmployerNotificationSetting.appAnnouncements => current.copyWith(appAnnouncements: enabled),
+      NotificationSetting.appAnnouncements => current.copyWith(appAnnouncements: enabled),
     };
   }
 }
