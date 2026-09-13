@@ -6,7 +6,7 @@ import 'package:patch_bro/core/widgets/app_error_view.dart';
 
 import '../../domain/repository/notifications_repository.dart';
 import '../controllers/notifications_state.dart';
-import '../providers/employer_notifications_providers.dart';
+import '../providers/notifications_providers.dart';
 import '../widgets/notification_master_card.dart';
 import '../widgets/notification_types_card.dart';
 
@@ -23,7 +23,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref.read(employerNotificationsControllerProvider.notifier).loadNotificationPreferences();
+        ref.read(notificationsControllerProvider.notifier).loadNotificationPreferences();
       }
     });
   }
@@ -31,7 +31,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   Future<void> _refresh() async {
     try {
       await ref
-          .read(employerNotificationsControllerProvider.notifier)
+          .read(notificationsControllerProvider.notifier)
           .refreshNotificationPreferences();
     } catch (_) {
       if (mounted) {
@@ -41,13 +41,13 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   }
 
   void _retry() {
-    ref.read(employerNotificationsControllerProvider.notifier).loadNotificationPreferences();
+    ref.read(notificationsControllerProvider.notifier).loadNotificationPreferences();
   }
 
   Future<void> _updateSetting(NotificationSetting setting, bool value) async {
     try {
       await ref
-          .read(employerNotificationsControllerProvider.notifier)
+          .read(notificationsControllerProvider.notifier)
           .updatePreference(setting, value);
     } catch (_) {
       if (mounted) {
@@ -58,7 +58,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(employerNotificationsControllerProvider);
+    final state = ref.watch(notificationsControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),

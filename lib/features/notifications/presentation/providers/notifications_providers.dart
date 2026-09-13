@@ -7,17 +7,17 @@ import '../../domain/repository/notifications_repository.dart';
 import '../controllers/notifications_controller.dart';
 import '../controllers/notifications_state.dart';
 
-final employerNotificationsDataSourceProvider = Provider<NotificationsLocalDataSource>((
+final notificationsDataSourceProvider = Provider<NotificationsLocalDataSource>((
   ref,
 ) {
   return NotificationsLocalDataSource(ref.read(supabaseClientProvider));
 });
 
-final employerNotificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
-  return NotificationsRepositoryImpl(ref.read(employerNotificationsDataSourceProvider));
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
+  return NotificationsRepositoryImpl(ref.read(notificationsDataSourceProvider));
 });
 
-final employerNotificationsControllerProvider =
+final notificationsControllerProvider =
     NotifierProvider<NotificationsController, NotificationsState>(
       NotificationsController.new,
     );
