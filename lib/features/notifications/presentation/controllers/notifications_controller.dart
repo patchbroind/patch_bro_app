@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/notification_preferences.dart';
 import '../../domain/repository/notifications_repository.dart';
-import '../providers/employer_notifications_providers.dart';
+import '../providers/notifications_providers.dart';
 import 'notifications_state.dart';
 
 class NotificationsController extends Notifier<NotificationsState> {
   NotificationsRepository get _repository {
-    return ref.read(employerNotificationsRepositoryProvider);
+    return ref.read(notificationsRepositoryProvider);
   }
 
   @override
