@@ -1,4 +1,3 @@
-```dart
 import 'package:dio/dio.dart';
 
 /// Application-level exception for API/network failures.
@@ -6,21 +5,14 @@ import 'package:dio/dio.dart';
 /// Feature repositories can catch this exception instead of depending
 /// directly on DioException.
 class ApiException implements Exception {
-  const ApiException({
-    required this.message,
-    this.statusCode,
-    this.data,
-    this.originalException,
-  });
+  const ApiException({required this.message, this.statusCode, this.data, this.originalException});
 
   final String message;
   final int? statusCode;
   final Object? data;
   final Object? originalException;
 
-  factory ApiException.fromDioException(
-    DioException exception,
-  ) {
+  factory ApiException.fromDioException(DioException exception) {
     final response = exception.response;
 
     return ApiException(
@@ -31,9 +23,7 @@ class ApiException implements Exception {
     );
   }
 
-  static String _resolveMessage(
-    DioException exception,
-  ) {
+  static String _resolveMessage(DioException exception) {
     final responseData = exception.response?.data;
 
     if (responseData is Map<String, dynamic>) {
@@ -70,18 +60,17 @@ class ApiException implements Exception {
         return 'Request was cancelled.';
 
       case DioExceptionType.badResponse:
-        return _badResponseMessage(
-          exception.response?.statusCode,
-        );
+        return _badResponseMessage(exception.response?.statusCode);
+
+      case DioExceptionType.transformTimeout:
+        return 'Response processing timed out. Please try again.';
 
       case DioExceptionType.unknown:
         return 'Something went wrong. Please try again.';
     }
   }
 
-  static String _badResponseMessage(
-    int? statusCode,
-  ) {
+  static String _badResponseMessage(int? statusCode) {
     switch (statusCode) {
       case 400:
         return 'Invalid request.';
@@ -123,4 +112,3 @@ class ApiException implements Exception {
         ')';
   }
 }
-```
