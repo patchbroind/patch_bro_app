@@ -1,4 +1,4 @@
-```dart
+
 /// Centralized API endpoint definitions.
 ///
 /// Keep endpoint paths here instead of scattering strings throughout
@@ -71,4 +71,4 @@ abstract final class ApiEndpoints {
 
   static const notifications = '/notifications';
 }
-```
+

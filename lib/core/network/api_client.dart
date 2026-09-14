@@ -1,4 +1,4 @@
-```dart
+
 import 'package:dio/dio.dart';
 
 import 'api_config.dart';
@@ -163,4 +163,4 @@ class ApiClient {
     return dio;
   }
 }
-```
+
