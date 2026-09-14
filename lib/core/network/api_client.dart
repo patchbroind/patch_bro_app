@@ -1,31 +1,95 @@
-
 import 'package:dio/dio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'api_config.dart';
 import 'api_exception.dart';
 
-/// Central HTTP client used by the application.
-///
-/// This class intentionally hides Dio from feature/domain layers.
-///
-/// Features should eventually communicate through this client instead
-/// of creating Dio instances themselves.
-///
-/// IMPORTANT:
-/// This client is being introduced now, but existing Supabase-based
-/// data sources are NOT being replaced yet.
 class ApiClient {
-  ApiClient({
-    Dio? dio,
-  }) : _dio = dio ?? _createDio();
+  ApiClient({Dio? dio}) : _dio = dio ?? _createDio();
 
   final Dio _dio;
 
   Dio get dio => _dio;
 
-  // ================================================================
-  // GET
-  // ================================================================
+  static Dio _createDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.fullBaseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        responseType: ResponseType.json,
+        contentType: 'application/json',
+        headers: {
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          try {
+            final supabase = Supabase.instance.client;
+
+            Session? session = supabase.auth.currentSession;
+
+            // No logged-in user.
+            if (session == null) {
+              return handler.reject(
+                DioException(
+                  requestOptions: options,
+                  type: DioExceptionType.cancel,
+                  error: ApiException(
+                    message: 'User is not authenticated',
+                    statusCode: 401,
+                  ),
+                ),
+              );
+            }
+
+            // Refresh the Supabase session if the access token expired.
+            if (session.isExpired) {
+              final response =
+                  await supabase.auth.refreshSession();
+
+              session = response.session;
+
+              if (session == null) {
+                return handler.reject(
+                  DioException(
+                    requestOptions: options,
+                    type: DioExceptionType.cancel,
+                    error: ApiException(
+                      message:
+                          'Session expired. Please login again.',
+                      statusCode: 401,
+                    ),
+                  ),
+                );
+              }
+            }
+
+            // Send the Supabase access token to our API.
+            options.headers['Authorization'] =
+                'Bearer ${session.accessToken}';
+
+            handler.next(options);
+          } catch (error) {
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.unknown,
+                error: error,
+              ),
+            );
+          }
+        },
+      ),
+    );
+
+    return dio;
+  }
 
   Future<Response<T>> get<T>(
     String path, {
@@ -45,16 +109,14 @@ class ApiClient {
     }
   }
 
-  // ================================================================
-  // POST
-  // ================================================================
-
   Future<Response<T>> post<T>(
     String path, {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
   }) async {
     try {
       return await _dio.post<T>(
@@ -63,15 +125,13 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
       );
     } on DioException catch (exception) {
       throw ApiException.fromDioException(exception);
     }
   }
-
-  // ================================================================
-  // PUT
-  // ================================================================
 
   Future<Response<T>> put<T>(
     String path, {
@@ -79,6 +139,8 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
   }) async {
     try {
       return await _dio.put<T>(
@@ -87,15 +149,13 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
       );
     } on DioException catch (exception) {
       throw ApiException.fromDioException(exception);
     }
   }
-
-  // ================================================================
-  // PATCH
-  // ================================================================
 
   Future<Response<T>> patch<T>(
     String path, {
@@ -103,6 +163,8 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
   }) async {
     try {
       return await _dio.patch<T>(
@@ -111,15 +173,13 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
       );
     } on DioException catch (exception) {
       throw ApiException.fromDioException(exception);
     }
   }
-
-  // ================================================================
-  // DELETE
-  // ================================================================
 
   Future<Response<T>> delete<T>(
     String path, {
@@ -140,27 +200,4 @@ class ApiClient {
       throw ApiException.fromDioException(exception);
     }
   }
-
-  // ================================================================
-  // DIO CREATION
-  // ================================================================
-
-  static Dio _createDio() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConfig.fullBaseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        responseType: ResponseType.json,
-        contentType: Headers.jsonContentType,
-        headers: const {
-          Headers.acceptHeader: Headers.jsonContentType,
-        },
-      ),
-    );
-
-    return dio;
-  }
 }
-
