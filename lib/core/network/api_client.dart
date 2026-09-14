@@ -12,6 +12,7 @@ class ApiClient {
   Dio get dio => _dio;
 
   static Dio _createDio() {
+    print('API BASE URL: ${ApiConfig.fullBaseUrl}');
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.fullBaseUrl,
