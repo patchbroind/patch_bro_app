@@ -308,17 +308,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
      *
      * API:
      *
-     * /api/v1/employer/jobs
+     * /employer/jobs
      *
      * Final:
      *
-     * /functions/v1/api/api/v1/employer/jobs
+     * /functions/v1/api/employer/jobs
      */
 
     const isCreateJobRoute =
       req.method === "POST" &&
       url.pathname.endsWith(
-        "/api/v1/employer/jobs",
+        "/employer/jobs",
       );
 
     if (!isCreateJobRoute) {
