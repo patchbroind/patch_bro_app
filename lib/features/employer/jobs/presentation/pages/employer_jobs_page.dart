@@ -8,6 +8,8 @@ import '../controllers/employer_jobs_state.dart';
 import '../providers/employer_jobs_providers.dart';
 import '../widgets/employer_job_card.dart';
 import '../widgets/employer_job_filter_tabs.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
 
 class EmployerJobsPage extends ConsumerStatefulWidget {
   const EmployerJobsPage({super.key});
@@ -49,6 +51,23 @@ class _EmployerJobsPageState extends ConsumerState<EmployerJobsPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(employerJobsControllerProvider);
+    ref.listen<PostJobState>(
+  postJobControllerProvider,
+  (previous, next) {
+    if (next.status ==
+            PostJobStatus.success &&
+        previous?.status !=
+            PostJobStatus.success) {
+      ref
+          .read(
+            employerJobsControllerProvider
+                .notifier,
+          )
+          .refreshJobs()
+          .catchError((_) {});
+    }
+  },
+);
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Jobs')),

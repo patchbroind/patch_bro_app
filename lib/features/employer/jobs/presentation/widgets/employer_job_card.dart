@@ -17,89 +17,112 @@ class EmployerJobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = switch (job.status) {
-      EmployerJobStatus.completed => AppColors.success,
-      EmployerJobStatus.active => AppColors.info,
-      EmployerJobStatus.cancelled => AppColors.textSecondary,
+    final statusColor =
+        switch (job.status) {
+      EmployerJobStatus.completed =>
+        AppColors.success,
+
+      EmployerJobStatus.active =>
+        AppColors.info,
+
+      EmployerJobStatus.cancelled =>
+        AppColors.textSecondary,
     };
 
     final dateLabel =
-        MaterialLocalizations.of(context).formatMediumDate(job.date);
+        MaterialLocalizations.of(context)
+            .formatMediumDate(job.date);
 
-    final amountLabel = '${job.currency} ${job.amount.toStringAsFixed(2)}';
+    final timeLabel =
+        MaterialLocalizations.of(context)
+            .formatTimeOfDay(
+      TimeOfDay.fromDateTime(job.time),
+    );
 
     return Container(
       decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.border,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
+        color: AppColors.surface,
+        borderRadius:
+            BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: AppTappableCard(
         onTap: onTap,
         color: AppColors.white,
-        padding: const EdgeInsets.symmetric(
+        padding:
+            const EdgeInsets.symmetric(
           horizontal: 10,
           vertical: 9,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment:
+              CrossAxisAlignment.center,
           children: [
-            // -----------------------------------------------------------------
-            // Job Image
-            // -----------------------------------------------------------------
             EmployerJobImage(
               imageUrl: job.imageUrl,
             ),
-      
+
             const SizedBox(width: 10),
-      
-            // -----------------------------------------------------------------
-            // Main Content
-            // -----------------------------------------------------------------
+
             Expanded(
               child: SizedBox(
                 height: 56,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  mainAxisAlignment:
+                      MainAxisAlignment.center,
                   children: [
-                    // Job title
                     Text(
                       job.title,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                            color:
+                                AppColors.textPrimary,
+                            fontWeight:
+                                FontWeight.w700,
                             fontSize: 12,
                           ),
                     ),
-      
+
                     const SizedBox(height: 3),
-      
-                    // Category
+
                     Text(
                       job.category,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                            color:
+                                AppColors.textSecondary,
                             fontSize: 10,
                           ),
                     ),
-      
+
                     const SizedBox(height: 2),
-      
-                    // Date
+
                     Text(
-                      dateLabel,
+                      '$dateLabel • $timeLabel',
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                            color:
+                                AppColors.textSecondary,
                             fontSize: 10,
                           ),
                     ),
@@ -107,56 +130,57 @@ class EmployerJobCard extends StatelessWidget {
                 ),
               ),
             ),
-      
+
             const SizedBox(width: 8),
-      
-            // -----------------------------------------------------------------
-            // Right Side
-            // -----------------------------------------------------------------
+
             SizedBox(
               width: 72,
               height: 56,
               child: Stack(
                 children: [
-                  // Status badge - Top Right
                   Positioned(
                     top: 0,
                     right: 0,
                     child: _StatusBadge(
-                      label: job.statusLabel,
-                      color: statusColor,
+                      label:
+                          job.statusLabel,
+                      color:
+                          statusColor,
                     ),
                   ),
-      
-                  // Amount - Bottom Right
+
                   Positioned(
                     bottom: 0,
                     right: 0,
+                    left: 0,
                     child: Text(
-                      amountLabel,
+                      job.locationAddress,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      textAlign:
+                          TextAlign.right,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                            color:
+                                AppColors.textSecondary,
+                            fontSize: 9,
                           ),
                     ),
                   ),
                 ],
               ),
             ),
-      
+
             const SizedBox(width: 5),
-      
-            // -----------------------------------------------------------------
-            // Chevron
-            // -----------------------------------------------------------------
-            Icon(
+
+            const Icon(
               Icons.chevron_right_rounded,
               size: 20,
-              color: AppColors.textSecondary,
+              color:
+                  AppColors.textSecondary,
             ),
           ],
         ),
@@ -165,7 +189,8 @@ class EmployerJobCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
+class _StatusBadge
+    extends StatelessWidget {
   const _StatusBadge({
     required this.label,
     required this.color,
@@ -177,21 +202,26 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(
+      constraints:
+          const BoxConstraints(
         maxWidth: 72,
       ),
-      padding: const EdgeInsets.symmetric(
+      padding:
+          const EdgeInsets.symmetric(
         horizontal: 6,
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(5),
+        color:
+            color.withValues(alpha: 0.10),
+        borderRadius:
+            BorderRadius.circular(5),
       ),
       child: Text(
         label,
         maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        overflow:
+            TextOverflow.ellipsis,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: color,
