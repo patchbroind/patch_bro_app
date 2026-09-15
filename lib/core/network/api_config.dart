@@ -27,7 +27,7 @@ abstract final class ApiConfig {
   );
 
   /// API version prefix.
-  static const apiVersion = '/api/v1';
+  static const apiVersion = '';
 
   /// Whether a Dio API base URL has been configured.
   static bool get isConfigured => baseUrl.isNotEmpty;
