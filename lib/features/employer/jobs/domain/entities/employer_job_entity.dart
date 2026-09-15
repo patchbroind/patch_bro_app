@@ -20,6 +20,7 @@ class EmployerJobEntity {
     this.latitude,
     this.longitude,
     this.imageUrl,
+    this.audioUrl,
   });
 
   final String id;
@@ -33,8 +34,15 @@ class EmployerJobEntity {
   final double? latitude;
   final double? longitude;
   final String? imageUrl;
+  final String? audioUrl;
 
   String get title => skill;
+
+  bool get hasVoiceDescription =>
+      audioUrl != null && audioUrl!.isNotEmpty;
+
+  bool get hasImages =>
+      imageUrl != null && imageUrl!.isNotEmpty;
 
   String get statusLabel {
     switch (status) {

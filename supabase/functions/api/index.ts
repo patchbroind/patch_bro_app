@@ -473,167 +473,196 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    /* ============================================================
- * GET EMPLOYER JOBS
- * ============================================================
- */
+    /*
+     * ============================================================
+     * GET EMPLOYER JOBS
+     * ============================================================
+     */
 
-if (req.method === "GET") {
-  const {
-    data: jobs,
-    error: jobsError,
-  } = await supabaseAdmin
-    .from("jobs")
-    .select(`
-      id,
-      employer_id,
-      category,
-      skill,
-      scheduled_date,
-      scheduled_time,
-      latitude,
-      longitude,
-      location_address,
-      description,
-      status,
-      created_at,
-      updated_at
-    `)
-    .eq("employer_id", userId)
-    .order("created_at", {
-      ascending: false,
-    });
+    if (req.method === "GET") {
+      const {
+        data: jobs,
+        error: jobsError,
+      } = await supabaseAdmin
+        .from("jobs")
+        .select(`
+          id,
+          employer_id,
+          category,
+          skill,
+          scheduled_date,
+          scheduled_time,
+          latitude,
+          longitude,
+          location_address,
+          description,
+          status,
+          created_at,
+          updated_at
+        `)
+        .eq("employer_id", userId)
+        .order("created_at", {
+          ascending: false,
+        });
 
-  if (jobsError) {
-    console.error(
-      "Employer jobs fetch failed:",
-      jobsError,
-    );
+      if (jobsError) {
+        console.error(
+          "Employer jobs fetch failed:",
+          jobsError,
+        );
 
-    return jsonCorsResponse(
-      {
-        success: false,
-        message: "Failed to fetch employer jobs",
-      },
-      500,
-    );
-  }
+        return jsonCorsResponse(
+          {
+            success: false,
+            message:
+              "Failed to fetch employer jobs",
+          },
+          500,
+        );
+      }
 
-  const jobRows =
-    Array.isArray(jobs)
-      ? (jobs as JobRow[])
-      : [];
+      const jobRows =
+        Array.isArray(jobs)
+          ? (jobs as JobRow[])
+          : [];
 
-  const jobIds =
-    jobRows.map((job) => job.id);
+      const jobIds =
+        jobRows.map((job) => job.id);
 
-  let media: Array<{
-    job_id: string;
-    media_type: string;
-    storage_path: string;
-    sort_order: number;
-  }> = [];
+      let media: Array<{
+        job_id: string;
+        media_type: string;
+        storage_path: string;
+        sort_order: number;
+      }> = [];
 
-  if (jobIds.length > 0) {
-    const {
-      data: mediaData,
-      error: mediaError,
-    } = await supabaseAdmin
-      .from("job_media")
-      .select(`
-        job_id,
-        media_type,
-        storage_path,
-        sort_order
-      `)
-      .in("job_id", jobIds)
-      .eq("media_type", "image")
-      .order("sort_order", {
-        ascending: true,
+      if (jobIds.length > 0) {
+        const {
+          data: mediaData,
+          error: mediaError,
+        } = await supabaseAdmin
+          .from("job_media")
+          .select(`
+            job_id,
+            media_type,
+            storage_path,
+            sort_order
+          `)
+          .in("job_id", jobIds)
+          .order("sort_order", {
+            ascending: true,
+          });
+
+        if (mediaError) {
+          console.error(
+            "Employer job media fetch failed:",
+            mediaError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Failed to fetch job media",
+            },
+            500,
+          );
+        }
+
+        media = mediaData ?? [];
+      }
+
+      const imageByJobId =
+        new Map<string, string>();
+
+      const audioByJobId =
+        new Map<string, string>();
+
+      for (const item of media) {
+        if (
+          imageByJobId.has(item.job_id) &&
+          audioByJobId.has(item.job_id)
+        ) {
+          continue;
+        }
+
+        const {
+          data: signedUrlData,
+          error: signedUrlError,
+        } = await supabaseAdmin.storage
+          .from(JOB_MEDIA_BUCKET)
+          .createSignedUrl(
+            item.storage_path,
+            3600,
+          );
+
+        if (signedUrlError) {
+          console.error(
+            "Job media signed URL failed:",
+            signedUrlError,
+          );
+
+          continue;
+        }
+
+        const signedUrl =
+          signedUrlData?.signedUrl;
+
+        if (!signedUrl) {
+          continue;
+        }
+
+        if (
+          item.media_type === "image" &&
+          !imageByJobId.has(item.job_id)
+        ) {
+          imageByJobId.set(
+            item.job_id,
+            signedUrl,
+          );
+        }
+
+        if (
+          item.media_type === "audio" &&
+          !audioByJobId.has(item.job_id)
+        ) {
+          audioByJobId.set(
+            item.job_id,
+            signedUrl,
+          );
+        }
+      }
+
+      const responseJobs =
+        jobRows.map((job) => ({
+          id: job.id,
+          category: job.category,
+          skill: job.skill,
+          scheduled_date:
+            job.scheduled_date,
+          scheduled_time:
+            job.scheduled_time,
+          latitude: job.latitude,
+          longitude: job.longitude,
+          location_address:
+            job.location_address,
+          description:
+            job.description ?? "",
+          status: job.status,
+          created_at: job.created_at,
+          updated_at: job.updated_at,
+          image_url:
+            imageByJobId.get(job.id) ?? null,
+          audio_url:
+            audioByJobId.get(job.id) ?? null,
+        }));
+
+      return jsonCorsResponse({
+        success: true,
+        message: "Jobs fetched successfully",
+        data: responseJobs,
       });
-
-    if (mediaError) {
-      console.error(
-        "Employer job media fetch failed:",
-        mediaError,
-      );
-
-      return jsonCorsResponse(
-        {
-          success: false,
-          message:
-            "Failed to fetch job media",
-        },
-        500,
-      );
     }
-
-    media = mediaData ?? [];
-  }
-
-  const imageByJobId =
-    new Map<string, string>();
-
-  for (const item of media) {
-    if (imageByJobId.has(item.job_id)) {
-      continue;
-    }
-
-    const {
-      data: signedUrlData,
-      error: signedUrlError,
-    } = await supabaseAdmin.storage
-      .from(JOB_MEDIA_BUCKET)
-      .createSignedUrl(
-        item.storage_path,
-        3600,
-      );
-
-    if (signedUrlError) {
-      console.error(
-        "Job image signed URL failed:",
-        signedUrlError,
-      );
-
-      continue;
-    }
-
-    if (signedUrlData?.signedUrl) {
-      imageByJobId.set(
-        item.job_id,
-        signedUrlData.signedUrl,
-      );
-    }
-  }
-
-  const responseJobs =
-    jobRows.map((job) => ({
-      id: job.id,
-      category: job.category,
-      skill: job.skill,
-      scheduled_date:
-        job.scheduled_date,
-      scheduled_time:
-        job.scheduled_time,
-      latitude: job.latitude,
-      longitude: job.longitude,
-      location_address:
-        job.location_address,
-      description:
-        job.description ?? "",
-      status: job.status,
-      created_at: job.created_at,
-      updated_at: job.updated_at,
-      image_url:
-        imageByJobId.get(job.id) ?? null,
-    }));
-
-  return jsonCorsResponse({
-    success: true,
-    message: "Jobs fetched successfully",
-    data: responseJobs,
-  });
-}
 
     /*
      * ============================================================

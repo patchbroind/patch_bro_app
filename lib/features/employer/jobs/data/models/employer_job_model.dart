@@ -13,6 +13,7 @@ class EmployerJobModel {
     this.latitude,
     this.longitude,
     this.imageUrl,
+    this.audioUrl,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class EmployerJobModel {
   final double? latitude;
   final double? longitude;
   final String? imageUrl;
+  final String? audioUrl;
 
   factory EmployerJobModel.fromJson(
     Map<String, dynamic> json,
@@ -59,6 +61,9 @@ class EmployerJobModel {
           _toNullableString(
         json['image_url'],
       ),
+      audioUrl: _toNullableString(
+        json['audio_url'],
+),
     );
   }
 
@@ -75,6 +80,7 @@ class EmployerJobModel {
       latitude: latitude,
       longitude: longitude,
       imageUrl: imageUrl,
+      audioUrl: audioUrl,
     );
   }
 
