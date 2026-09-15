@@ -1,32 +1,55 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
 
 import '../../domain/entities/employer_job_entity.dart';
+import '../models/employer_job_model.dart';
 
 class EmployerJobsRemoteDataSource {
-  EmployerJobsRemoteDataSource(this._supabase);
+  EmployerJobsRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   Future<List<EmployerJobEntity>> getEmployerJobs() async {
-    final user = _supabase.auth.currentUser;
+    final response =
+        await _apiClient.get<Map<String, dynamic>>(
+      ApiEndpoints.employerJobs,
+    );
 
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
+    final responseData = response.data;
+
+    if (responseData == null) {
+      throw Exception(
+        'Invalid response received from the server.',
+      );
     }
 
-    /*
-     * Temporary backend boundary: current migrations contain no jobs table,
-     * status contract, amount fields, or image fields. Return no jobs until
-     * that schema is defined rather than guessing table or column names.
-     * Replace only this method when the backend contract is available.
-     */
-    return  <EmployerJobEntity>[
-      //...............Temporary data.....................
-      EmployerJobEntity(id:"55" , title: "Maintain roof f ds fds fsdf sdf f  sdfsf", category: "Building", date: DateTime.now(), status:  EmployerJobStatus.active, amount: 100.0, currency: "USD"),
-      EmployerJobEntity(id:"55" , title: "Maintain roof", category: "Building", date: DateTime.now(), status:  EmployerJobStatus.completed, amount: 100.0, currency: "USD"),
-      EmployerJobEntity(id:"55" , title: "Maintain roof", category: "Building", date: DateTime.now(), status:  EmployerJobStatus.cancelled, amount: 100.0, currency: "USD")
-      //...............Temporary data.....................
+    if (responseData['success'] != true) {
+      throw Exception(
+        responseData['message']?.toString() ??
+            'Failed to fetch jobs.',
+      );
+    }
 
-      ];
+    final data = responseData['data'];
+
+    if (data is! List) {
+      throw Exception(
+        'Invalid jobs data received from the server.',
+      );
+    }
+
+    final models = data
+        .map(
+          (item) => EmployerJobModel.fromJson(
+            Map<String, dynamic>.from(
+              item as Map,
+            ),
+          ),
+        )
+        .toList();
+
+    return models
+        .map((model) => model.toEntity())
+        .toList();
   }
 }
