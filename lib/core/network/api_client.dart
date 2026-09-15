@@ -12,6 +12,7 @@ class ApiClient {
   Dio get dio => _dio;
 
   static Dio _createDio() {
+    print('API BASE URL: ${ApiConfig.fullBaseUrl}');
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.fullBaseUrl,
@@ -20,15 +21,14 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 60),
         responseType: ResponseType.json,
         contentType: 'application/json',
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: {'Accept': 'application/json'},
       ),
     );
 
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          print('DIO REQUEST: ${options.method} ${options.uri}');
           try {
             final supabase = Supabase.instance.client;
 
@@ -40,18 +40,14 @@ class ApiClient {
                 DioException(
                   requestOptions: options,
                   type: DioExceptionType.cancel,
-                  error: ApiException(
-                    message: 'User is not authenticated',
-                    statusCode: 401,
-                  ),
+                  error: ApiException(message: 'User is not authenticated', statusCode: 401),
                 ),
               );
             }
 
             // Refresh the Supabase session if the access token expired.
             if (session.isExpired) {
-              final response =
-                  await supabase.auth.refreshSession();
+              final response = await supabase.auth.refreshSession();
 
               session = response.session;
 
@@ -61,8 +57,7 @@ class ApiClient {
                     requestOptions: options,
                     type: DioExceptionType.cancel,
                     error: ApiException(
-                      message:
-                          'Session expired. Please login again.',
+                      message: 'Session expired. Please login again.',
                       statusCode: 401,
                     ),
                   ),
@@ -71,17 +66,12 @@ class ApiClient {
             }
 
             // Send the Supabase access token to our API.
-            options.headers['Authorization'] =
-                'Bearer ${session.accessToken}';
+            options.headers['Authorization'] = 'Bearer ${session.accessToken}';
 
             handler.next(options);
           } catch (error) {
             handler.reject(
-              DioException(
-                requestOptions: options,
-                type: DioExceptionType.unknown,
-                error: error,
-              ),
+              DioException(requestOptions: options, type: DioExceptionType.unknown, error: error),
             );
           }
         },
@@ -129,6 +119,12 @@ class ApiClient {
         onReceiveProgress: onReceiveProgress,
       );
     } on DioException catch (exception) {
+      print('DIO ERROR TYPE: ${exception.type}');
+      print('DIO ERROR MESSAGE: ${exception.message}');
+      print('DIO ERROR ERROR: ${exception.error}');
+      print('DIO ERROR URI: ${exception.requestOptions.uri}');
+      print('DIO ERROR STATUS: ${exception.response?.statusCode}');
+
       throw ApiException.fromDioException(exception);
     }
   }
