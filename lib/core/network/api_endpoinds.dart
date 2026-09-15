@@ -1,4 +1,3 @@
-
 /// Centralized API endpoint definitions.
 ///
 /// Keep endpoint paths here instead of scattering strings throughout
@@ -43,7 +42,6 @@ abstract final class ApiEndpoints {
   static const jobs = '/jobs';
 
   static String jobById(String id) => '/jobs/$id';
-
   // ================================================================
   // EMPLOYER
   // ================================================================
@@ -51,6 +49,8 @@ abstract final class ApiEndpoints {
   static const employerProfile = '/employer/profile';
 
   static const employerHome = '/employer/home';
+
+  static const employerJobs = '/employer/jobs';
 
   static const employerAddresses = '/employer/addresses';
 
@@ -62,8 +62,7 @@ abstract final class ApiEndpoints {
 
   static const employerTrust = '/employer/trust';
 
-  static const employerFavouriteWorkers =
-      '/employer/favourite-workers';
+  static const employerFavouriteWorkers = '/employer/favourite-workers';
 
   // ================================================================
   // NOTIFICATIONS
@@ -71,4 +70,3 @@ abstract final class ApiEndpoints {
 
   static const notifications = '/notifications';
 }
-
