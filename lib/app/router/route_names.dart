@@ -6,11 +6,17 @@ abstract final class RouteNames {
   // ============================================================
 
   static const splash = 'splash';
+
   static const login = 'login';
+
   static const signup = 'signup';
+
   static const otp = 'otp';
+
   static const profileDetails = 'profile-details';
+
   static const forgotPassword = 'forgot-password';
+
   static const resetPassword = 'reset-password';
 
   // ============================================================
@@ -18,10 +24,15 @@ abstract final class RouteNames {
   // ============================================================
 
   static const workerHome = 'worker-home';
+
   static const workerJobs = 'worker-jobs';
+
   static const workerProfile = 'worker-profile';
+
   static const workerEarnings = 'worker-earnings';
+
   static const workerAvailability = 'worker-availability';
+
   static const workerNotifications = 'worker-notifications';
 
   // ============================================================
@@ -29,16 +40,31 @@ abstract final class RouteNames {
   // ============================================================
 
   static const employerHome = 'employer-home';
+
   static const employerJobs = 'employer-jobs';
+
   static const employerPostJob = 'employer-post-job';
+
   static const employerWorkers = 'employer-workers';
+
+  static const employerWorkerProfile = 'employer-worker-profile';
+
   static const employerPayments = 'employer-payments';
+
   static const employerProfile = 'employer-profile';
+
   static const employerTrust = 'employer-trust';
+
   static const employerBenefit = 'employer-benefit';
+
   static const employerFavouriteWorkers = 'employer-favourite-workers';
-  static const employerPersonalInformation = 'employer-personal-information';
+
+  static const employerPersonalInformation =
+      'employer-personal-information';
+
   static const employerAddresses = 'employer-addresses';
+
   static const employerNotifications = 'employer-notifications';
+
   static const employerSettings = 'employer-settings';
 }
