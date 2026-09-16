@@ -18,17 +18,14 @@ import '../widgets/employer_workers_search_bar.dart';
 import '../widgets/employer_workers_tabs.dart';
 
 class EmployerWorkersPage extends ConsumerStatefulWidget {
-  const EmployerWorkersPage({
-    super.key,
-  });
+  const EmployerWorkersPage({super.key});
 
   @override
   ConsumerState<EmployerWorkersPage> createState() =>
       _EmployerWorkersPageState();
 }
 
-class _EmployerWorkersPageState
-    extends ConsumerState<EmployerWorkersPage> {
+class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   late final TextEditingController _searchController;
 
   @override
@@ -42,11 +39,7 @@ class _EmployerWorkersPageState
         return;
       }
 
-      ref
-          .read(
-            employerWorkersControllerProvider.notifier,
-          )
-          .loadWorkers();
+      ref.read(employerWorkersControllerProvider.notifier).loadWorkers();
     });
   }
 
@@ -61,9 +54,7 @@ class _EmployerWorkersPageState
   // ============================================================
 
   Future<void> _openFilter() async {
-    final currentFilters = ref
-        .read(employerWorkersControllerProvider)
-        .filters;
+    final currentFilters = ref.read(employerWorkersControllerProvider).filters;
 
     final result = await showModalBottomSheet<EmployerWorkersFilters>(
       context: context,
@@ -73,9 +64,7 @@ class _EmployerWorkersPageState
       builder: (_) {
         return FractionallySizedBox(
           heightFactor: 0.88,
-          child: EmployerWorkersFilterSheet(
-            initialFilters: currentFilters,
-          ),
+          child: EmployerWorkersFilterSheet(initialFilters: currentFilters),
         );
       },
     );
@@ -84,9 +73,7 @@ class _EmployerWorkersPageState
       return;
     }
 
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .updateFilters(result);
+    ref.read(employerWorkersControllerProvider.notifier).updateFilters(result);
   }
 
   // ============================================================
@@ -94,10 +81,7 @@ class _EmployerWorkersPageState
   // ============================================================
 
   void _openWorkerDetails(String workerId) {
-    context.pushNamed(
-      RouteNames.employerWorkerProfile,
-      extra: workerId,
-    );
+    context.pushNamed(RouteNames.employerWorkerProfile, extra: workerId);
   }
 
   // ============================================================
@@ -107,9 +91,7 @@ class _EmployerWorkersPageState
   Future<void> _toggleFavourite(String workerId) async {
     try {
       await ref
-          .read(
-            employerWorkersControllerProvider.notifier,
-          )
+          .read(employerWorkersControllerProvider.notifier)
           .toggleFavourite(workerId);
     } catch (_) {
       if (!mounted) {
@@ -130,9 +112,7 @@ class _EmployerWorkersPageState
   Future<void> _refresh() async {
     try {
       await ref
-          .read(
-            employerWorkersControllerProvider.notifier,
-          )
+          .read(employerWorkersControllerProvider.notifier)
           .refreshWorkers();
     } catch (_) {
       if (!mounted) {
@@ -152,9 +132,7 @@ class _EmployerWorkersPageState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(
-      employerWorkersControllerProvider,
-    );
+    final state = ref.watch(employerWorkersControllerProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -180,9 +158,7 @@ class _EmployerWorkersPageState
   // ============================================================
 
   void _openNotifications() {
-    context.pushNamed(
-      RouteNames.employerNotifications,
-    );
+    context.pushNamed(RouteNames.employerNotifications);
   }
 
   void _updateSearch(String value) {
@@ -192,9 +168,7 @@ class _EmployerWorkersPageState
   }
 
   void _selectTab(EmployerWorkersTab tab) {
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .selectTab(tab);
+    ref.read(employerWorkersControllerProvider.notifier).selectTab(tab);
   }
 
   void _selectCategory(String category) {
@@ -204,9 +178,7 @@ class _EmployerWorkersPageState
   }
 
   void _loadWorkers() {
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .loadWorkers();
+    ref.read(employerWorkersControllerProvider.notifier).loadWorkers();
   }
 }
 
@@ -251,8 +223,8 @@ class _WorkersContent extends StatelessWidget {
     if (state.isFailure && !state.hasWorkers) {
       return AppErrorView(
         title: 'Unable to load Workers',
-        message: state.errorMessage ??
-            'Please check your connection and try again.',
+        message:
+            state.errorMessage ?? 'Please check your connection and try again.',
         icon: Icons.cloud_off_outlined,
         onRetry: onRetry,
       );
@@ -263,16 +235,9 @@ class _WorkersContent extends StatelessWidget {
       onRefresh: onRefresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          14,
-          16,
-          28,
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
         children: [
-          EmployerWorkersHeader(
-            onNotificationTap: onNotificationTap,
-          ),
+          EmployerWorkersHeader(onNotificationTap: onNotificationTap),
           const SizedBox(height: 16),
           EmployerWorkersSearchBar(
             controller: searchController,
@@ -329,9 +294,7 @@ class _WorkerList extends StatelessWidget {
       children: [
         for (final worker in workers)
           Padding(
-            padding: const EdgeInsets.only(
-              bottom: 12,
-            ),
+            padding: const EdgeInsets.only(bottom: 12),
             child: EmployerWorkerCard(
               key: ValueKey(worker.id),
               worker: worker,
@@ -359,9 +322,7 @@ class _WorkersLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: CircularProgressIndicator(
-        color: AppColors.employerPrimary,
-      ),
+      child: CircularProgressIndicator(color: AppColors.employerPrimary),
     );
   }
 }

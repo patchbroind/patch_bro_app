@@ -5,10 +5,7 @@ import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import '../controllers/employer_workers_state.dart';
 
 class EmployerWorkersFilterSheet extends StatefulWidget {
-  const EmployerWorkersFilterSheet({
-    super.key,
-    required this.initialFilters,
-  });
+  const EmployerWorkersFilterSheet({super.key, required this.initialFilters});
 
   final EmployerWorkersFilters initialFilters;
 
@@ -51,9 +48,7 @@ class _EmployerWorkersFilterSheetState
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(28),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -74,10 +69,9 @@ class _EmployerWorkersFilterSheetState
                   Expanded(
                     child: Text(
                       'Filters',
-                      style:
-                          Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -99,8 +93,7 @@ class _EmployerWorkersFilterSheetState
                       spacing: 8,
                       runSpacing: 8,
                       children: categories.map((category) {
-                        final selected =
-                            _filters.category == category;
+                        final selected = _filters.category == category;
 
                         return _ChoiceChip(
                           label: category,
@@ -119,9 +112,9 @@ class _EmployerWorkersFilterSheetState
                     Text(
                       'Within ${_filters.distanceKm.round()} km',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Slider(
                       value: _filters.distanceKm,
@@ -130,9 +123,7 @@ class _EmployerWorkersFilterSheetState
                       divisions: 49,
                       activeColor: AppColors.employerPrimary,
                       onChanged: (value) {
-                        _updateFilters(
-                          _filters.copyWith(distanceKm: value),
-                        );
+                        _updateFilters(_filters.copyWith(distanceKm: value));
                       },
                     ),
                     Row(
@@ -152,18 +143,14 @@ class _EmployerWorkersFilterSheetState
                           label: 'Any',
                           selected: _filters.minimumRating == 0,
                           onTap: () {
-                            _updateFilters(
-                              _filters.copyWith(minimumRating: 0),
-                            );
+                            _updateFilters(_filters.copyWith(minimumRating: 0));
                           },
                         ),
                         _ChoiceChip(
                           label: '4.0+',
                           selected: _filters.minimumRating == 4,
                           onTap: () {
-                            _updateFilters(
-                              _filters.copyWith(minimumRating: 4),
-                            );
+                            _updateFilters(_filters.copyWith(minimumRating: 4));
                           },
                         ),
                         _ChoiceChip(
@@ -179,9 +166,7 @@ class _EmployerWorkersFilterSheetState
                           label: '5.0',
                           selected: _filters.minimumRating == 5,
                           onTap: () {
-                            _updateFilters(
-                              _filters.copyWith(minimumRating: 5),
-                            );
+                            _updateFilters(_filters.copyWith(minimumRating: 5));
                           },
                         ),
                       ],
@@ -194,33 +179,25 @@ class _EmployerWorkersFilterSheetState
                       selected: _filters.availability == 'Any time',
                       onTap: () {
                         _updateFilters(
-                          _filters.copyWith(
-                            availability: 'Any time',
-                          ),
+                          _filters.copyWith(availability: 'Any time'),
                         );
                       },
                     ),
                     _AvailabilityRadio(
                       label: 'Available today',
-                      selected:
-                          _filters.availability == 'Available today',
+                      selected: _filters.availability == 'Available today',
                       onTap: () {
                         _updateFilters(
-                          _filters.copyWith(
-                            availability: 'Available today',
-                          ),
+                          _filters.copyWith(availability: 'Available today'),
                         );
                       },
                     ),
                     _AvailabilityRadio(
                       label: 'Available tomorrow',
-                      selected:
-                          _filters.availability == 'Available tomorrow',
+                      selected: _filters.availability == 'Available tomorrow',
                       onTap: () {
                         _updateFilters(
-                          _filters.copyWith(
-                            availability: 'Available tomorrow',
-                          ),
+                          _filters.copyWith(availability: 'Available tomorrow'),
                         );
                       },
                     ),
@@ -235,9 +212,7 @@ class _EmployerWorkersFilterSheetState
                           selected: _filters.experience == 'Any',
                           onTap: () {
                             _updateFilters(
-                              _filters.copyWith(
-                                experience: 'Any',
-                              ),
+                              _filters.copyWith(experience: 'Any'),
                             );
                           },
                         ),
@@ -246,9 +221,7 @@ class _EmployerWorkersFilterSheetState
                           selected: _filters.experience == '1+ years',
                           onTap: () {
                             _updateFilters(
-                              _filters.copyWith(
-                                experience: '1+ years',
-                              ),
+                              _filters.copyWith(experience: '1+ years'),
                             );
                           },
                         ),
@@ -257,9 +230,7 @@ class _EmployerWorkersFilterSheetState
                           selected: _filters.experience == '3+ years',
                           onTap: () {
                             _updateFilters(
-                              _filters.copyWith(
-                                experience: '3+ years',
-                              ),
+                              _filters.copyWith(experience: '3+ years'),
                             );
                           },
                         ),
@@ -268,9 +239,7 @@ class _EmployerWorkersFilterSheetState
                           selected: _filters.experience == '5+ years',
                           onTap: () {
                             _updateFilters(
-                              _filters.copyWith(
-                                experience: '5+ years',
-                              ),
+                              _filters.copyWith(experience: '5+ years'),
                             );
                           },
                         ),
@@ -284,9 +253,7 @@ class _EmployerWorkersFilterSheetState
                       activeColor: AppColors.employerPrimary,
                       onChanged: (value) {
                         _updateFilters(
-                          _filters.copyWith(
-                            currentlyAvailableOnly: value,
-                          ),
+                          _filters.copyWith(currentlyAvailableOnly: value),
                         );
                       },
                     ),
@@ -298,19 +265,14 @@ class _EmployerWorkersFilterSheetState
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               decoration: const BoxDecoration(
                 color: AppColors.white,
-                border: Border(
-                  top: BorderSide(color: AppColors.border),
-                ),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.pop(
-                          context,
-                          const EmployerWorkersFilters(),
-                        );
+                        Navigator.pop(context, const EmployerWorkersFilters());
                       },
                       child: const Text('Reset'),
                     ),
@@ -339,18 +301,18 @@ class _EmployerWorkersFilterSheetState
     return Text(
       text,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 
   Widget _smallLabel(BuildContext context, String text) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
     );
   }
 }
@@ -372,25 +334,17 @@ class _ChoiceChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 10,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.employerPrimary
-              : const Color(0xFFF4F6F7),
+          color: selected ? AppColors.employerPrimary : const Color(0xFFF4F6F7),
           borderRadius: BorderRadius.circular(22),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color:
-                    selected ? AppColors.white : AppColors.textPrimary,
-                fontWeight: selected
-                    ? FontWeight.w700
-                    : FontWeight.w500,
-              ),
+            color: selected ? AppColors.white : AppColors.textPrimary,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -417,9 +371,7 @@ class _AvailabilityRadio extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_off,
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
               color: selected
                   ? AppColors.employerPrimary
                   : AppColors.textSecondary,
@@ -427,9 +379,9 @@ class _AvailabilityRadio extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
             ),
           ],
         ),

@@ -20,7 +20,9 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(employerWorkersControllerProvider);
 
-    final worker = ref.read(employerWorkersControllerProvider.notifier).workerById(workerId);
+    final worker = ref
+        .read(employerWorkersControllerProvider.notifier)
+        .workerById(workerId);
 
     if (worker == null) {
       return const Scaffold(body: Center(child: Text('Worker not found')));
@@ -52,7 +54,10 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
               const SizedBox(height: 22),
               EmployerWorkerDetailsSectionTitle(
                 title: 'Reviews',
-                trailing: TextButton(onPressed: () {}, child: const Text('See All')),
+                trailing: TextButton(
+                  onPressed: () {},
+                  child: const Text('See All'),
+                ),
               ),
               const SizedBox(height: 8),
               const EmployerWorkerDetailsReviewCard(),
@@ -65,11 +70,17 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
           ),
         ),
       ),
-      bottomSheet: EmployerWorkerDetailsInviteBar(onInvite: () => _handleInvite(context)),
+      bottomSheet: EmployerWorkerDetailsInviteBar(
+        onInvite: () => _handleInvite(context),
+      ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, WidgetRef ref, bool isFavourite) {
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    WidgetRef ref,
+    bool isFavourite,
+  ) {
     return AppBar(
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -79,10 +90,14 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
       actions: [
         IconButton(
           onPressed: () {
-            ref.read(employerWorkersControllerProvider.notifier).toggleFavourite(workerId);
+            ref
+                .read(employerWorkersControllerProvider.notifier)
+                .toggleFavourite(workerId);
           },
           icon: Icon(
-            isFavourite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            isFavourite
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
             color: isFavourite ? AppColors.error : AppColors.textPrimary,
           ),
         ),
@@ -92,7 +107,9 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
 
   void _handleInvite(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invite flow will be connected to the job backend next.')),
+      const SnackBar(
+        content: Text('Invite flow will be connected to the job backend next.'),
+      ),
     );
   }
 }
@@ -106,9 +123,10 @@ class _AboutText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(height: 1.5, color: AppColors.textSecondary),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        height: 1.5,
+        color: AppColors.textSecondary,
+      ),
     );
   }
 }

@@ -4,10 +4,7 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
 class EmployerWorkerDetailsStats extends StatelessWidget {
-  const EmployerWorkerDetailsStats({
-    super.key,
-    required this.worker,
-  });
+  const EmployerWorkerDetailsStats({super.key, required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -41,10 +38,7 @@ class EmployerWorkerDetailsStats extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.value,
-    required this.label,
-  });
+  const _StatCard({required this.value, required this.label});
 
   final String value;
   final String label;
@@ -54,10 +48,7 @@ class _StatCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFFF7F8F8),
         borderRadius: BorderRadius.circular(14),

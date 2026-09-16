@@ -9,20 +9,18 @@ import '../controllers/employer_workers_state.dart';
 
 final employerWorkersRemoteDataSourceProvider =
     Provider<EmployerWorkersRemoteDataSource>((ref) {
-  return EmployerWorkersRemoteDataSource(
-    ref.read(supabaseClientProvider),
-  );
-});
+      return EmployerWorkersRemoteDataSource(ref.read(supabaseClientProvider));
+    });
 
-final employerWorkersRepositoryProvider =
-    Provider<EmployerWorkersRepository>((ref) {
+final employerWorkersRepositoryProvider = Provider<EmployerWorkersRepository>((
+  ref,
+) {
   return EmployerWorkersRepositoryImpl(
     ref.read(employerWorkersRemoteDataSourceProvider),
   );
 });
 
-final employerWorkersControllerProvider = NotifierProvider<
-    EmployerWorkersController,
-    EmployerWorkersState>(
-  EmployerWorkersController.new,
-);
+final employerWorkersControllerProvider =
+    NotifierProvider<EmployerWorkersController, EmployerWorkersState>(
+      EmployerWorkersController.new,
+    );

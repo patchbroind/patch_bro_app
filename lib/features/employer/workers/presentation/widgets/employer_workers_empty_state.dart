@@ -3,18 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
 class EmployerWorkersEmptyState extends StatelessWidget {
-  const EmployerWorkersEmptyState({
-    super.key,
-  });
+  const EmployerWorkersEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 90,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 90),
       child: Column(
         children: [
           const Icon(

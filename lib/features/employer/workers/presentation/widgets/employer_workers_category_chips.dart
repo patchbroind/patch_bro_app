@@ -49,12 +49,9 @@ class EmployerWorkersCategoryChips extends StatelessWidget {
               child: Text(
                 category,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: selected
-                          ? AppColors.white
-                          : AppColors.textPrimary,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  color: selected ? AppColors.white : AppColors.textPrimary,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           );
