@@ -3,145 +3,264 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
 
+import '../../domain/entities/employer_job_entity.dart';
 import '../controllers/employer_jobs_state.dart';
 import '../providers/employer_jobs_providers.dart';
 import '../widgets/employer_job_card.dart';
 import '../widgets/employer_job_filter_tabs.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
+import 'employer_job_details_page.dart';
 
-class EmployerJobsPage extends ConsumerStatefulWidget {
-  const EmployerJobsPage({super.key});
+class EmployerJobsPage
+    extends ConsumerStatefulWidget {
+  const EmployerJobsPage({
+    super.key,
+  });
 
   @override
-  ConsumerState<EmployerJobsPage> createState() => _EmployerJobsPageState();
+  ConsumerState<EmployerJobsPage>
+      createState() =>
+          _EmployerJobsPageState();
 }
 
-class _EmployerJobsPageState extends ConsumerState<EmployerJobsPage> {
+class _EmployerJobsPageState
+    extends ConsumerState<EmployerJobsPage> {
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
 
-      ref.read(employerJobsControllerProvider.notifier).loadJobs();
-    });
-  }
-
-  Future<void> _refresh() async {
-    try {
-      await ref.read(employerJobsControllerProvider.notifier).refreshJobs();
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      AppSnackbar.error(context, 'Unable to refresh jobs. Please try again.');
-    }
-  }
-
-  void _retry() {
-    ref.read(employerJobsControllerProvider.notifier).loadJobs();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(employerJobsControllerProvider);
-    ref.listen<PostJobState>(
-  postJobControllerProvider,
-  (previous, next) {
-    if (next.status ==
-            PostJobStatus.success &&
-        previous?.status !=
-            PostJobStatus.success) {
       ref
           .read(
             employerJobsControllerProvider
                 .notifier,
           )
-          .refreshJobs()
-          .catchError((_) {});
+          .loadJobs();
+    });
+  }
+
+  Future<void> _refresh() async {
+    try {
+      await ref
+          .read(
+            employerJobsControllerProvider
+                .notifier,
+          )
+          .refreshJobs();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      AppSnackbar.error(
+        context,
+        'Unable to refresh jobs. Please try again.',
+      );
     }
-  },
-);
+  }
+
+  void _retry() {
+    ref
+        .read(
+          employerJobsControllerProvider
+              .notifier,
+        )
+        .loadJobs();
+  }
+
+  void _openJobDetails(
+    EmployerJobEntity job,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            EmployerJobDetailsPage(
+          job: job,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state =
+        ref.watch(
+      employerJobsControllerProvider,
+    );
+
+    ref.listen<PostJobState>(
+      postJobControllerProvider,
+      (previous, next) {
+        if (next.status ==
+                PostJobStatus.success &&
+            previous?.status !=
+                PostJobStatus.success) {
+          ref
+              .read(
+                employerJobsControllerProvider
+                    .notifier,
+              )
+              .refreshJobs()
+              .catchError(
+                (_) {},
+              );
+        }
+      },
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Jobs')),
+      appBar: AppBar(
+        title: const Text('My Jobs'),
+      ),
       body: _buildBody(state),
     );
   }
 
-  Widget _buildBody(EmployerJobsState state) {
-    if (state.isLoading && !state.hasJobs) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary));
+  Widget _buildBody(
+    EmployerJobsState state,
+  ) {
+    if (state.isLoading &&
+        !state.hasJobs) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color:
+              AppColors.employerPrimary,
+        ),
+      );
     }
 
-    if (state.isFailure && !state.hasJobs) {
+    if (state.isFailure &&
+        !state.hasJobs) {
       return AppErrorView(
         title: 'Unable to load Jobs',
-        message: state.errorMessage ?? 'Please check your connection and try again.',
-        icon: Icons.cloud_off_outlined,
+        message:
+            state.errorMessage ??
+                'Please check your connection and try again.',
+        icon:
+            Icons.cloud_off_outlined,
         onRetry: _retry,
       );
     }
 
     return RefreshIndicator(
-      color: AppColors.employerPrimary,
+      color:
+          AppColors.employerPrimary,
       onRefresh: _refresh,
       child: _JobsContent(
         state: state,
-        onFilterSelected: (filter) {
-          ref.read(employerJobsControllerProvider.notifier).selectFilter(filter);
+        onFilterSelected:
+            (filter) {
+          ref
+              .read(
+                employerJobsControllerProvider
+                    .notifier,
+              )
+              .selectFilter(
+                filter,
+              );
         },
+        onJobTap: _openJobDetails,
       ),
     );
   }
 }
 
-class _JobsContent extends StatelessWidget {
-  const _JobsContent({required this.state, required this.onFilterSelected});
+class _JobsContent
+    extends StatelessWidget {
+  const _JobsContent({
+    required this.state,
+    required this.onFilterSelected,
+    required this.onJobTap,
+  });
 
   final EmployerJobsState state;
-  final ValueChanged<EmployerJobsFilter> onFilterSelected;
+
+  final ValueChanged<
+      EmployerJobsFilter>
+      onFilterSelected;
+
+  final ValueChanged<
+      EmployerJobEntity>
+      onJobTap;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final horizontalPadding = constraints.maxWidth >= 600 ? 24.0 : 16.0;
-        final jobs = state.filteredJobs;
+      builder:
+          (context, constraints) {
+        final horizontalPadding =
+            constraints.maxWidth >=
+                    600
+                ? 24.0
+                : 16.0;
 
-        final hasJobs = jobs.isNotEmpty;
+        final jobs =
+            state.filteredJobs;
+
+        final hasJobs =
+            jobs.isNotEmpty;
 
         return ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 28),
-          itemCount: hasJobs ? jobs.length + 2 : 3,
-          itemBuilder: (context, index) {
+          physics:
+              const AlwaysScrollableScrollPhysics(),
+          padding:
+              EdgeInsets.fromLTRB(
+            horizontalPadding,
+            12,
+            horizontalPadding,
+            28,
+          ),
+          itemCount:
+              hasJobs
+                  ? jobs.length + 2
+                  : 3,
+          itemBuilder:
+              (context, index) {
             if (index == 0) {
               return EmployerJobFilterTabs(
-                selectedFilter: state.filter,
-                onSelected: onFilterSelected,
+                selectedFilter:
+                    state.filter,
+                onSelected:
+                    onFilterSelected,
               );
             }
 
             if (index == 1) {
-              return const SizedBox(height: 18);
+              return const SizedBox(
+                height: 18,
+              );
             }
 
             if (!hasJobs) {
-              return _JobsEmptyState(filter: state.filter);
+              return _JobsEmptyState(
+                filter:
+                    state.filter,
+              );
             }
 
-            final job = jobs[index - 2];
+            final job =
+                jobs[index - 2];
+
             return Padding(
-              key: ValueKey(job.id),
-              padding: const EdgeInsets.only(bottom: 12),
-              child: EmployerJobCard(job: job),
+              key: ValueKey(
+                job.id,
+              ),
+              padding:
+                  const EdgeInsets.only(
+                bottom: 12,
+              ),
+              child: EmployerJobCard(
+                job: job,
+                onTap: () =>
+                    onJobTap(job),
+              ),
             );
           },
         );
@@ -150,33 +269,59 @@ class _JobsContent extends StatelessWidget {
   }
 }
 
-class _JobsEmptyState extends StatelessWidget {
-  const _JobsEmptyState({required this.filter});
+class _JobsEmptyState
+    extends StatelessWidget {
+  const _JobsEmptyState({
+    required this.filter,
+  });
 
   final EmployerJobsFilter filter;
 
   @override
-  Widget build(BuildContext context) {
-    final message = switch (filter) {
-      EmployerJobsFilter.all => 'No jobs found',
-      EmployerJobsFilter.active => 'No active jobs',
-      EmployerJobsFilter.completed => 'No completed jobs',
-      EmployerJobsFilter.cancelled => 'No cancelled jobs',
+  Widget build(
+    BuildContext context,
+  ) {
+    final message =
+        switch (filter) {
+      EmployerJobsFilter.all =>
+        'No jobs found',
+      EmployerJobsFilter.active =>
+        'No active jobs',
+      EmployerJobsFilter.completed =>
+        'No completed jobs',
+      EmployerJobsFilter.cancelled =>
+        'No cancelled jobs',
     };
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 72),
+      padding:
+          const EdgeInsets.symmetric(
+        vertical: 72,
+      ),
       child: Column(
         children: [
-          const Icon(Icons.work_outline, size: 42, color: AppColors.imagePlaceholderIcon),
-          const SizedBox(height: 12),
+          const Icon(
+            Icons.work_outline,
+            size: 42,
+            color:
+                AppColors.imagePlaceholderIcon,
+          ),
+          const SizedBox(
+            height: 12,
+          ),
           Text(
             message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
+            textAlign:
+                TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(
+                  color:
+                      AppColors.textSecondary,
+                  fontWeight:
+                      FontWeight.w600,
+                ),
           ),
         ],
       ),

@@ -10,6 +10,8 @@ class EmployerJobModel {
     required this.locationAddress,
     required this.description,
     required this.status,
+    required this.createdAt,
+    required this.updatedAt,
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -24,6 +26,8 @@ class EmployerJobModel {
   final String locationAddress;
   final String description;
   final EmployerJobStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
   final double? latitude;
   final double? longitude;
   final String? imageUrl;
@@ -33,7 +37,7 @@ class EmployerJobModel {
     Map<String, dynamic> json,
   ) {
     return EmployerJobModel(
-      id: json['id'].toString(),
+      id: json['id']?.toString() ?? '',
       category:
           json['category']?.toString() ?? '',
       skill:
@@ -51,19 +55,24 @@ class EmployerJobModel {
       status: _parseStatus(
         json['status'],
       ),
+      createdAt: _parseDateTime(
+        json['created_at'],
+      ),
+      updatedAt: _parseDateTime(
+        json['updated_at'],
+      ),
       latitude: _toDouble(
         json['latitude'],
       ),
       longitude: _toDouble(
         json['longitude'],
       ),
-      imageUrl:
-          _toNullableString(
+      imageUrl: _toNullableString(
         json['image_url'],
       ),
       audioUrl: _toNullableString(
         json['audio_url'],
-),
+      ),
     );
   }
 
@@ -77,6 +86,8 @@ class EmployerJobModel {
       locationAddress: locationAddress,
       description: description,
       status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       latitude: latitude,
       longitude: longitude,
       imageUrl: imageUrl,
@@ -98,6 +109,22 @@ class EmployerJobModel {
     }
 
     return parsed;
+  }
+
+  static DateTime _parseDateTime(
+    dynamic value,
+  ) {
+    final parsed = DateTime.tryParse(
+      value?.toString() ?? '',
+    );
+
+    if (parsed == null) {
+      throw const FormatException(
+        'Invalid job timestamp.',
+      );
+    }
+
+    return parsed.toLocal();
   }
 
   static DateTime _parseTime(
