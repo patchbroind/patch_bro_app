@@ -284,12 +284,13 @@ as $$
 
     case
       when employer_profile.location is not null
-       and p.location is not null
+        and p.location is not null
       then round(
         (
-          extensions.st_distance(
+          public.st_distance(
             employer_profile.location,
-            p.location
+            p.location,
+            true
           ) / 1000
         )::numeric,
         1
