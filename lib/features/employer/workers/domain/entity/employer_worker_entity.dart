@@ -21,11 +21,13 @@ class EmployerWorkerEntity {
     this.availabilityDays = const [],
     this.location = '',
     this.phone = '',
+    this.verified = false,
   });
 
   final String id;
   final String name;
   final String profession;
+
   final double rating;
   final int reviewCount;
   final double distanceKm;
@@ -48,6 +50,8 @@ class EmployerWorkerEntity {
   final String location;
   final String phone;
 
+  final bool verified;
+
   EmployerWorkerEntity copyWith({
     String? id,
     String? name,
@@ -67,6 +71,7 @@ class EmployerWorkerEntity {
     List<String>? availabilityDays,
     String? location,
     String? phone,
+    bool? verified,
   }) {
     return EmployerWorkerEntity(
       id: id ?? this.id,
@@ -87,6 +92,7 @@ class EmployerWorkerEntity {
       availabilityDays: availabilityDays ?? this.availabilityDays,
       location: location ?? this.location,
       phone: phone ?? this.phone,
+      verified: verified ?? this.verified,
     );
   }
 }

@@ -21,26 +21,17 @@ class EmployerWorkersSearchBar extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _SearchField(
-            controller: controller,
-            onChanged: onChanged,
-          ),
+          child: _SearchField(controller: controller, onChanged: onChanged),
         ),
         const SizedBox(width: 8),
-        _FilterButton(
-          onTap: onFilterTap,
-          filterCount: filterCount,
-        ),
+        _FilterButton(onTap: onFilterTap, filterCount: filterCount),
       ],
     );
   }
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _SearchField({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -55,9 +46,9 @@ class _SearchField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Search workers, skills or services...',
-          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+          hintStyle: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           prefixIcon: const Icon(
             Icons.search_rounded,
             color: AppColors.textSecondary,
@@ -74,26 +65,18 @@ class _SearchField extends StatelessWidget {
                   controller.clear();
                   onChanged('');
                 },
-                icon: const Icon(
-                  Icons.close_rounded,
-                ),
+                icon: const Icon(Icons.close_rounded),
               );
             },
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 12,
-          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(
-              color: AppColors.border,
-            ),
+            borderSide: const BorderSide(color: AppColors.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(
-              color: AppColors.border,
-            ),
+            borderSide: const BorderSide(color: AppColors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
@@ -111,10 +94,7 @@ class _SearchField extends StatelessWidget {
 }
 
 class _FilterButton extends StatelessWidget {
-  const _FilterButton({
-    required this.onTap,
-    required this.filterCount,
-  });
+  const _FilterButton({required this.onTap, required this.filterCount});
 
   final VoidCallback onTap;
   final int filterCount;
@@ -133,11 +113,7 @@ class _FilterButton extends StatelessWidget {
             child: const SizedBox(
               width: 48,
               height: 48,
-              child: Icon(
-                Icons.tune_rounded,
-                color: AppColors.white,
-                size: 22,
-              ),
+              child: Icon(Icons.tune_rounded, color: AppColors.white, size: 22),
             ),
           ),
         ),

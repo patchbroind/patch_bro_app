@@ -75,9 +75,7 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // ============================================================
 
   void selectTab(EmployerWorkersTab tab) {
-    state = state.copyWith(
-      selectedTab: tab,
-    );
+    state = state.copyWith(selectedTab: tab);
   }
 
   // ============================================================
@@ -85,9 +83,7 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // ============================================================
 
   void updateSearchQuery(String value) {
-    state = state.copyWith(
-      searchQuery: value,
-    );
+    state = state.copyWith(searchQuery: value);
   }
 
   // ============================================================
@@ -97,9 +93,7 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   void selectCategory(String category) {
     state = state.copyWith(
       selectedCategory: category,
-      filters: state.filters.copyWith(
-        category: category,
-      ),
+      filters: state.filters.copyWith(category: category),
     );
   }
 
@@ -140,17 +134,12 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
 
     final worker = state.workers[workerIndex];
 
-    state = state.copyWith(
-      togglingWorkerId: workerId,
-      clearError: true,
-    );
+    state = state.copyWith(togglingWorkerId: workerId, clearError: true);
 
     try {
       await _repository.toggleFavourite(workerId);
 
-      final updatedWorker = worker.copyWith(
-        isFavourite: !worker.isFavourite,
-      );
+      final updatedWorker = worker.copyWith(isFavourite: !worker.isFavourite);
 
       final updatedWorkers = [...state.workers];
 

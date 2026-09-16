@@ -4,22 +4,11 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
 class EmployerWorkerDetailsAvailability extends StatelessWidget {
-  const EmployerWorkerDetailsAvailability({
-    super.key,
-    required this.worker,
-  });
+  const EmployerWorkerDetailsAvailability({super.key, required this.worker});
 
   final EmployerWorkerEntity worker;
 
-  static const _days = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
+  static const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +18,8 @@ class EmployerWorkerDetailsAvailability extends StatelessWidget {
 
         return Expanded(
           child: Container(
-            margin: EdgeInsets.only(
-              right: day == _days.last ? 0 : 5,
-            ),
-            padding: const EdgeInsets.symmetric(
-              vertical: 10,
-            ),
+            margin: EdgeInsets.only(right: day == _days.last ? 0 : 5),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: available
                   ? AppColors.employerLight
@@ -46,16 +31,14 @@ class EmployerWorkerDetailsAvailability extends StatelessWidget {
                 Text(
                   day,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                      ),
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Icon(
-                  available
-                      ? Icons.check_rounded
-                      : Icons.remove_rounded,
+                  available ? Icons.check_rounded : Icons.remove_rounded,
                   size: 15,
                   color: available
                       ? AppColors.employerPrimary

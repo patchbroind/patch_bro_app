@@ -24,9 +24,7 @@ class EmployerWorkerDetailsReviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,9 +33,7 @@ class EmployerWorkerDetailsReviewCard extends StatelessWidget {
             children: [
               const CircleAvatar(
                 radius: 18,
-                child: Icon(
-                  Icons.person_outline_rounded,
-                ),
+                child: Icon(Icons.person_outline_rounded),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -55,9 +51,7 @@ class EmployerWorkerDetailsReviewCard extends StatelessWidget {
                 color: AppColors.warning,
               ),
               const SizedBox(width: 2),
-              Text(
-                rating.toStringAsFixed(1),
-              ),
+              Text(rating.toStringAsFixed(1)),
             ],
           ),
           const SizedBox(height: 8),

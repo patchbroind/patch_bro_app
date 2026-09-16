@@ -4,7 +4,6 @@ import 'package:patch_bro/core/widgets/app_tappable_card.dart';
 import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
-
 class EmployerWorkerCard extends StatelessWidget {
   const EmployerWorkerCard({
     super.key,
@@ -24,14 +23,14 @@ class EmployerWorkerCard extends StatelessWidget {
     final availabilityText = worker.isAvailableToday
         ? 'Available today'
         : worker.availableTomorrow
-            ? 'Available tomorrow'
-            : 'Currently unavailable';
+        ? 'Available tomorrow'
+        : 'Currently unavailable';
 
     final availabilityColor = worker.isAvailableToday
         ? AppColors.success
         : worker.availableTomorrow
-            ? AppColors.info
-            : AppColors.textSecondary;
+        ? AppColors.info
+        : AppColors.textSecondary;
 
     return Container(
       decoration: BoxDecoration(
@@ -74,10 +73,7 @@ class EmployerWorkerCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.white,
-                          width: 2,
-                        ),
+                        border: Border.all(color: AppColors.white, width: 2),
                       ),
                     ),
                   ),
@@ -96,9 +92,7 @@ class EmployerWorkerCard extends StatelessWidget {
                           worker.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w700,
@@ -111,8 +105,7 @@ class EmployerWorkerCard extends StatelessWidget {
                         height: 40,
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          onPressed:
-                              isToggling ? null : onToggleFavourite,
+                          onPressed: isToggling ? null : onToggleFavourite,
                           tooltip: worker.isFavourite
                               ? 'Remove favourite'
                               : 'Add favourite',
@@ -141,8 +134,8 @@ class EmployerWorkerCard extends StatelessWidget {
                   Text(
                     worker.profession,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Row(
@@ -156,9 +149,9 @@ class EmployerWorkerCard extends StatelessWidget {
                       Text(
                         worker.rating.toStringAsFixed(1),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -166,10 +159,8 @@ class EmployerWorkerCard extends StatelessWidget {
                           '(${worker.reviewCount} reviews)',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ),
                     ],
@@ -185,10 +176,9 @@ class EmployerWorkerCard extends StatelessWidget {
                       const SizedBox(width: 3),
                       Text(
                         '${worker.distanceKm.toStringAsFixed(1)} km away',
-                        style:
-                            Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -204,11 +194,10 @@ class EmployerWorkerCard extends StatelessWidget {
                     ),
                     child: Text(
                       availabilityText,
-                      style:
-                          Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: availabilityColor,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: availabilityColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 7),
@@ -227,12 +216,12 @@ class EmployerWorkerCard extends StatelessWidget {
                         ),
                         child: Text(
                           skill,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       );
                     }).toList(),

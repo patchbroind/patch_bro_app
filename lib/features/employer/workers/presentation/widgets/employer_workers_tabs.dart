@@ -29,9 +29,7 @@ class EmployerWorkersTabs extends StatelessWidget {
               label: 'Workers',
               selected: selectedTab == EmployerWorkersTab.workers,
               onTap: () {
-                onChanged(
-                  EmployerWorkersTab.workers,
-                );
+                onChanged(EmployerWorkersTab.workers);
               },
             ),
           ),
@@ -40,9 +38,7 @@ class EmployerWorkersTabs extends StatelessWidget {
               label: 'Favourite Workers',
               selected: selectedTab == EmployerWorkersTab.favourites,
               onTap: () {
-                onChanged(
-                  EmployerWorkersTab.favourites,
-                );
+                onChanged(EmployerWorkersTab.favourites);
               },
             ),
           ),
@@ -71,26 +67,18 @@ class _TabItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
-          duration: const Duration(
-            milliseconds: 180,
-          ),
+          duration: const Duration(milliseconds: 180),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.employerPrimary
-                : Colors.transparent,
+            color: selected ? AppColors.employerPrimary : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: selected
-                      ? AppColors.white
-                      : AppColors.textPrimary,
-                  fontWeight: selected
-                      ? FontWeight.w700
-                      : FontWeight.w600,
-                ),
+              color: selected ? AppColors.white : AppColors.textPrimary,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            ),
           ),
         ),
       ),

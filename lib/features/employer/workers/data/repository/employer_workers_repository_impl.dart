@@ -2,7 +2,6 @@ import 'package:patch_bro/features/employer/workers/data/datasource/employer_wor
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 import 'package:patch_bro/features/employer/workers/domain/repository/employer_workers_repository.dart';
 
-
 class EmployerWorkersRepositoryImpl implements EmployerWorkersRepository {
   EmployerWorkersRepositoryImpl(this._remoteDataSource);
 

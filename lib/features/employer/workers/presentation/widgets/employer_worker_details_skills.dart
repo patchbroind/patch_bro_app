@@ -4,10 +4,7 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
 class EmployerWorkerDetailsSkills extends StatelessWidget {
-  const EmployerWorkerDetailsSkills({
-    super.key,
-    required this.worker,
-  });
+  const EmployerWorkerDetailsSkills({super.key, required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -20,10 +17,7 @@ class EmployerWorkerDetailsSkills extends StatelessWidget {
       runSpacing: 8,
       children: worker.skills.map((skill) {
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFF1F4F5),
             borderRadius: BorderRadius.circular(20),

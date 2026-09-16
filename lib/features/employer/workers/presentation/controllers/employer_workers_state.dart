@@ -1,18 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
+enum EmployerWorkersTab { workers, favourites }
 
-enum EmployerWorkersTab {
-  workers,
-  favourites,
-}
-
-enum EmployerWorkersStatus {
-  initial,
-  loading,
-  success,
-  failure,
-}
+enum EmployerWorkersStatus { initial, loading, success, failure }
 
 @immutable
 class EmployerWorkersFilters {
@@ -98,10 +89,8 @@ class EmployerWorkersState {
   List<EmployerWorkerEntity> get visibleWorkers {
     final query = searchQuery.trim().toLowerCase();
 
-    Iterable<EmployerWorkerEntity> result = selectedTab ==
-            EmployerWorkersTab.workers
-        ? workers
-        : favouriteWorkers;
+    Iterable<EmployerWorkerEntity> result =
+        selectedTab == EmployerWorkersTab.workers ? workers : favouriteWorkers;
 
     if (query.isNotEmpty) {
       result = result.where((worker) {
@@ -118,8 +107,7 @@ class EmployerWorkersState {
     if (selectedCategory != 'All') {
       result = result.where(
         (worker) =>
-            worker.profession.toLowerCase() ==
-            selectedCategory.toLowerCase(),
+            worker.profession.toLowerCase() == selectedCategory.toLowerCase(),
       );
     }
 
@@ -130,9 +118,7 @@ class EmployerWorkersState {
     }
 
     if (filters.minimumRating > 0) {
-      result = result.where(
-        (worker) => worker.rating >= filters.minimumRating,
-      );
+      result = result.where((worker) => worker.rating >= filters.minimumRating);
     }
 
     switch (filters.availability) {
@@ -165,6 +151,10 @@ class EmployerWorkersState {
       case 'Any':
       default:
         break;
+    }
+
+    if (filters.verifiedOnly) {
+      result = result.where((worker) => worker.verified);
     }
 
     if (filters.currentlyAvailableOnly) {

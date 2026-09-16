@@ -5,10 +5,7 @@ import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
 class EmployerWorkerDetailsHero extends StatelessWidget {
-  const EmployerWorkerDetailsHero({
-    super.key,
-    required this.worker,
-  });
+  const EmployerWorkerDetailsHero({super.key, required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -17,24 +14,16 @@ class EmployerWorkerDetailsHero extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _WorkerAvatar(
-          worker: worker,
-        ),
+        _WorkerAvatar(worker: worker),
         const SizedBox(width: 14),
-        Expanded(
-          child: _WorkerBasicInfo(
-            worker: worker,
-          ),
-        ),
+        Expanded(child: _WorkerBasicInfo(worker: worker)),
       ],
     );
   }
 }
 
 class _WorkerAvatar extends StatelessWidget {
-  const _WorkerAvatar({
-    required this.worker,
-  });
+  const _WorkerAvatar({required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -60,10 +49,7 @@ class _WorkerAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.success,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.white,
-                  width: 2,
-                ),
+                border: Border.all(color: AppColors.white, width: 2),
               ),
             ),
           ),
@@ -73,9 +59,7 @@ class _WorkerAvatar extends StatelessWidget {
 }
 
 class _WorkerBasicInfo extends StatelessWidget {
-  const _WorkerBasicInfo({
-    required this.worker,
-  });
+  const _WorkerBasicInfo({required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -96,31 +80,21 @@ class _WorkerBasicInfo extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           worker.profession,
-          style: textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 8),
-        _RatingRow(
-          worker: worker,
-        ),
+        _RatingRow(worker: worker),
         const SizedBox(height: 6),
-        _DistanceRow(
-          worker: worker,
-        ),
+        _DistanceRow(worker: worker),
         const SizedBox(height: 8),
-        _AvailabilityBadge(
-          worker: worker,
-        ),
+        _AvailabilityBadge(worker: worker),
       ],
     );
   }
 }
 
 class _RatingRow extends StatelessWidget {
-  const _RatingRow({
-    required this.worker,
-  });
+  const _RatingRow({required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -130,11 +104,7 @@ class _RatingRow extends StatelessWidget {
 
     return Row(
       children: [
-        const Icon(
-          Icons.star_rounded,
-          color: AppColors.warning,
-          size: 19,
-        ),
+        const Icon(Icons.star_rounded, color: AppColors.warning, size: 19),
         const SizedBox(width: 4),
         Text(
           worker.rating.toStringAsFixed(1),
@@ -146,9 +116,7 @@ class _RatingRow extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           '(${worker.reviewCount} reviews)',
-          style: textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -156,9 +124,7 @@ class _RatingRow extends StatelessWidget {
 }
 
 class _DistanceRow extends StatelessWidget {
-  const _DistanceRow({
-    required this.worker,
-  });
+  const _DistanceRow({required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -174,9 +140,9 @@ class _DistanceRow extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           '${worker.distanceKm.toStringAsFixed(1)} km from you',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -184,9 +150,7 @@ class _DistanceRow extends StatelessWidget {
 }
 
 class _AvailabilityBadge extends StatelessWidget {
-  const _AvailabilityBadge({
-    required this.worker,
-  });
+  const _AvailabilityBadge({required this.worker});
 
   final EmployerWorkerEntity worker;
 
@@ -198,20 +162,17 @@ class _AvailabilityBadge extends StatelessWidget {
     final color = isToday
         ? AppColors.success
         : isTomorrow
-            ? AppColors.info
-            : AppColors.textSecondary;
+        ? AppColors.info
+        : AppColors.textSecondary;
 
     final label = isToday
         ? 'Available today'
         : isTomorrow
-            ? 'Available tomorrow'
-            : 'Currently unavailable';
+        ? 'Available tomorrow'
+        : 'Currently unavailable';
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
@@ -219,9 +180,9 @@ class _AvailabilityBadge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

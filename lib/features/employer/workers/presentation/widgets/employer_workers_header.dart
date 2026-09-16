@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
 class EmployerWorkersHeader extends StatelessWidget {
-  const EmployerWorkersHeader({
-    super.key,
-    required this.onNotificationTap,
-  });
+  const EmployerWorkersHeader({super.key, required this.onNotificationTap});
 
   final VoidCallback onNotificationTap;
 
