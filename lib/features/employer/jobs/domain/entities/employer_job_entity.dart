@@ -17,6 +17,8 @@ class EmployerJobEntity {
     required this.locationAddress,
     required this.description,
     required this.status,
+    required this.createdAt,
+    required this.updatedAt,
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -31,18 +33,35 @@ class EmployerJobEntity {
   final String locationAddress;
   final String description;
   final EmployerJobStatus status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
   final double? latitude;
   final double? longitude;
+
   final String? imageUrl;
   final String? audioUrl;
 
+  // ============================================================
+  // COMPUTED PROPERTIES
+  // ============================================================
+
   String get title => skill;
 
-  bool get hasVoiceDescription =>
-      audioUrl != null && audioUrl!.isNotEmpty;
+  bool get hasDescription =>
+      description.trim().isNotEmpty;
 
-  bool get hasImages =>
-      imageUrl != null && imageUrl!.isNotEmpty;
+  bool get hasVoiceDescription =>
+      audioUrl != null &&
+      audioUrl!.trim().isNotEmpty;
+
+  bool get hasImage =>
+      imageUrl != null &&
+      imageUrl!.trim().isNotEmpty;
+
+  bool get hasLocation =>
+      latitude != null &&
+      longitude != null;
 
   String get statusLabel {
     switch (status) {
