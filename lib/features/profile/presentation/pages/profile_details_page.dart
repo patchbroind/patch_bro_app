@@ -185,7 +185,7 @@ class _ProfileDetailsPageState extends ConsumerState<ProfileDetailsPage> {
         return;
       }
 
-      context.go(config.isWorker ? '/worker/home' : '/employer/home');
+      context.go(config.isWorker ? '/worker/profile/setup' : '/employer/home');
     } catch (error) {
       if (!mounted) {
         return;

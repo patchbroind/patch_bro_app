@@ -23,6 +23,8 @@ import 'package:patch_bro/features/employer/workers/presentation/pages/employer_
 import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 
+import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
+
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -31,7 +33,9 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
+
 import '../../features/navigation/presentation/pages/main_navigation_page.dart';
+
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/presentation/pages/profile_details_page.dart';
 
@@ -62,6 +66,10 @@ class AppRouter {
       redirect: (context, state) async {
         final location = state.matchedLocation;
 
+        // ==========================================================
+        // PUBLIC / AUTH ROUTES
+        // ==========================================================
+
         final isSplash = location == '/splash';
 
         final isLogin = location == '/login';
@@ -75,6 +83,20 @@ class AppRouter {
         final isOtp = location == '/otp';
 
         final isProfileDetails = location == '/profile-details';
+
+        // ==========================================================
+        // WORKER PROFILE SETUP
+        //
+        // This route is intentionally allowed before a worker
+        // profile exists.
+        //
+        // The worker has already completed the basic profile
+        // details, but still needs to create the professional
+        // worker profile.
+        // ==========================================================
+
+        final isWorkerProfileSetup =
+            location == '/worker/profile/setup';
 
         final user = currentUser();
 
@@ -121,10 +143,32 @@ class AppRouter {
         }
 
         // ==========================================================
-        // PROFILE DETAILS
+        // BASIC PROFILE DETAILS
+        //
+        // This page is allowed before the required role-specific
+        // profile exists.
         // ==========================================================
 
         if (isProfileDetails) {
+          return null;
+        }
+
+        // ==========================================================
+        // WORKER PROFILE SETUP
+        //
+        // IMPORTANT:
+        //
+        // A Worker is allowed to enter this route even when
+        // worker_profiles does not yet contain a row.
+        //
+        // Employer users are redirected to their own home.
+        // ==========================================================
+
+        if (isWorkerProfileSetup) {
+          if (!config.isWorker) {
+            return _homeLocation(config);
+          }
+
           return null;
         }
 
@@ -254,9 +298,7 @@ class AppRouter {
               );
             }
 
-            return OtpPage(
-              request: request,
-            );
+            return OtpPage(request: request);
           },
         ),
 
@@ -269,6 +311,30 @@ class AppRouter {
           name: RouteNames.profileDetails,
           builder: (context, state) {
             return const ProfileDetailsPage();
+          },
+        ),
+
+        // ==========================================================
+        // WORKER PROFILE SETUP
+        //
+        // IMPORTANT:
+        //
+        // This is intentionally OUTSIDE the Worker shell.
+        //
+        // Reason:
+        // The setup screen is an onboarding screen and should NOT
+        // display the Worker bottom navigation bar.
+        //
+        // It is also allowed before worker_profiles exists.
+        // ==========================================================
+
+        GoRoute(
+          path: '/worker/profile/setup',
+          name: RouteNames.workerProfileSetup,
+          builder: (context, state) {
+            return const WorkerProfilePage(
+              isSetup: true,
+            );
           },
         ),
 
@@ -510,6 +576,9 @@ class AppRouter {
 
         // ==========================================================
         // WORKER PROFILE
+        //
+        // This is the actual Worker Profile page after the
+        // professional profile has been created.
         // ==============================================================
 
         StatefulShellBranch(
@@ -518,9 +587,7 @@ class AppRouter {
               path: '/worker/profile',
               name: RouteNames.workerProfile,
               builder: (context, state) {
-                return const _PlaceholderPage(
-                  title: 'Worker Profile',
-                );
+                return const WorkerProfilePage();
               },
             ),
           ],
@@ -562,7 +629,6 @@ class AppRouter {
           ],
         );
       },
-
       branches: [
         // ==========================================================
         // EMPLOYER HOME
@@ -709,10 +775,7 @@ class _PlaceholderPage extends ConsumerWidget {
   final String title;
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
