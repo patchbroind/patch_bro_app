@@ -140,12 +140,7 @@ class _EmployerSettingsAndSupportPageState
                     'Security & Privacy will be available soon.',
                   );
                 },
-                onSwitchToWorker: () {
-                  AppSnackbar.info(
-                    context,
-                    'Switch to Worker will be available soon.',
-                  );
-                },
+               
                 onHelp: () {
                   AppSnackbar.info(
                     context,

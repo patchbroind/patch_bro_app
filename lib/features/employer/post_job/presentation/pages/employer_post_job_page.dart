@@ -176,7 +176,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   }
 
   void _openWorkers({required String category, required String skill}) {
-    final queryParameters = <String, String>{};
+    final queryParameters = <String, String>{'tab': 'workers',};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();

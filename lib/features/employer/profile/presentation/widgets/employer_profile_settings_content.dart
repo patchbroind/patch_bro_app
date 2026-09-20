@@ -11,7 +11,6 @@ class EmployerProfileSettingsContent
     required this.onAddresses,
     required this.onNotifications,
     required this.onSecurity,
-    required this.onSwitchToWorker,
     required this.onHelp,
     required this.onTerms,
     required this.onPrivacy,
@@ -29,7 +28,6 @@ class EmployerProfileSettingsContent
 
   final VoidCallback onSecurity;
 
-  final VoidCallback onSwitchToWorker;
 
   final VoidCallback onHelp;
 

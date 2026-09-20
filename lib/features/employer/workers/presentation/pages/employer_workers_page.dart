@@ -10,22 +10,17 @@ import '../controllers/employer_workers_state.dart';
 import '../providers/employer_workers_providers.dart';
 import '../widgets/employer_workers_filter_sheet.dart';
 
-class EmployerWorkersPage
-    extends ConsumerStatefulWidget {
-  const EmployerWorkersPage({
-    super.key,
-  });
+class EmployerWorkersPage extends ConsumerStatefulWidget {
+  const EmployerWorkersPage({super.key, this.initialTab = EmployerWorkersTab.workers});
+
+  final EmployerWorkersTab initialTab;
 
   @override
-  ConsumerState<EmployerWorkersPage>
-      createState() =>
-          _EmployerWorkersPageState();
+  ConsumerState<EmployerWorkersPage> createState() => _EmployerWorkersPageState();
 }
 
-class _EmployerWorkersPageState
-    extends ConsumerState<EmployerWorkersPage> {
-  late final TextEditingController
-      _searchController;
+class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
+  late final TextEditingController _searchController;
 
   bool _jobFilterApplied = false;
 
@@ -33,24 +28,36 @@ class _EmployerWorkersPageState
   void initState() {
     super.initState();
 
-    _searchController =
-        TextEditingController();
+    _searchController = TextEditingController();
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
 
-      ref
-          .read(
-            employerWorkersControllerProvider
-                .notifier,
-          )
-          .loadWorkers();
+      final controller = ref.read(employerWorkersControllerProvider.notifier);
+
+      controller.loadWorkers();
+
+      controller.selectTab(widget.initialTab);
 
       _applyJobFilterFromRoute();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EmployerWorkersPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.initialTab != widget.initialTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        ref.read(employerWorkersControllerProvider.notifier).selectTab(widget.initialTab);
+      });
+    }
   }
 
   @override
@@ -68,38 +75,22 @@ class _EmployerWorkersPageState
       return;
     }
 
-    final uri =
-        GoRouterState.of(context).uri;
+    final uri = GoRouterState.of(context).uri;
 
-    final category =
-        uri.queryParameters['category']
-            ?.trim();
+    final category = uri.queryParameters['category']?.trim();
 
-    final skill =
-        uri.queryParameters['skill']
-            ?.trim();
+    final skill = uri.queryParameters['skill']?.trim();
 
-    if ((category == null ||
-            category.isEmpty) &&
-        (skill == null ||
-            skill.isEmpty)) {
+    if ((category == null || category.isEmpty) && (skill == null || skill.isEmpty)) {
       return;
     }
 
     ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .applyJobFilters(
-          category: category ?? 'All',
-          skill: skill ?? '',
-        );
+        .read(employerWorkersControllerProvider.notifier)
+        .applyJobFilters(category: category ?? 'All', skill: skill ?? '');
 
-    if (skill != null &&
-        skill.isNotEmpty) {
-      _searchController.text =
-          skill;
+    if (skill != null && skill.isNotEmpty) {
+      _searchController.text = skill;
     }
 
     _jobFilterApplied = true;
@@ -110,87 +101,49 @@ class _EmployerWorkersPageState
   // ============================================================
 
   Future<void> _openFilter() async {
-    final currentFilters =
-        ref
-            .read(
-              employerWorkersControllerProvider,
-            )
-            .filters;
+    final currentFilters = ref.read(employerWorkersControllerProvider).filters;
 
-    final result =
-        await showModalBottomSheet<
-            EmployerWorkersFilters>(
+    final result = await showModalBottomSheet<EmployerWorkersFilters>(
       context: context,
-      isScrollControlled:
-          true,
+      isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor:
-          Colors.transparent,
+      backgroundColor: Colors.transparent,
       builder: (_) {
         return FractionallySizedBox(
           heightFactor: 0.88,
-          child:
-              EmployerWorkersFilterSheet(
-            initialFilters:
-                currentFilters,
-          ),
+          child: EmployerWorkersFilterSheet(initialFilters: currentFilters),
         );
       },
     );
 
-    if (result == null ||
-        !mounted) {
+    if (result == null || !mounted) {
       return;
     }
 
-    ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .updateFilters(
-          result,
-        );
+    ref.read(employerWorkersControllerProvider.notifier).updateFilters(result);
   }
 
   // ============================================================
   // WORKER DETAILS
   // ============================================================
 
-  void _openWorkerDetails(
-    String workerId,
-  ) {
-    context.pushNamed(
-      RouteNames.employerWorkerProfile,
-      extra: workerId,
-    );
+  void _openWorkerDetails(String workerId) {
+    context.pushNamed(RouteNames.employerWorkerProfile, extra: workerId);
   }
 
   // ============================================================
   // FAVOURITE
   // ============================================================
 
-  Future<void> _toggleFavourite(
-    String workerId,
-  ) async {
+  Future<void> _toggleFavourite(String workerId) async {
     try {
-      await ref
-          .read(
-            employerWorkersControllerProvider
-                .notifier,
-          )
-          .toggleFavourite(
-            workerId,
-          );
+      await ref.read(employerWorkersControllerProvider.notifier).toggleFavourite(workerId);
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to update favourite worker. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to update favourite worker. Please try again.');
     }
   }
 
@@ -200,21 +153,13 @@ class _EmployerWorkersPageState
 
   Future<void> _refresh() async {
     try {
-      await ref
-          .read(
-            employerWorkersControllerProvider
-                .notifier,
-          )
-          .refreshWorkers();
+      await ref.read(employerWorkersControllerProvider.notifier).refreshWorkers();
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to refresh workers. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to refresh workers. Please try again.');
     }
   }
 
@@ -223,39 +168,23 @@ class _EmployerWorkersPageState
   // ============================================================
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final state =
-        ref.watch(
-      employerWorkersControllerProvider,
-    );
+  Widget build(BuildContext context) {
+    final state = ref.watch(employerWorkersControllerProvider);
 
     return Scaffold(
       body: SafeArea(
-        child:
-            EmployerWorkersContent(
+        child: EmployerWorkersContent(
           state: state,
-          searchController:
-              _searchController,
-          onNotificationTap:
-              _openNotifications,
-          onSearchChanged:
-              _updateSearch,
-          onFilterTap:
-              _openFilter,
-          onTabChanged:
-              _selectTab,
-          onCategorySelected:
-              _selectCategory,
-          onWorkerTap:
-              _openWorkerDetails,
-          onFavouriteTap:
-              _toggleFavourite,
-          onRefresh:
-              _refresh,
-          onRetry:
-              _loadWorkers,
+          searchController: _searchController,
+          onNotificationTap: _openNotifications,
+          onSearchChanged: _updateSearch,
+          onFilterTap: _openFilter,
+          onTabChanged: _selectTab,
+          onCategorySelected: _selectCategory,
+          onWorkerTap: _openWorkerDetails,
+          onFavouriteTap: _toggleFavourite,
+          onRefresh: _refresh,
+          onRetry: _loadWorkers,
         ),
       ),
     );
@@ -266,56 +195,22 @@ class _EmployerWorkersPageState
   // ============================================================
 
   void _openNotifications() {
-    context.pushNamed(
-      RouteNames.employerNotifications,
-    );
+    context.pushNamed(RouteNames.employerNotifications);
   }
 
-  void _updateSearch(
-    String value,
-  ) {
-    ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .updateSearchQuery(
-          value,
-        );
+  void _updateSearch(String value) {
+    ref.read(employerWorkersControllerProvider.notifier).updateSearchQuery(value);
   }
 
-  void _selectTab(
-    EmployerWorkersTab tab,
-  ) {
-    ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .selectTab(
-          tab,
-        );
+  void _selectTab(EmployerWorkersTab tab) {
+    ref.read(employerWorkersControllerProvider.notifier).selectTab(tab);
   }
 
-  void _selectCategory(
-    String category,
-  ) {
-    ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .selectCategory(
-          category,
-        );
+  void _selectCategory(String category) {
+    ref.read(employerWorkersControllerProvider.notifier).selectCategory(category);
   }
 
   void _loadWorkers() {
-    ref
-        .read(
-          employerWorkersControllerProvider
-              .notifier,
-        )
-        .loadWorkers();
+    ref.read(employerWorkersControllerProvider.notifier).loadWorkers();
   }
 }
