@@ -5,9 +5,12 @@ import 'package:patch_bro/features/employer/workers/domain/repository/employer_w
 import '../providers/employer_workers_providers.dart';
 import 'employer_workers_state.dart';
 
-class EmployerWorkersController extends Notifier<EmployerWorkersState> {
+class EmployerWorkersController
+    extends Notifier<EmployerWorkersState> {
   EmployerWorkersRepository get _repository {
-    return ref.read(employerWorkersRepositoryProvider);
+    return ref.read(
+      employerWorkersRepositoryProvider,
+    );
   }
 
   @override
@@ -16,7 +19,7 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   }
 
   // ============================================================
-  // LOAD WORKERS
+  // LOAD
   // ============================================================
 
   Future<void> loadWorkers() async {
@@ -25,37 +28,46 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
     }
 
     state = state.copyWith(
-      status: EmployerWorkersStatus.loading,
+      status:
+          EmployerWorkersStatus.loading,
       clearError: true,
     );
 
     try {
-      final workers = await _repository.getWorkers();
+      final workers =
+          await _repository.getWorkers();
 
       state = state.copyWith(
-        status: EmployerWorkersStatus.success,
-        workers: List.unmodifiable(workers),
+        status:
+            EmployerWorkersStatus.success,
+        workers:
+            List.unmodifiable(workers),
         clearError: true,
       );
     } catch (error) {
       state = state.copyWith(
-        status: EmployerWorkersStatus.failure,
-        errorMessage: error.toString(),
+        status:
+            EmployerWorkersStatus.failure,
+        errorMessage:
+            error.toString(),
       );
     }
   }
 
   // ============================================================
-  // REFRESH WORKERS
+  // REFRESH
   // ============================================================
 
   Future<void> refreshWorkers() async {
     try {
-      final workers = await _repository.getWorkers();
+      final workers =
+          await _repository.getWorkers();
 
       state = state.copyWith(
-        status: EmployerWorkersStatus.success,
-        workers: List.unmodifiable(workers),
+        status:
+            EmployerWorkersStatus.success,
+        workers:
+            List.unmodifiable(workers),
         clearError: true,
       );
     } catch (error) {
@@ -63,7 +75,8 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
         status: state.hasWorkers
             ? EmployerWorkersStatus.success
             : EmployerWorkersStatus.failure,
-        errorMessage: error.toString(),
+        errorMessage:
+            error.toString(),
       );
 
       rethrow;
@@ -74,26 +87,76 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // TAB
   // ============================================================
 
-  void selectTab(EmployerWorkersTab tab) {
-    state = state.copyWith(selectedTab: tab);
+  void selectTab(
+    EmployerWorkersTab tab,
+  ) {
+    state = state.copyWith(
+      selectedTab: tab,
+    );
   }
 
   // ============================================================
   // SEARCH
   // ============================================================
 
-  void updateSearchQuery(String value) {
-    state = state.copyWith(searchQuery: value);
+  void updateSearchQuery(
+    String value,
+  ) {
+    state = state.copyWith(
+      searchQuery: value,
+    );
   }
 
   // ============================================================
   // CATEGORY
   // ============================================================
 
-  void selectCategory(String category) {
+  void selectCategory(
+    String category,
+  ) {
     state = state.copyWith(
-      selectedCategory: category,
-      filters: state.filters.copyWith(category: category),
+      selectedCategory:
+          category,
+      filters:
+          state.filters.copyWith(
+        category: category,
+      ),
+    );
+  }
+
+  // ============================================================
+  // JOB MATCH FILTER
+  // ============================================================
+
+  void applyJobFilters({
+    required String category,
+    required String skill,
+  }) {
+    final normalizedCategory =
+        category.trim();
+
+    final normalizedSkill =
+        skill.trim();
+
+    final filters =
+        state.filters.copyWith(
+      category:
+          normalizedCategory.isEmpty
+              ? 'All'
+              : normalizedCategory,
+      skill:
+          normalizedSkill,
+    );
+
+    state = state.copyWith(
+      selectedTab:
+          EmployerWorkersTab.workers,
+      selectedCategory:
+          filters.category,
+      filters: filters,
+      searchQuery:
+          normalizedSkill,
+      clearError: true,
     );
   }
 
@@ -101,17 +164,22 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // FILTERS
   // ============================================================
 
-  void updateFilters(EmployerWorkersFilters filters) {
+  void updateFilters(
+    EmployerWorkersFilters filters,
+  ) {
     state = state.copyWith(
       filters: filters,
-      selectedCategory: filters.category,
+      selectedCategory:
+          filters.category,
     );
   }
 
   void resetFilters() {
     state = state.copyWith(
       selectedCategory: 'All',
-      filters: const EmployerWorkersFilters(),
+      filters:
+          const EmployerWorkersFilters(),
+      searchQuery: '',
     );
   }
 
@@ -119,41 +187,65 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // FAVOURITE
   // ============================================================
 
-  Future<void> toggleFavourite(String workerId) async {
-    if (state.togglingWorkerId != null) {
+  Future<void> toggleFavourite(
+    String workerId,
+  ) async {
+    if (state.togglingWorkerId !=
+        null) {
       return;
     }
 
-    final workerIndex = state.workers.indexWhere(
-      (worker) => worker.id == workerId,
+    final workerIndex =
+        state.workers.indexWhere(
+      (worker) =>
+          worker.id == workerId,
     );
 
     if (workerIndex == -1) {
       return;
     }
 
-    final worker = state.workers[workerIndex];
+    final worker =
+        state.workers[workerIndex];
 
-    state = state.copyWith(togglingWorkerId: workerId, clearError: true);
+    state = state.copyWith(
+      togglingWorkerId:
+          workerId,
+      clearError: true,
+    );
 
     try {
-      await _repository.toggleFavourite(workerId);
+      await _repository
+          .toggleFavourite(
+        workerId,
+      );
 
-      final updatedWorker = worker.copyWith(isFavourite: !worker.isFavourite);
+      final updatedWorker =
+          worker.copyWith(
+        isFavourite:
+            !worker.isFavourite,
+      );
 
-      final updatedWorkers = [...state.workers];
+      final updatedWorkers =
+          [...state.workers];
 
-      updatedWorkers[workerIndex] = updatedWorker;
+      updatedWorkers[workerIndex] =
+          updatedWorker;
 
       state = state.copyWith(
-        workers: List.unmodifiable(updatedWorkers),
+        workers:
+            List.unmodifiable(
+          updatedWorkers,
+        ),
         clearTogglingWorker: true,
         clearError: true,
       );
     } catch (error) {
       state = state.copyWith(
-        errorMessage: error.toString(),
-        clearTogglingWorker: true,
+        errorMessage:
+            error.toString(),
+        clearTogglingWorker:
+            true,
       );
 
       rethrow;
@@ -164,8 +256,11 @@ class EmployerWorkersController extends Notifier<EmployerWorkersState> {
   // FIND WORKER
   // ============================================================
 
-  EmployerWorkerEntity? workerById(String id) {
-    for (final worker in state.workers) {
+  EmployerWorkerEntity? workerById(
+    String id,
+  ) {
+    for (final worker
+        in state.workers) {
       if (worker.id == id) {
         return worker;
       }

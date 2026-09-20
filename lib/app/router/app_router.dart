@@ -685,12 +685,16 @@ class AppRouter {
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/employer/workers',
-              name: RouteNames.employerWorkers,
-              builder: (context, state) {
-                return const EmployerWorkersPage();
-              },
-            ),
+  path: '/employer/workers',
+  name: RouteNames.employerWorkers,
+  builder: (context, state) {
+    return EmployerWorkersPage(
+      key: ValueKey(
+        state.uri.toString(),
+      ),
+    );
+  },
+),
           ],
         ),
 
