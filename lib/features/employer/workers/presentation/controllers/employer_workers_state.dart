@@ -9,7 +9,7 @@ enum EmployerWorkersStatus { initial, loading, success, failure }
 class EmployerWorkersFilters {
   const EmployerWorkersFilters({
     this.category = 'All',
-    this.distanceKm = 10,
+    this.distanceKm = 0,
     this.minimumRating = 0,
     this.availability = 'Any time',
     this.experience = 'Any',
