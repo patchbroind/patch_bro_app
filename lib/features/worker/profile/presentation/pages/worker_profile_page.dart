@@ -10,6 +10,11 @@ import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
 
 import '../providers/worker_profile_providers.dart';
+import '../widgets/worker_profile_about.dart';
+import '../widgets/worker_profile_availability.dart';
+import '../widgets/worker_profile_header.dart';
+import '../widgets/worker_profile_profession.dart';
+import '../widgets/worker_profile_skills.dart';
 
 class WorkerProfilePage extends ConsumerStatefulWidget {
   const WorkerProfilePage({
@@ -29,8 +34,7 @@ class _WorkerProfilePageState
   final _formKey = GlobalKey<FormState>();
 
   final _aboutController = TextEditingController();
-  final _experienceController =
-      TextEditingController();
+  final _experienceController = TextEditingController();
 
   static const _professions = [
     'Plumber',
@@ -76,6 +80,7 @@ class _WorkerProfilePageState
   ];
 
   String _profession = _professions.first;
+
   final Set<String> _selectedSkills = {};
   final Set<String> _selectedDays = {};
 
@@ -92,9 +97,7 @@ class _WorkerProfilePageState
       }
 
       ref
-          .read(
-            workerProfileControllerProvider.notifier,
-          )
+          .read(workerProfileControllerProvider.notifier)
           .loadProfile();
     });
   }
@@ -106,9 +109,7 @@ class _WorkerProfilePageState
     super.dispose();
   }
 
-  void _populateProfile(
-    BuildContext context,
-  ) {
+  void _populateProfile() {
     final profile = ref
         .read(workerProfileControllerProvider)
         .profile;
@@ -117,32 +118,29 @@ class _WorkerProfilePageState
       return;
     }
 
-    if (_experienceController.text.isEmpty) {
-      _profession = _professions.contains(
-        profile.profession,
-      )
-          ? profile.profession
-          : 'Other';
-
-      _selectedSkills
-        ..clear()
-        ..addAll(profile.skills);
-
-      _selectedDays
-        ..clear()
-        ..addAll(profile.availabilityDays);
-
-      _aboutController.text = profile.about;
-
-      _experienceController.text =
-          profile.experienceYears.toString();
-
-      _availableToday =
-          profile.availableToday;
-
-      _availableTomorrow =
-          profile.availableTomorrow;
+    if (_experienceController.text.isNotEmpty) {
+      return;
     }
+
+    _profession = _professions.contains(profile.profession)
+        ? profile.profession
+        : 'Other';
+
+    _selectedSkills
+      ..clear()
+      ..addAll(profile.skills);
+
+    _selectedDays
+      ..clear()
+      ..addAll(profile.availabilityDays);
+
+    _aboutController.text = profile.about;
+
+    _experienceController.text =
+        profile.experienceYears.toString();
+
+    _availableToday = profile.availableToday;
+    _availableTomorrow = profile.availableTomorrow;
   }
 
   Future<void> _save() async {
@@ -179,9 +177,7 @@ class _WorkerProfilePageState
     }
 
     final success = await ref
-        .read(
-          workerProfileControllerProvider.notifier,
-        )
+        .read(workerProfileControllerProvider.notifier)
         .saveProfile(
           profession: _profession,
           skills: _selectedSkills.toList(),
@@ -219,6 +215,50 @@ class _WorkerProfilePageState
     }
   }
 
+  void _onProfessionChanged(String value) {
+    setState(() {
+      _profession = value;
+    });
+  }
+
+  void _onSkillChanged(
+    String skill,
+    bool selected,
+  ) {
+    setState(() {
+      if (selected) {
+        _selectedSkills.add(skill);
+      } else {
+        _selectedSkills.remove(skill);
+      }
+    });
+  }
+
+  void _onDayChanged(
+    String day,
+    bool selected,
+  ) {
+    setState(() {
+      if (selected) {
+        _selectedDays.add(day);
+      } else {
+        _selectedDays.remove(day);
+      }
+    });
+  }
+
+  void _onAvailableTodayChanged(bool value) {
+    setState(() {
+      _availableToday = value;
+    });
+  }
+
+  void _onAvailableTomorrowChanged(bool value) {
+    setState(() {
+      _availableTomorrow = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(
@@ -236,7 +276,7 @@ class _WorkerProfilePageState
     }
 
     if (state.hasProfile) {
-      _populateProfile(context);
+      _populateProfile();
     }
 
     return Scaffold(
@@ -262,27 +302,53 @@ class _WorkerProfilePageState
               32,
             ),
             children: [
-              _buildHeader(context),
+              WorkerProfileHeader(
+                isSetup: widget.isSetup,
+              ),
               const SizedBox(height: 24),
-              _buildProfession(context),
+
+              WorkerProfileProfession(
+                profession: _profession,
+                professions: _professions,
+                onChanged: _onProfessionChanged,
+              ),
               const SizedBox(height: 24),
-              _buildSkills(context),
+
+              WorkerProfileSkills(
+                skills: _skills,
+                selectedSkills: _selectedSkills,
+                onSkillChanged: _onSkillChanged,
+              ),
               const SizedBox(height: 24),
+
               AppTextField(
                 controller: _experienceController,
                 hintText: 'Years of experience',
                 icon: Icons.work_history_outlined,
-                keyboardType:
-                    TextInputType.number,
-                textInputAction:
-                    TextInputAction.next,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
                 validator: Validators.required,
               ),
               const SizedBox(height: 24),
-              _buildAbout(context),
+
+              WorkerProfileAbout(
+                controller: _aboutController,
+              ),
               const SizedBox(height: 24),
-              _buildAvailability(context),
+
+              WorkerProfileAvailability(
+                days: _days,
+                selectedDays: _selectedDays,
+                availableToday: _availableToday,
+                availableTomorrow: _availableTomorrow,
+                onDayChanged: _onDayChanged,
+                onAvailableTodayChanged:
+                    _onAvailableTodayChanged,
+                onAvailableTomorrowChanged:
+                    _onAvailableTomorrowChanged,
+              ),
               const SizedBox(height: 32),
+
               AppPrimaryButton(
                 label: widget.isSetup
                     ? 'Complete Profile'
@@ -298,290 +364,6 @@ class _WorkerProfilePageState
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.workerLight,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: const BoxDecoration(
-              color: AppColors.workerPrimary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.handyman_outlined,
-              color: AppColors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.isSetup
-                      ? 'Build your professional profile'
-                      : 'Your professional profile',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Tell employers what you do and when you are available.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
-                        color:
-                            AppColors.textSecondary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfession(
-    BuildContext context,
-  ) {
-    return _Section(
-      title: 'Profession',
-      child: DropdownButtonFormField<String>(
-        value: _profession,
-        decoration: InputDecoration(
-          prefixIcon: const Icon(
-            Icons.construction_outlined,
-            color: AppColors.workerPrimary,
-          ),
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
-          ),
-        ),
-        items: _professions
-            .map(
-              (profession) =>
-                  DropdownMenuItem<String>(
-                value: profession,
-                child: Text(profession),
-              ),
-            )
-            .toList(),
-        onChanged: (value) {
-          if (value == null) {
-            return;
-          }
-
-          setState(() {
-            _profession = value;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildSkills(
-    BuildContext context,
-  ) {
-    return _Section(
-      title: 'Skills',
-      subtitle:
-          'Select the services you can provide.',
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _skills.map((skill) {
-          final selected =
-              _selectedSkills.contains(skill);
-
-          return FilterChip(
-            label: Text(skill),
-            selected: selected,
-            selectedColor:
-                AppColors.workerLight,
-            checkmarkColor:
-                AppColors.workerPrimary,
-            side: BorderSide(
-              color: selected
-                  ? AppColors.workerPrimary
-                  : AppColors.border,
-            ),
-            onSelected: (value) {
-              setState(() {
-                if (value) {
-                  _selectedSkills.add(skill);
-                } else {
-                  _selectedSkills.remove(skill);
-                }
-              });
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildAbout(
-    BuildContext context,
-  ) {
-    return _Section(
-      title: 'About you',
-      subtitle:
-          'Briefly describe your experience and services.',
-      child: TextFormField(
-        controller: _aboutController,
-        minLines: 4,
-        maxLines: 6,
-        maxLength: 500,
-        validator: Validators.required,
-        decoration: InputDecoration(
-          hintText:
-              'Tell employers about your work experience...',
-          alignLabelWithHint: true,
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvailability(
-    BuildContext context,
-  ) {
-    return _Section(
-      title: 'Availability',
-      subtitle:
-          'Choose the days you normally accept jobs.',
-      child: Column(
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _days.map((day) {
-              final selected =
-                  _selectedDays.contains(day);
-
-              return FilterChip(
-                label: Text(day),
-                selected: selected,
-                selectedColor:
-                    AppColors.workerLight,
-                checkmarkColor:
-                    AppColors.workerPrimary,
-                side: BorderSide(
-                  color: selected
-                      ? AppColors.workerPrimary
-                      : AppColors.border,
-                ),
-                onSelected: (value) {
-                  setState(() {
-                    if (value) {
-                      _selectedDays.add(day);
-                    } else {
-                      _selectedDays.remove(day);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 14),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title:
-                const Text('Available today'),
-            value: _availableToday,
-            activeColor:
-                AppColors.workerPrimary,
-            onChanged: (value) {
-              setState(() {
-                _availableToday = value;
-              });
-            },
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title:
-                const Text('Available tomorrow'),
-            value: _availableTomorrow,
-            activeColor:
-                AppColors.workerPrimary,
-            onChanged: (value) {
-              setState(() {
-                _availableTomorrow = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.child,
-    this.subtitle,
-  });
-
-  final String title;
-  final String? subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-        ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            subtitle!,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(
-                  color:
-                      AppColors.textSecondary,
-                ),
-          ),
-        ],
-        const SizedBox(height: 10),
-        child,
-      ],
     );
   }
 }
