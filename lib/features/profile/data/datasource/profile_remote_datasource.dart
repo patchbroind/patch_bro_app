@@ -24,9 +24,7 @@ class ProfileRemoteDataSource {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      throw const AuthException(
-        'No authenticated user found.',
-      );
+      throw const AuthException('No authenticated user found.');
     }
 
     final userId = user.id;
@@ -37,46 +35,43 @@ class ProfileRemoteDataSource {
     //
     final location = 'POINT($longitude $latitude)';
 
-    await _supabase.from('profiles').upsert(
-      {
-        'id': userId,
-        'name': name.trim(),
-        'phone': phone.trim(),
-        'address_1': address1.trim(),
-        'address_2': address2?.trim().isEmpty == true
-            ? null
-            : address2?.trim(),
-        'pin_code': pinCode.trim(),
-        'state': state.trim(),
-        'location': location,
-        'location_address': locationAddress.trim(),
-      },
-      onConflict: 'id',
-    );
+    await _supabase.from('profiles').upsert({
+      'id': userId,
+      'name': name.trim(),
+      'phone': phone.trim(),
+      'address_1': address1.trim(),
+      'address_2': address2?.trim().isEmpty == true ? null : address2?.trim(),
+      'pin_code': pinCode.trim(),
+      'state': state.trim(),
+      'location': location,
+      'location_address': locationAddress.trim(),
+    }, onConflict: 'id');
 
     // ==============================================================
     // ROLE-SPECIFIC PROFILE
     // ==============================================================
-
-    if (isWorker) {
-      await _supabase
-          .from('worker_profiles')
-          .upsert(
-            {
-              'id': userId,
-            },
-            onConflict: 'id',
-          );
-    } else {
-      await _supabase
-          .from('employer_profiles')
-          .upsert(
-            {
-              'id': userId,
-            },
-            onConflict: 'id',
-          );
+    if (!isWorker) {
+      await _supabase.from('employer_profiles').upsert({'id': userId}, onConflict: 'id');
     }
+    // if (isWorker) {
+    //   await _supabase
+    //       .from('worker_profiles')
+    //       .upsert(
+    //         {
+    //           'id': userId,
+    //         },
+    //         onConflict: 'id',
+    //       );
+    // } else {
+    //   await _supabase
+    //       .from('employer_profiles')
+    //       .upsert(
+    //         {
+    //           'id': userId,
+    //         },
+    //         onConflict: 'id',
+    //       );
+    // }
   }
 
   // ================================================================
@@ -112,19 +107,14 @@ class ProfileRemoteDataSource {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      throw const AuthException(
-        'No authenticated user found.',
-      );
+      throw const AuthException('No authenticated user found.');
     }
 
     final location = 'POINT($longitude $latitude)';
 
     await _supabase
         .from('profiles')
-        .update({
-          'location': location,
-          'location_address': locationAddress.trim(),
-        })
+        .update({'location': location, 'location_address': locationAddress.trim()})
         .eq('id', user.id);
   }
 

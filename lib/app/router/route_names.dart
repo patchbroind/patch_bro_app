@@ -28,6 +28,7 @@ abstract final class RouteNames {
   static const workerJobs = 'worker-jobs';
 
   static const workerProfile = 'worker-profile';
+  static const workerProfileSetup = 'worker-profile-setup';
 
   static const workerEarnings = 'worker-earnings';
 
