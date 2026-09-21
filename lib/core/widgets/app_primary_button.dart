@@ -8,12 +8,14 @@ class AppPrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.backgroundColor,
+    this.leadingIcon,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
   final Color? backgroundColor;
+  final Icon? leadingIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,14 @@ class AppPrimaryButton extends StatelessWidget {
                 height: 24,
                 child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.white),
               )
-            : Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            : Row(
+              mainAxisAlignment: .center,
+              spacing: 5,
+              children: [
+                ?leadingIcon,
+                Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+              ],
+            ),
       ),
     );
   }

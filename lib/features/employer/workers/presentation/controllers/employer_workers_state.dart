@@ -1,15 +1,24 @@
 import 'package:flutter/foundation.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 
-enum EmployerWorkersTab { workers, favourites }
+enum EmployerWorkersTab {
+  workers,
+  favourites,
+}
 
-enum EmployerWorkersStatus { initial, loading, success, failure }
+enum EmployerWorkersStatus {
+  initial,
+  loading,
+  success,
+  failure,
+}
 
 @immutable
 class EmployerWorkersFilters {
   const EmployerWorkersFilters({
     this.category = 'All',
-    this.distanceKm = 10,
+    this.skill = '',
+    this.distanceKm = 0,
     this.minimumRating = 0,
     this.availability = 'Any time',
     this.experience = 'Any',
@@ -18,15 +27,20 @@ class EmployerWorkersFilters {
   });
 
   final String category;
+  final String skill;
+
   final double distanceKm;
   final double minimumRating;
+
   final String availability;
   final String experience;
+
   final bool verifiedOnly;
   final bool currentlyAvailableOnly;
 
   EmployerWorkersFilters copyWith({
     String? category,
+    String? skill,
     double? distanceKm,
     double? minimumRating,
     String? availability,
@@ -35,14 +49,23 @@ class EmployerWorkersFilters {
     bool? currentlyAvailableOnly,
   }) {
     return EmployerWorkersFilters(
-      category: category ?? this.category,
-      distanceKm: distanceKm ?? this.distanceKm,
-      minimumRating: minimumRating ?? this.minimumRating,
-      availability: availability ?? this.availability,
-      experience: experience ?? this.experience,
-      verifiedOnly: verifiedOnly ?? this.verifiedOnly,
+      category:
+          category ?? this.category,
+      skill:
+          skill ?? this.skill,
+      distanceKm:
+          distanceKm ?? this.distanceKm,
+      minimumRating:
+          minimumRating ?? this.minimumRating,
+      availability:
+          availability ?? this.availability,
+      experience:
+          experience ?? this.experience,
+      verifiedOnly:
+          verifiedOnly ?? this.verifiedOnly,
       currentlyAvailableOnly:
-          currentlyAvailableOnly ?? this.currentlyAvailableOnly,
+          currentlyAvailableOnly ??
+              this.currentlyAvailableOnly,
     );
   }
 }
@@ -50,84 +73,158 @@ class EmployerWorkersFilters {
 @immutable
 class EmployerWorkersState {
   const EmployerWorkersState({
-    this.status = EmployerWorkersStatus.initial,
+    this.status =
+        EmployerWorkersStatus.initial,
     this.workers = const [],
     this.searchQuery = '',
-    this.selectedTab = EmployerWorkersTab.workers,
+    this.selectedTab =
+        EmployerWorkersTab.workers,
     this.selectedCategory = 'All',
-    this.filters = const EmployerWorkersFilters(),
+    this.filters =
+        const EmployerWorkersFilters(),
     this.errorMessage,
     this.togglingWorkerId,
   });
 
   final EmployerWorkersStatus status;
-  final List<EmployerWorkerEntity> workers;
+
+  final List<EmployerWorkerEntity>
+      workers;
 
   final String searchQuery;
-  final EmployerWorkersTab selectedTab;
+
+  final EmployerWorkersTab
+      selectedTab;
+
   final String selectedCategory;
 
-  final EmployerWorkersFilters filters;
+  final EmployerWorkersFilters
+      filters;
 
   final String? errorMessage;
   final String? togglingWorkerId;
 
-  bool get isLoading => status == EmployerWorkersStatus.loading;
+  bool get isLoading =>
+      status ==
+      EmployerWorkersStatus.loading;
 
-  bool get isSuccess => status == EmployerWorkersStatus.success;
+  bool get isSuccess =>
+      status ==
+      EmployerWorkersStatus.success;
 
-  bool get isFailure => status == EmployerWorkersStatus.failure;
+  bool get isFailure =>
+      status ==
+      EmployerWorkersStatus.failure;
 
-  bool get hasWorkers => workers.isNotEmpty;
+  bool get hasWorkers =>
+      workers.isNotEmpty;
 
-  List<EmployerWorkerEntity> get favouriteWorkers {
+  List<EmployerWorkerEntity>
+      get favouriteWorkers {
     return workers
-        .where((worker) => worker.isFavourite)
+        .where(
+          (worker) =>
+              worker.isFavourite,
+        )
         .toList(growable: false);
   }
 
-  List<EmployerWorkerEntity> get visibleWorkers {
-    final query = searchQuery.trim().toLowerCase();
+  List<EmployerWorkerEntity>
+      get visibleWorkers {
+    final query =
+        searchQuery
+            .trim()
+            .toLowerCase();
 
-    Iterable<EmployerWorkerEntity> result =
-        selectedTab == EmployerWorkersTab.workers ? workers : favouriteWorkers;
+    Iterable<EmployerWorkerEntity>
+        result =
+        selectedTab ==
+                EmployerWorkersTab.workers
+            ? workers
+            : favouriteWorkers;
 
     if (query.isNotEmpty) {
-      result = result.where((worker) {
+      result =
+          result.where((worker) {
         final searchableText = [
           worker.name,
           worker.profession,
           ...worker.skills,
         ].join(' ').toLowerCase();
 
-        return searchableText.contains(query);
+        return searchableText
+            .contains(query);
       });
     }
 
-    if (selectedCategory != 'All') {
-      result = result.where(
+    if (selectedCategory !=
+        'All') {
+      result =
+          result.where(
         (worker) =>
-            worker.profession.toLowerCase() == selectedCategory.toLowerCase(),
+            worker.profession
+                .toLowerCase() ==
+            selectedCategory
+                .toLowerCase(),
       );
     }
 
-    if (filters.distanceKm > 0) {
-      result = result.where(
-        (worker) => worker.distanceKm <= filters.distanceKm,
+    final selectedSkill =
+        filters.skill
+            .trim()
+            .toLowerCase();
+
+    if (selectedSkill.isNotEmpty) {
+      result =
+          result.where(
+        (worker) => worker.skills.any(
+          (skill) =>
+              skill
+                  .trim()
+                  .toLowerCase() ==
+              selectedSkill,
+        ),
       );
     }
 
-    if (filters.minimumRating > 0) {
-      result = result.where((worker) => worker.rating >= filters.minimumRating);
+    if (filters.distanceKm >
+        0) {
+      result =
+          result.where(
+        (worker) =>
+            worker.distanceKm <=
+            filters.distanceKm,
+      );
     }
 
-    switch (filters.availability) {
+    if (filters.minimumRating >
+        0) {
+      result =
+          result.where(
+        (worker) =>
+            worker.rating >=
+            filters.minimumRating,
+      );
+    }
+
+    switch (
+        filters.availability) {
       case 'Available today':
-        result = result.where((worker) => worker.isAvailableToday);
+        result =
+            result.where(
+          (worker) =>
+              worker
+                  .isAvailableToday,
+        );
         break;
 
       case 'Available tomorrow':
-        result = result.where((worker) => worker.availableTomorrow);
+        result =
+            result.where(
+          (worker) =>
+              worker
+                  .availableTomorrow,
+        );
         break;
 
       case 'Any time':
@@ -135,17 +232,36 @@ class EmployerWorkersState {
         break;
     }
 
-    switch (filters.experience) {
+    switch (
+        filters.experience) {
       case '1+ years':
-        result = result.where((worker) => worker.experienceYears >= 1);
+        result =
+            result.where(
+          (worker) =>
+              worker
+                  .experienceYears >=
+              1,
+        );
         break;
 
       case '3+ years':
-        result = result.where((worker) => worker.experienceYears >= 3);
+        result =
+            result.where(
+          (worker) =>
+              worker
+                  .experienceYears >=
+              3,
+        );
         break;
 
       case '5+ years':
-        result = result.where((worker) => worker.experienceYears >= 5);
+        result =
+            result.where(
+          (worker) =>
+              worker
+                  .experienceYears >=
+              5,
+        );
         break;
 
       case 'Any':
@@ -154,32 +270,58 @@ class EmployerWorkersState {
     }
 
     if (filters.verifiedOnly) {
-      result = result.where((worker) => worker.verified);
+      result =
+          result.where(
+        (worker) =>
+            worker.verified,
+      );
     }
 
-    if (filters.currentlyAvailableOnly) {
-      result = result.where((worker) => worker.isAvailableToday);
+    if (filters
+        .currentlyAvailableOnly) {
+      result =
+          result.where(
+        (worker) =>
+            worker.isAvailableToday,
+      );
     }
 
-    return result.toList(growable: false);
+    return result.toList(
+      growable: false,
+    );
   }
 
   int get activeFilterCount {
     var count = 0;
 
-    if (filters.distanceKm != 10) {
+    if (filters.category !=
+        'All') {
       count++;
     }
 
-    if (filters.minimumRating > 0) {
+    if (filters.skill
+        .trim()
+        .isNotEmpty) {
       count++;
     }
 
-    if (filters.availability != 'Any time') {
+    if (filters.distanceKm !=
+        10) {
       count++;
     }
 
-    if (filters.experience != 'Any') {
+    if (filters.minimumRating >
+        0) {
+      count++;
+    }
+
+    if (filters.availability !=
+        'Any time') {
+      count++;
+    }
+
+    if (filters.experience !=
+        'Any') {
       count++;
     }
 
@@ -187,14 +329,16 @@ class EmployerWorkersState {
       count++;
     }
 
-    if (filters.currentlyAvailableOnly) {
+    if (filters
+        .currentlyAvailableOnly) {
       count++;
     }
 
     return count;
   }
 
-  EmployerWorkersState copyWith({
+  EmployerWorkersState
+      copyWith({
     EmployerWorkersStatus? status,
     List<EmployerWorkerEntity>? workers,
     String? searchQuery,
@@ -207,16 +351,30 @@ class EmployerWorkersState {
     bool clearTogglingWorker = false,
   }) {
     return EmployerWorkersState(
-      status: status ?? this.status,
-      workers: workers ?? this.workers,
-      searchQuery: searchQuery ?? this.searchQuery,
-      selectedTab: selectedTab ?? this.selectedTab,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
-      filters: filters ?? this.filters,
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-      togglingWorkerId: clearTogglingWorker
+      status:
+          status ?? this.status,
+      workers:
+          workers ?? this.workers,
+      searchQuery:
+          searchQuery ??
+              this.searchQuery,
+      selectedTab:
+          selectedTab ??
+              this.selectedTab,
+      selectedCategory:
+          selectedCategory ??
+              this.selectedCategory,
+      filters:
+          filters ?? this.filters,
+      errorMessage: clearError
           ? null
-          : togglingWorkerId ?? this.togglingWorkerId,
+          : errorMessage ??
+              this.errorMessage,
+      togglingWorkerId:
+          clearTogglingWorker
+              ? null
+              : togglingWorkerId ??
+                  this.togglingWorkerId,
     );
   }
 }

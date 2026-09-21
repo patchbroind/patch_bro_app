@@ -2,32 +2,37 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/utils/date_time_utils.dart';
+import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
 
-import '../controllers/post_job_state.dart';
 import '../providers/post_job_providers.dart';
 import '../widgets/post_job_image_picker.dart';
+import '../widgets/post_job_invite_workers_dialog.dart';
 import '../widgets/post_job_location_field.dart';
-import '../widgets/post_job_section.dart';
 import '../widgets/post_job_voice_recorder.dart';
 
 class EmployerPostJobPage extends ConsumerStatefulWidget {
-  const EmployerPostJobPage({
-    super.key,
-  });
+  const EmployerPostJobPage({super.key});
 
   @override
-  ConsumerState<EmployerPostJobPage> createState() =>
-      _EmployerPostJobPageState();
+  ConsumerState<EmployerPostJobPage> createState() => _EmployerPostJobPageState();
 }
 
-class _EmployerPostJobPageState
-    extends ConsumerState<EmployerPostJobPage> {
+class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   late final TextEditingController _categoryController;
+
   late final TextEditingController _skillController;
+
   late final TextEditingController _descriptionController;
 
   Timer? _recordingTimer;
@@ -37,7 +42,9 @@ class _EmployerPostJobPageState
     super.initState();
 
     _categoryController = TextEditingController();
+
     _skillController = TextEditingController();
+
     _descriptionController = TextEditingController();
   }
 
@@ -51,19 +58,14 @@ class _EmployerPostJobPageState
   }
 
   Future<void> _selectDate() async {
-    final controller =
-        ref.read(postJobControllerProvider.notifier);
+    final controller = ref.read(postJobControllerProvider.notifier);
 
     final now = DateTime.now();
 
     final selected = await showDatePicker(
       context: context,
       firstDate: now,
-      lastDate: DateTime(
-        now.year + 2,
-        now.month,
-        now.day,
-      ),
+      lastDate: DateTime(now.year + 2, now.month, now.day),
       initialDate: now,
     );
 
@@ -73,13 +75,9 @@ class _EmployerPostJobPageState
   }
 
   Future<void> _selectTime() async {
-    final controller =
-        ref.read(postJobControllerProvider.notifier);
+    final controller = ref.read(postJobControllerProvider.notifier);
 
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
+    final selected = await showTimePicker(context: context, initialTime: TimeOfDay.now());
 
     if (selected == null) {
       return;
@@ -87,63 +85,43 @@ class _EmployerPostJobPageState
 
     final now = DateTime.now();
 
-    controller.setTime(
-      DateTime(
-        now.year,
-        now.month,
-        now.day,
-        selected.hour,
-        selected.minute,
-      ),
-    );
+    controller.setTime(DateTime(now.year, now.month, now.day, selected.hour, selected.minute));
   }
 
   Future<void> _selectLocation() async {
-  final location = await Navigator.of(context)
-      .push<ProfileLocation>(
-    MaterialPageRoute(
-      builder: (_) => const LocationPickerPage(),
-    ),
-  );
+    final location = await Navigator.of(
+      context,
+    ).push<ProfileLocation>(MaterialPageRoute(builder: (_) => const LocationPickerPage()));
 
-  if (location != null) {
-    ref
-        .read(postJobControllerProvider.notifier)
-        .setLocation(location);
+    if (location != null) {
+      ref.read(postJobControllerProvider.notifier).setLocation(location);
+    }
   }
-}
 
   Future<void> _startRecording() async {
-    await ref
-        .read(postJobControllerProvider.notifier)
-        .startRecording();
+    await ref.read(postJobControllerProvider.notifier).startRecording();
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     final state = ref.read(postJobControllerProvider);
 
     if (state.isRecording) {
       _recordingTimer?.cancel();
 
-      _recordingTimer = Timer.periodic(
-  const Duration(seconds: 1),
-  (_) {
-    final currentState =
-        ref.read(postJobControllerProvider);
+      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final currentState = ref.read(postJobControllerProvider);
 
-    if (!currentState.isRecording) {
-      _recordingTimer?.cancel();
-      return;
-    }
+        if (!currentState.isRecording) {
+          _recordingTimer?.cancel();
+          return;
+        }
 
-    ref
-        .read(postJobControllerProvider.notifier)
-        .updateRecordingDuration(
-          currentState.recordingDuration +
-              const Duration(seconds: 1),
-        );
-  },
-);
+        ref
+            .read(postJobControllerProvider.notifier)
+            .updateRecordingDuration(currentState.recordingDuration + const Duration(seconds: 1));
+      });
     }
   }
 
@@ -151,106 +129,73 @@ class _EmployerPostJobPageState
     _recordingTimer?.cancel();
     _recordingTimer = null;
 
-    await ref
-        .read(postJobControllerProvider.notifier)
-        .stopRecording();
+    await ref.read(postJobControllerProvider.notifier).stopRecording();
   }
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
 
-    final success = await ref
-        .read(postJobControllerProvider.notifier)
-        .submitJob();
+    final success = await ref.read(postJobControllerProvider.notifier).submitJob();
 
     if (!mounted) {
       return;
     }
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Job submitted successfully.',
-          ),
-        ),
-      );
-    } else {
-      final state =
-          ref.read(postJobControllerProvider);
+    if (!success) {
+      final state = ref.read(postJobControllerProvider);
 
       if (state.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.errorMessage!),
-          ),
-        );
+        AppSnackbar.error(context, state.errorMessage!);
       }
-    }
-  }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) {
-      return 'Select date';
+      return;
     }
 
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    final state = ref.read(postJobControllerProvider);
 
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    await _showInviteWorkersDialog(category: state.category.trim(), skill: state.skill.trim());
   }
 
-  String _formatTime(DateTime? time) {
-    if (time == null) {
-      return 'Select time';
+  Future<void> _showInviteWorkersDialog({required String category, required String skill}) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PostJobInviteWorkersDialog(
+          category: category,
+          skill: skill,
+          onNotNow: () {
+            Navigator.of(dialogContext).pop();
+          },
+          onInvite: () {
+            Navigator.of(dialogContext).pop();
+
+            _openWorkers(category: category, skill: skill);
+          },
+        );
+      },
+    );
+  }
+
+  void _openWorkers({required String category, required String skill}) {
+    final queryParameters = <String, String>{'tab': 'workers',};
+
+    if (category.trim().isNotEmpty) {
+      queryParameters['category'] = category.trim();
     }
 
-    final hour = time.hour == 0
-        ? 12
-        : time.hour > 12
-            ? time.hour - 12
-            : time.hour;
+    if (skill.trim().isNotEmpty) {
+      queryParameters['skill'] = skill.trim();
+    }
 
-    final minute =
-        time.minute.toString().padLeft(2, '0');
-
-    final period =
-        time.hour >= 12 ? 'PM' : 'AM';
-
-    return '$hour:$minute $period';
+    context.goNamed(RouteNames.employerWorkers, queryParameters: queryParameters);
   }
+
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postJobControllerProvider);
-
-    ref.listen<PostJobState>(
-      postJobControllerProvider,
-      (previous, next) {
-        if (next.status == PostJobStatus.success &&
-            previous?.status != PostJobStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Job submitted successfully.',
-              ),
-            ),
-          );
-        }
-      },
-    );
+    final isSubmitting = state.status == PostJobStatus.submitting;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -263,208 +208,125 @@ class _EmployerPostJobPageState
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final horizontalPadding =
-                constraints.maxWidth >= 600
-                    ? 32.0
-                    : 16.0;
+            final horizontalPadding = constraints.maxWidth >= 600 ? 32.0 : 16.0;
 
-            final contentWidth =
-                constraints.maxWidth >= 900
-                    ? 760.0
-                    : double.infinity;
+            final contentWidth = constraints.maxWidth >= 900 ? 760.0 : double.infinity;
 
             return Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: contentWidth,
-                ),
-                child: Form(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      8,
-                      horizontalPadding,
-                      32,
-                    ),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 24),
-
-                        PostJobSection(
-                          title: 'Job Details',
-                          subtitle:
-                              'Tell workers what kind of work you need.',
-                          child: Column(
-                            children: [
-                              AppTextField(
-                                controller:
-                                    _categoryController,
-                                hintText:
-                                    'Enter job category',
-                                icon: Icons.category_outlined,
-                                textInputAction:
-                                    TextInputAction.next,
-                                onChanged: ref
-                                    .read(
-                                      postJobControllerProvider
-                                          .notifier,
-                                    )
-                                    .setCategory,
-                              ),
-                              const SizedBox(height: 14),
-                              AppTextField(
-                                controller:
-                                    _skillController,
-                                hintText:
-                                    'Required skill',
-                                icon: Icons.handyman_outlined,
-                                textInputAction:
-                                    TextInputAction.next,
-                                onChanged: ref
-                                    .read(
-                                      postJobControllerProvider
-                                          .notifier,
-                                    )
-                                    .setSkill,
-                              ),
-                            ],
-                          ),
+                constraints: BoxConstraints(maxWidth: contentWidth),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSubHeader(context),
+                      const SizedBox(height: 24),
+                      PostJobSection(
+                        title: 'Job Details',
+                        subtitle: 'Tell workers what kind of work you need.',
+                        child: Column(
+                          children: [
+                            AppTextField(
+                              controller: _categoryController,
+                              hintText: 'Enter job category',
+                              icon: Icons.category_outlined,
+                              textInputAction: TextInputAction.next,
+                              onChanged: ref.read(postJobControllerProvider.notifier).setCategory,
+                            ),
+                            const SizedBox(height: 14),
+                            AppTextField(
+                              controller: _skillController,
+                              hintText: 'Required skill',
+                              icon: Icons.handyman_outlined,
+                              textInputAction: TextInputAction.next,
+                              onChanged: ref.read(postJobControllerProvider.notifier).setSkill,
+                            ),
+                          ],
                         ),
-
-                        const SizedBox(height: 24),
-
-                        PostJobSection(
-                          title: 'Schedule',
-                          subtitle:
-                              'Choose when the work needs to be done.',
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _SelectionTile(
-                                  icon:
-                                      Icons.calendar_today_outlined,
-                                  title: 'Date',
-                                  value:
-                                      _formatDate(
-                                    state.selectedDate,
-                                  ),
-                                  onTap: _selectDate,
-                                ),
+                      ),
+                      const SizedBox(height: 24),
+                      PostJobSection(
+                        title: 'Schedule',
+                        subtitle: 'Choose when the work needs to be done.',
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SelectionTile(
+                                icon: Icons.calendar_today_outlined,
+                                title: 'Date',
+                                value: DateTimeUtils.formatDate(state.selectedDate),
+                                onTap: _selectDate,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _SelectionTile(
-                                  icon:
-                                      Icons.access_time_outlined,
-                                  title: 'Time',
-                                  value:
-                                      _formatTime(
-                                    state.selectedTime,
-                                  ),
-                                  onTap: _selectTime,
-                                ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SelectionTile(
+                                icon: Icons.access_time_outlined,
+                                title: 'Time',
+                                value: DateTimeUtils.formatTime(state.selectedTime),
+                                onTap: _selectTime,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-
-                        const SizedBox(height: 24),
-
-                        PostJobSection(
-                          title: 'Location',
-                          subtitle:
-                              'Where should the worker arrive?',
-                          child: PostJobLocationField(
-                            address:
-                                state.locationAddress,
-                            onTap:
-                                _selectLocation,
-                          ),
+                      ),
+                      const SizedBox(height: 24),
+                      PostJobSection(
+                        title: 'Location',
+                        subtitle: 'Where should the worker arrive?',
+                        child: PostJobLocationField(
+                          address: state.locationAddress,
+                          onTap: _selectLocation,
                         ),
-
-                        const SizedBox(height: 24),
-
-                        PostJobSection(
-                          title: 'Description',
-                          subtitle:
-                              'Describe the work clearly for workers.',
-                          child: Column(
-                            children: [
-                              AppTextField(
-                                controller:
-                                    _descriptionController,
-                                hintText:
-                                    'Describe the job...',
-                                icon:
-                                    Icons.description_outlined,
-                                maxLength: 1000,
-                                keyboardType:
-                                    TextInputType.multiline,
-                                onChanged: ref
-                                    .read(
-                                      postJobControllerProvider
-                                          .notifier,
-                                    )
-                                    .setDescription,
-                              ),
-                              const SizedBox(height: 12),
-                              PostJobVoiceRecorder(
-                                isRecording:
-                                    state.isRecording,
-                                duration:
-                                    state.recordingDuration,
-                                hasRecording:
-                                    state.voiceRecording !=
-                                        null,
-                                onStart:
-                                    _startRecording,
-                                onStop:
-                                    _stopRecording,
-                                onRemove: ref
-                                    .read(
-                                      postJobControllerProvider
-                                          .notifier,
-                                    )
-                                    .removeVoiceRecording,
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 24),
+                      PostJobSection(
+                        title: 'Description',
+                        subtitle: 'Describe the work clearly for workers.',
+                        child: Column(
+                          children: [
+                            AppTextField(
+                              controller: _descriptionController,
+                              hintText: 'Describe the job...',
+                              icon: Icons.description_outlined,
+                              maxLength: 1000,
+                              keyboardType: TextInputType.multiline,
+                              onChanged: ref
+                                  .read(postJobControllerProvider.notifier)
+                                  .setDescription,
+                            ),
+                            const SizedBox(height: 12),
+                            PostJobVoiceRecorder(
+                              isRecording: state.isRecording,
+                              duration: state.recordingDuration,
+                              hasRecording: state.voiceRecording != null,
+                              onStart: _startRecording,
+                              onStop: _stopRecording,
+                              onRemove: ref
+                                  .read(postJobControllerProvider.notifier)
+                                  .removeVoiceRecording,
+                            ),
+                          ],
                         ),
-
-                        const SizedBox(height: 24),
-
-                        PostJobSection(
-                          title: 'Job Images',
-                          subtitle:
-                              'Add up to 2 images to help workers understand the job.',
-                          child: PostJobImagePicker(
-                            images: state.images,
-                            onAdd: ref
-                                .read(
-                                  postJobControllerProvider
-                                      .notifier,
-                                )
-                                .pickImages,
-                            onRemove: ref
-                                .read(
-                                  postJobControllerProvider
-                                      .notifier,
-                                )
-                                .removeImage,
-                          ),
+                      ),
+                      const SizedBox(height: 24),
+                      PostJobSection(
+                        title: 'Job Images',
+                        subtitle: 'Add up to 2 images to help workers understand the job.',
+                        child: PostJobImagePicker(
+                          images: state.images,
+                          onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
+                          onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
                         ),
-
-                        const SizedBox(height: 32),
-
-                        _buildSubmitButton(
-                          context,
-                          state,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 32),
+                      // _buildSubmitButton(context, state),
+                      AppPrimaryButton(label: 'Post Job', 
+                      isLoading: isSubmitting,
+                      leadingIcon: Icon(Icons.add_circle_outline),
+                      onPressed: _submit)
+                    ],
                   ),
                 ),
               ),
@@ -475,160 +337,12 @@ class _EmployerPostJobPageState
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Find the right worker for the job',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Provide the job details so verified workers can understand what you need.',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton(
-    BuildContext context,
-    PostJobState state,
-  ) {
-    final isSubmitting =
-        state.status == PostJobStatus.submitting;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed:
-            isSubmitting ? null : _submit,
-        child: isSubmitting
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
-              )
-            : const Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_circle_outline,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Post Job',
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-class _SelectionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final VoidCallback onTap;
-
-  const _SelectionTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected =
-        !value.startsWith('Select');
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.employerLight,
-                borderRadius:
-                    BorderRadius.circular(11),
-              ),
-              child: Icon(
-                icon,
-                color:
-                    AppColors.employerPrimary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                          color:
-                              AppColors.textSecondary,
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(
-                          color: isSelected
-                              ? AppColors.textPrimary
-                              : AppColors.textHint,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildSubHeader(BuildContext context) {
+    return Text(
+      'Provide the job details so verified workers can understand what you need.',
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary, height: 1.45),
     );
   }
 }

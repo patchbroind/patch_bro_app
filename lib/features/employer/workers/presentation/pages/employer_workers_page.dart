@@ -3,30 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:patch_bro/app/router/route_names.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
-import 'package:patch_bro/core/widgets/app_error_view.dart';
+import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_content.dart';
 
 import '../controllers/employer_workers_state.dart';
 import '../providers/employer_workers_providers.dart';
-import '../widgets/employer_worker_card.dart';
-import '../widgets/employer_workers_category_chips.dart';
-import '../widgets/employer_workers_empty_state.dart';
 import '../widgets/employer_workers_filter_sheet.dart';
-import '../widgets/employer_workers_header.dart';
-import '../widgets/employer_workers_search_bar.dart';
-import '../widgets/employer_workers_tabs.dart';
 
 class EmployerWorkersPage extends ConsumerStatefulWidget {
-  const EmployerWorkersPage({super.key});
+  const EmployerWorkersPage({super.key, this.initialTab = EmployerWorkersTab.workers});
+
+  final EmployerWorkersTab initialTab;
 
   @override
-  ConsumerState<EmployerWorkersPage> createState() =>
-      _EmployerWorkersPageState();
+  ConsumerState<EmployerWorkersPage> createState() => _EmployerWorkersPageState();
 }
 
 class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   late final TextEditingController _searchController;
+
+  bool _jobFilterApplied = false;
 
   @override
   void initState() {
@@ -39,14 +35,65 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         return;
       }
 
-      ref.read(employerWorkersControllerProvider.notifier).loadWorkers();
+      final controller = ref.read(employerWorkersControllerProvider.notifier);
+
+      controller.loadWorkers();
+
+      controller.selectTab(widget.initialTab);
+
+      _applyJobFilterFromRoute();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EmployerWorkersPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.initialTab != widget.initialTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        ref.read(employerWorkersControllerProvider.notifier).selectTab(widget.initialTab);
+      });
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  // ============================================================
+  // JOB FILTER
+  // ============================================================
+
+  void _applyJobFilterFromRoute() {
+    if (_jobFilterApplied) {
+      return;
+    }
+
+    final uri = GoRouterState.of(context).uri;
+
+    final category = uri.queryParameters['category']?.trim();
+
+    final skill = uri.queryParameters['skill']?.trim();
+
+    if ((category == null || category.isEmpty) && (skill == null || skill.isEmpty)) {
+      return;
+    }
+
+    ref
+        .read(employerWorkersControllerProvider.notifier)
+        .applyJobFilters(category: category ?? 'All', skill: skill ?? '');
+
+    if (skill != null && skill.isNotEmpty) {
+      _searchController.text = skill;
+    }
+
+    _jobFilterApplied = true;
   }
 
   // ============================================================
@@ -90,18 +137,13 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
   Future<void> _toggleFavourite(String workerId) async {
     try {
-      await ref
-          .read(employerWorkersControllerProvider.notifier)
-          .toggleFavourite(workerId);
+      await ref.read(employerWorkersControllerProvider.notifier).toggleFavourite(workerId);
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to update favourite worker. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to update favourite worker. Please try again.');
     }
   }
 
@@ -111,18 +153,13 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
   Future<void> _refresh() async {
     try {
-      await ref
-          .read(employerWorkersControllerProvider.notifier)
-          .refreshWorkers();
+      await ref.read(employerWorkersControllerProvider.notifier).refreshWorkers();
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(
-        context,
-        'Unable to refresh workers. Please try again.',
-      );
+      AppSnackbar.error(context, 'Unable to refresh workers. Please try again.');
     }
   }
 
@@ -136,7 +173,7 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
     return Scaffold(
       body: SafeArea(
-        child: _WorkersContent(
+        child: EmployerWorkersContent(
           state: state,
           searchController: _searchController,
           onNotificationTap: _openNotifications,
@@ -162,9 +199,7 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   }
 
   void _updateSearch(String value) {
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .updateSearchQuery(value);
+    ref.read(employerWorkersControllerProvider.notifier).updateSearchQuery(value);
   }
 
   void _selectTab(EmployerWorkersTab tab) {
@@ -172,157 +207,10 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   }
 
   void _selectCategory(String category) {
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .selectCategory(category);
+    ref.read(employerWorkersControllerProvider.notifier).selectCategory(category);
   }
 
   void _loadWorkers() {
     ref.read(employerWorkersControllerProvider.notifier).loadWorkers();
-  }
-}
-
-// ============================================================================
-// WORKERS CONTENT
-// ============================================================================
-
-class _WorkersContent extends StatelessWidget {
-  const _WorkersContent({
-    required this.state,
-    required this.searchController,
-    required this.onNotificationTap,
-    required this.onSearchChanged,
-    required this.onFilterTap,
-    required this.onTabChanged,
-    required this.onCategorySelected,
-    required this.onWorkerTap,
-    required this.onFavouriteTap,
-    required this.onRefresh,
-    required this.onRetry,
-  });
-
-  final EmployerWorkersState state;
-  final TextEditingController searchController;
-
-  final VoidCallback onNotificationTap;
-  final ValueChanged<String> onSearchChanged;
-  final VoidCallback onFilterTap;
-  final ValueChanged<EmployerWorkersTab> onTabChanged;
-  final ValueChanged<String> onCategorySelected;
-  final ValueChanged<String> onWorkerTap;
-  final ValueChanged<String> onFavouriteTap;
-  final Future<void> Function() onRefresh;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.isLoading && !state.hasWorkers) {
-      return const _WorkersLoading();
-    }
-
-    if (state.isFailure && !state.hasWorkers) {
-      return AppErrorView(
-        title: 'Unable to load Workers',
-        message:
-            state.errorMessage ?? 'Please check your connection and try again.',
-        icon: Icons.cloud_off_outlined,
-        onRetry: onRetry,
-      );
-    }
-
-    return RefreshIndicator(
-      color: AppColors.employerPrimary,
-      onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
-        children: [
-          EmployerWorkersHeader(onNotificationTap: onNotificationTap),
-          const SizedBox(height: 16),
-          EmployerWorkersSearchBar(
-            controller: searchController,
-            onChanged: onSearchChanged,
-            onFilterTap: onFilterTap,
-            filterCount: state.activeFilterCount,
-          ),
-          const SizedBox(height: 14),
-          EmployerWorkersTabs(
-            selectedTab: state.selectedTab,
-            onChanged: onTabChanged,
-          ),
-          const SizedBox(height: 12),
-          EmployerWorkersCategoryChips(
-            selectedCategory: state.selectedCategory,
-            onSelected: onCategorySelected,
-          ),
-          const SizedBox(height: 16),
-          _WorkerList(
-            state: state,
-            onWorkerTap: onWorkerTap,
-            onFavouriteTap: onFavouriteTap,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// WORKER LIST
-// ============================================================================
-
-class _WorkerList extends StatelessWidget {
-  const _WorkerList({
-    required this.state,
-    required this.onWorkerTap,
-    required this.onFavouriteTap,
-  });
-
-  final EmployerWorkersState state;
-  final ValueChanged<String> onWorkerTap;
-  final ValueChanged<String> onFavouriteTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final workers = state.visibleWorkers;
-
-    if (workers.isEmpty) {
-      return const EmployerWorkersEmptyState();
-    }
-
-    return Column(
-      children: [
-        for (final worker in workers)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: EmployerWorkerCard(
-              key: ValueKey(worker.id),
-              worker: worker,
-              isToggling: worker.id == state.togglingWorkerId,
-              onTap: () {
-                onWorkerTap(worker.id);
-              },
-              onToggleFavourite: () {
-                onFavouriteTap(worker.id);
-              },
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ============================================================================
-// LOADING
-// ============================================================================
-
-class _WorkersLoading extends StatelessWidget {
-  const _WorkersLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.employerPrimary),
-    );
   }
 }

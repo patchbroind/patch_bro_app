@@ -20,12 +20,7 @@ class EmployerFavouriteWorkersRemoteDataSource {
      * reviews. Do not guess table/column/RPC names; replace this method when
      * that backend contract is available.
      */
-    return const <FavouriteWorkerEntity>[ 
-    //.........................temporary data.............
-
-      FavouriteWorkerEntity(id: "1", name: "John", profession: "Painter", rating: 5.5, reviewCount: 7),FavouriteWorkerEntity(id: "2", name: "Ram", profession: "Cleaning", rating: 7.5, reviewCount: 9)
-    //.........................temporary data.............
-    ];
+    return const <FavouriteWorkerEntity>[];
   }
 
   Future<void> toggleFavourite(String workerId) async {

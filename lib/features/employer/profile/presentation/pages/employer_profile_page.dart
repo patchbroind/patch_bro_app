@@ -14,6 +14,8 @@ import '../widgets/employer_profile_menu_tile.dart';
 import '../widgets/employer_profile_section.dart';
 import '../widgets/employer_profile_stats.dart';
 import '../widgets/employer_trust_card.dart';
+import 'package:patch_bro/features/employer/workers/presentation/controllers/employer_workers_state.dart';
+import 'package:patch_bro/features/employer/workers/presentation/providers/employer_workers_providers.dart';
 
 class EmployerProfilePage extends ConsumerStatefulWidget {
   const EmployerProfilePage({super.key});
@@ -48,6 +50,7 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Profile'),
+        centerTitle: true,
         actions: [
           IconButton(
             tooltip: 'Settings',
@@ -131,8 +134,17 @@ class _EmployerProfilePageState extends ConsumerState<EmployerProfilePage> {
   }
 
   void _onFavouriteWorkers() {
-    context.pushNamed(RouteNames.employerFavouriteWorkers);
-  }
+  ref
+      .read(employerWorkersControllerProvider.notifier)
+      .selectTab(EmployerWorkersTab.favourites);
+
+  context.goNamed(
+    RouteNames.employerWorkers,
+    queryParameters: {
+      'tab': 'favourites',
+    },
+  );
+}
 
   void _onMyReviews() {
     _showComingSoon('My Reviews');
