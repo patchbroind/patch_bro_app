@@ -9,6 +9,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.backgroundColor,
     this.leadingIcon,
+    this.labelStyle,
   });
 
   final String label;
@@ -16,6 +17,7 @@ class AppPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final Color? backgroundColor;
   final Icon? leadingIcon;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class AppPrimaryButton extends StatelessWidget {
               spacing: 5,
               children: [
                 ?leadingIcon,
-                Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                Text(label, style:labelStyle?? const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               ],
             ),
       ),

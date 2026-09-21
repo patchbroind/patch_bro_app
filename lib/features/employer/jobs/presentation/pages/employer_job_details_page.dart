@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/widgets/app_primary_button.dart';
+import 'package:patch_bro/core/widgets/app_primary_outlined_button.dart';
 
 import '../../domain/entities/employer_job_entity.dart';
 import '../widgets/employer_job_audio_player.dart';
@@ -559,63 +561,21 @@ class _ActionButtons extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // Edit Job will be implemented
-              // in the job editing feature.
-            },
-            icon: const Icon(
-              Icons.edit_outlined,
-            ),
-            label: const Text('Edit Job'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor:
-                  AppColors.employerPrimary,
-              side: const BorderSide(
-                color:
-                    AppColors.employerPrimary,
-              ),
-              padding:
-                  const EdgeInsets.symmetric(
-                vertical: 14,
-              ),
-              shape:
-                  RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          child: AppPrimaryOutlinedButton(label: 'Edit Job', icon: const Icon(Icons.edit_outlined), onPressed: () {
+            
+          }),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // Find Workers will be implemented
-              // in the worker matching feature.
-            },
-            icon: const Icon(
+          child: AppPrimaryButton(label:'Invite Workers' , 
+          leadingIcon: Icon(
               Icons.people_outline,
             ),
-            label:
-                const Text('Invite Workers'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  AppColors.employerPrimary,
-              foregroundColor:
-                  AppColors.white,
-              elevation: 0,
-              padding:
-                  const EdgeInsets.symmetric(
-                vertical: 14,
-              ),
-              shape:
-                  RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(12),
-              ),
-            ),
-          ),
+            labelStyle: const TextStyle(fontSize: 14),
+          onPressed: () {
+            
+          },)
+          
         ),
       ],
     );
