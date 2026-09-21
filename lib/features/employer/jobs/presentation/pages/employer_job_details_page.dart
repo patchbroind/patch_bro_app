@@ -598,7 +598,7 @@ class _ActionButtons extends StatelessWidget {
               Icons.people_outline,
             ),
             label:
-                const Text('Find Workers'),
+                const Text('Invite Workers'),
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   AppColors.employerPrimary,

@@ -57,6 +57,15 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     super.dispose();
   }
 
+  void _resetForm() {
+    _categoryController.clear();
+    _skillController.clear();
+    _descriptionController.clear();
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    ref.read(postJobControllerProvider.notifier).reset();
+  }
+
   Future<void> _selectDate() async {
     final controller = ref.read(postJobControllerProvider.notifier);
 
@@ -134,26 +143,26 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-
-    final success = await ref.read(postJobControllerProvider.notifier).submitJob();
-
+    final controller = ref.read(postJobControllerProvider.notifier);
+    final success = await controller.submitJob();
     if (!mounted) {
       return;
     }
-
     if (!success) {
       final state = ref.read(postJobControllerProvider);
-
       if (state.errorMessage != null) {
         AppSnackbar.error(context, state.errorMessage!);
       }
-
       return;
     }
-
     final state = ref.read(postJobControllerProvider);
-
-    await _showInviteWorkersDialog(category: state.category.trim(), skill: state.skill.trim());
+    final category = state.category.trim();
+    final skill = state.skill.trim();
+    await _showInviteWorkersDialog(category: category, skill: skill);
+    if (!mounted) {
+      return;
+    }
+    _resetForm();
   }
 
   Future<void> _showInviteWorkersDialog({required String category, required String skill}) async {
@@ -178,7 +187,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   }
 
   void _openWorkers({required String category, required String skill}) {
-    final queryParameters = <String, String>{'tab': 'workers',};
+    final queryParameters = <String, String>{'tab': 'workers'};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();
@@ -190,7 +199,6 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     context.goNamed(RouteNames.employerWorkers, queryParameters: queryParameters);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -322,10 +330,12 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                       ),
                       const SizedBox(height: 32),
                       // _buildSubmitButton(context, state),
-                      AppPrimaryButton(label: 'Post Job', 
-                      isLoading: isSubmitting,
-                      leadingIcon: Icon(Icons.add_circle_outline),
-                      onPressed: _submit)
+                      AppPrimaryButton(
+                        label: 'Post Job',
+                        isLoading: isSubmitting,
+                        leadingIcon: Icon(Icons.add_circle_outline),
+                        onPressed: _submit,
+                      ),
                     ],
                   ),
                 ),
