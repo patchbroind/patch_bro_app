@@ -3,6 +3,7 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/widgets/app_tappable_card.dart';
 import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
+import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_card_invite_button.dart';
 
 class EmployerWorkerCard extends StatelessWidget {
   const EmployerWorkerCard({
@@ -10,12 +11,23 @@ class EmployerWorkerCard extends StatelessWidget {
     required this.worker,
     required this.onTap,
     required this.onToggleFavourite,
+    this.onInvite,
+    this.showInviteButton = false,
+    this.isInviting = false,
+    this.isInvited = false,
     this.isToggling = false,
   });
 
   final EmployerWorkerEntity worker;
+
   final VoidCallback onTap;
   final VoidCallback onToggleFavourite;
+
+  final VoidCallback? onInvite;
+
+  final bool showInviteButton;
+  final bool isInviting;
+  final bool isInvited;
   final bool isToggling;
 
   @override
@@ -37,13 +49,7 @@ class EmployerWorkerCard extends StatelessWidget {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2))],
       ),
       clipBehavior: Clip.antiAlias,
       child: AppTappableCard(
@@ -92,11 +98,10 @@ class EmployerWorkerCard extends StatelessWidget {
                           worker.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -106,16 +111,12 @@ class EmployerWorkerCard extends StatelessWidget {
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           onPressed: isToggling ? null : onToggleFavourite,
-                          tooltip: worker.isFavourite
-                              ? 'Remove favourite'
-                              : 'Add favourite',
+                          tooltip: worker.isFavourite ? 'Remove favourite' : 'Add favourite',
                           icon: isToggling
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : Icon(
                                   worker.isFavourite
@@ -130,21 +131,21 @@ class EmployerWorkerCard extends StatelessWidget {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 2),
+
                   Text(
                     worker.profession,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
                   ),
+
                   const SizedBox(height: 5),
+
                   Row(
                     children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 17,
-                        color: AppColors.warning,
-                      ),
+                      const Icon(Icons.star_rounded, size: 17, color: AppColors.warning),
                       const SizedBox(width: 3),
                       Text(
                         worker.rating.toStringAsFixed(1),
@@ -159,13 +160,16 @@ class EmployerWorkerCard extends StatelessWidget {
                           '(${worker.reviewCount} reviews)',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
                         ),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 3),
+
                   Row(
                     children: [
                       const Icon(
@@ -176,18 +180,17 @@ class EmployerWorkerCard extends StatelessWidget {
                       const SizedBox(width: 3),
                       Text(
                         '${worker.distanceKm.toStringAsFixed(1)} km away',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 7),
+
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: availabilityColor.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
@@ -200,32 +203,40 @@ class EmployerWorkerCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 7),
+
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: worker.skills.take(2).map((skill) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F3F5),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Text(
                           skill,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
+
+                  if (showInviteButton) ...[
+                    const SizedBox(height: 10),
+
+                    EmployerWorkerCardInviteButton(
+                      isInviting: isInviting,
+                      isInvited: isInvited,
+                      onInvite: onInvite,
+                    ),
+                  ],
                 ],
               ),
             ),

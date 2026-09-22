@@ -1,16 +1,19 @@
 import 'dart:io';
 
-import 'package:patch_bro/features/employer/post_job/data/datasource/post_job_remote_data_source.dart';
-
 import '../../domain/repositories/post_job_repository.dart';
+import '../datasource/post_job_remote_data_source.dart';
 
-class PostJobRepositoryImpl implements PostJobRepository {
-  final PostJobRemoteDataSource _remoteDataSource;
+class PostJobRepositoryImpl
+    implements PostJobRepository {
+  PostJobRepositoryImpl(
+    this._remoteDataSource,
+  );
 
-  PostJobRepositoryImpl(this._remoteDataSource);
+  final PostJobRemoteDataSource
+      _remoteDataSource;
 
   @override
-  Future<void> createJob({
+  Future<String> createJob({
     required String category,
     required String skill,
     required DateTime date,
@@ -29,9 +32,11 @@ class PostJobRepositoryImpl implements PostJobRepository {
       time: time,
       latitude: latitude,
       longitude: longitude,
-      locationAddress: locationAddress,
+      locationAddress:
+          locationAddress,
       description: description,
-      voiceRecording: voiceRecording,
+      voiceRecording:
+          voiceRecording,
       images: images,
     );
   }

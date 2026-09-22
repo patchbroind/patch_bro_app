@@ -9,7 +9,7 @@ class PostJobRemoteDataSource {
 
   final ApiClient _apiClient;
 
-  Future<void> createJob({
+  Future<String> createJob({
     required String category,
     required String skill,
     required DateTime date,
@@ -23,136 +23,76 @@ class PostJobRemoteDataSource {
   }) async {
     final formData = FormData();
 
-    // ------------------------------------------------------------
-    // JOB DETAILS
-    // ------------------------------------------------------------
+    formData.fields.add(MapEntry('category', category));
 
-    formData.fields.add(
-      MapEntry('category', category),
-    );
+    formData.fields.add(MapEntry('skill', skill));
 
-    formData.fields.add(
-      MapEntry('skill', skill),
-    );
+    formData.fields.add(MapEntry('scheduled_date', _formatDate(date)));
 
-    formData.fields.add(
-      MapEntry(
-        'scheduled_date',
-        _formatDate(date),
-      ),
-    );
+    formData.fields.add(MapEntry('scheduled_time', _formatTime(time)));
 
-    formData.fields.add(
-      MapEntry(
-        'scheduled_time',
-        _formatTime(time),
-      ),
-    );
+    formData.fields.add(MapEntry('latitude', latitude.toString()));
 
-    formData.fields.add(
-      MapEntry(
-        'latitude',
-        latitude.toString(),
-      ),
-    );
+    formData.fields.add(MapEntry('longitude', longitude.toString()));
 
-    formData.fields.add(
-      MapEntry(
-        'longitude',
-        longitude.toString(),
-      ),
-    );
+    formData.fields.add(MapEntry('location_address', locationAddress));
 
-    formData.fields.add(
-      MapEntry(
-        'location_address',
-        locationAddress,
-      ),
-    );
+    formData.fields.add(MapEntry('description', description));
 
-    formData.fields.add(
-      MapEntry(
-        'description',
-        description,
-      ),
-    );
-
-    // ------------------------------------------------------------
-    // IMAGES
-    // ------------------------------------------------------------
-
-    // Backend currently supports a maximum of 2 images.
     final limitedImages = images.take(2).toList();
 
     for (final image in limitedImages) {
       if (!await image.exists()) {
-        throw Exception(
-          'Selected job image could not be found.',
-        );
+        throw Exception('Selected job image could not be found.');
       }
 
       formData.files.add(
-        MapEntry(
-          'images',
-          await MultipartFile.fromFile(
-            image.path,
-            filename: _fileName(image),
-          ),
-        ),
+        MapEntry('images', await MultipartFile.fromFile(image.path, filename: _fileName(image))),
       );
     }
 
-    // ------------------------------------------------------------
-    // VOICE DESCRIPTION
-    // ------------------------------------------------------------
-
     if (voiceRecording != null) {
       if (!await voiceRecording.exists()) {
-        throw Exception(
-          'Voice recording could not be found.',
-        );
+        throw Exception('Voice recording could not be found.');
       }
 
       formData.files.add(
         MapEntry(
           'audio',
-          await MultipartFile.fromFile(
-            voiceRecording.path,
-            filename: _fileName(voiceRecording),
-          ),
+          await MultipartFile.fromFile(voiceRecording.path, filename: _fileName(voiceRecording)),
         ),
       );
     }
 
-    // ------------------------------------------------------------
-    // API REQUEST
-    // ------------------------------------------------------------
-
     final response = await _apiClient.post<Map<String, dynamic>>(
       ApiEndpoints.employerJobs,
       data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
 
     final responseData = response.data;
 
     if (responseData == null) {
-      throw Exception(
-        'Invalid response received from the server.',
-      );
+      throw Exception('Invalid response received from the server.');
     }
 
-    final success = responseData['success'];
-
-    if (success != true) {
-      final message =
-          responseData['message']?.toString() ??
-          'Failed to create job.';
-
-      throw Exception(message);
+    if (responseData['success'] != true) {
+      throw Exception(responseData['message']?.toString() ?? 'Failed to create job.');
     }
+
+    final data = responseData['data'];
+
+    if (data is! Map) {
+      throw Exception('Invalid job creation response.');
+    }
+
+    final jobId = data['job_id']?.toString();
+
+    if (jobId == null || jobId.isEmpty) {
+      throw Exception('The server did not return the created job ID.');
+    }
+
+    return jobId;
   }
 
   String _formatDate(DateTime date) {
@@ -173,9 +113,7 @@ class PostJobRemoteDataSource {
   String _fileName(File file) {
     final path = file.path;
 
-    final separatorIndex = path.lastIndexOf(
-      Platform.pathSeparator,
-    );
+    final separatorIndex = path.lastIndexOf(Platform.pathSeparator);
 
     if (separatorIndex == -1) {
       return path;

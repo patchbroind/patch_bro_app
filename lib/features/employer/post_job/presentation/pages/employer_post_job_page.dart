@@ -143,29 +143,45 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
+
     final controller = ref.read(postJobControllerProvider.notifier);
-    final success = await controller.submitJob();
+
+    final jobId = await controller.submitJob();
+
     if (!mounted) {
       return;
     }
-    if (!success) {
+
+    if (jobId == null || jobId.isEmpty) {
       final state = ref.read(postJobControllerProvider);
+
       if (state.errorMessage != null) {
         AppSnackbar.error(context, state.errorMessage!);
       }
+
       return;
     }
+
     final state = ref.read(postJobControllerProvider);
+
     final category = state.category.trim();
+
     final skill = state.skill.trim();
-    await _showInviteWorkersDialog(category: category, skill: skill);
+
+    await _showInviteWorkersDialog(jobId: jobId, category: category, skill: skill);
+
     if (!mounted) {
       return;
     }
+
     _resetForm();
   }
 
-  Future<void> _showInviteWorkersDialog({required String category, required String skill}) async {
+  Future<void> _showInviteWorkersDialog({
+    required String jobId,
+    required String category,
+    required String skill,
+  }) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -179,15 +195,15 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
           onInvite: () {
             Navigator.of(dialogContext).pop();
 
-            _openWorkers(category: category, skill: skill);
+            _openWorkers(jobId: jobId, category: category, skill: skill);
           },
         );
       },
     );
   }
 
-  void _openWorkers({required String category, required String skill}) {
-    final queryParameters = <String, String>{'tab': 'workers'};
+  void _openWorkers({required String jobId, required String category, required String skill}) {
+    final queryParameters = <String, String>{'tab': 'workers', 'jobId': jobId};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();

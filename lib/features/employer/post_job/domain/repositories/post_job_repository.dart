@@ -1,7 +1,7 @@
 import 'dart:io';
 
 abstract class PostJobRepository {
-  Future<void> createJob({
+  Future<String> createJob({
     required String category,
     required String skill,
     required DateTime date,

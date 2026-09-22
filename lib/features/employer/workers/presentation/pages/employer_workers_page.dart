@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/features/employer/invitations/presentation/providers/employer_invitations_providers.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_content.dart';
 
 import '../controllers/employer_workers_state.dart';
@@ -24,6 +24,8 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
   bool _jobFilterApplied = false;
 
+  String? _jobId;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +37,10 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         return;
       }
 
+      final uri = GoRouterState.of(context).uri;
+
+      _jobId = uri.queryParameters['jobId'];
+
       final controller = ref.read(employerWorkersControllerProvider.notifier);
 
       controller.loadWorkers();
@@ -42,6 +48,10 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
       controller.selectTab(widget.initialTab);
 
       _applyJobFilterFromRoute();
+
+      if (_jobId != null && _jobId!.isNotEmpty) {
+        ref.read(employerInvitationsControllerProvider(_jobId!).notifier).initialize();
+      }
     });
   }
 
@@ -148,6 +158,39 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   }
 
   // ============================================================
+  // INVITE
+  // ============================================================
+
+  Future<void> _inviteWorker(String workerId) async {
+    final jobId = _jobId;
+
+    if (jobId == null || jobId.isEmpty) {
+      return;
+    }
+
+    try {
+      await ref.read(employerInvitationsControllerProvider(jobId).notifier).inviteWorker(workerId);
+
+      if (!mounted) {
+        return;
+      }
+
+      AppSnackbar.success(
+        context,
+        'Worker invited successfully. The invitation is valid for 15 minutes.',
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      final message = error.toString();
+
+      AppSnackbar.error(context, message.replaceFirst('Exception: ', ''));
+    }
+  }
+
+  // ============================================================
   // REFRESH
   // ============================================================
 
@@ -169,12 +212,18 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(employerWorkersControllerProvider);
+    final workerState = ref.watch(employerWorkersControllerProvider);
+
+    final jobId = _jobId;
+
+    final invitationState = jobId == null || jobId.isEmpty
+        ? null
+        : ref.watch(employerInvitationsControllerProvider(jobId));
 
     return Scaffold(
       body: SafeArea(
         child: EmployerWorkersContent(
-          state: state,
+          state: workerState,
           searchController: _searchController,
           onNotificationTap: _openNotifications,
           onSearchChanged: _updateSearch,
@@ -185,14 +234,14 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
           onFavouriteTap: _toggleFavourite,
           onRefresh: _refresh,
           onRetry: _loadWorkers,
+          onInviteTap: jobId == null ? null : _inviteWorker,
+          showInviteButton: jobId != null && jobId.isNotEmpty,
+          invitingWorkerId: invitationState?.invitingWorkerId,
+          invitedWorkerIds: invitationState?.activeWorkerIds ?? const {},
         ),
       ),
     );
   }
-
-  // ============================================================
-  // CALLBACKS
-  // ============================================================
 
   void _openNotifications() {
     context.pushNamed(RouteNames.employerNotifications);
