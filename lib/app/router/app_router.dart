@@ -42,6 +42,7 @@ import '../../features/profile/presentation/pages/profile_details_page.dart';
 
 import '../config/app_config.dart';
 import 'route_names.dart';
+import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 
 class AppRouter {
   AppRouter._();
@@ -442,15 +443,17 @@ class AppRouter {
   static StatefulShellRoute _buildWorkerShell() {
     return StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        return MainNavigationPage(
-          navigationShell: navigationShell,
-          destinations: const [
-            AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
-            AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
-            AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
-            AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
-            AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
-          ],
+        return WorkerInvitationRealtimeListener(
+          child: MainNavigationPage(
+            navigationShell: navigationShell,
+            destinations: const [
+              AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
+              AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
+              AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
+              AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
+              AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
+            ],
+          ),
         );
       },
       branches: [

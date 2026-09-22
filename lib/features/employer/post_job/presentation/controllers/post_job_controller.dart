@@ -216,18 +216,19 @@ class PostJobController extends Notifier<PostJobState> {
     return null;
   }
 
-  Future<bool> submitJob() async {
+  Future<String?> submitJob() async {
     final validationError = _validate();
 
     if (validationError != null) {
       state = state.copyWith(status: PostJobStatus.failure, errorMessage: validationError);
-      return false;
+
+      return null;
     }
 
     state = state.copyWith(status: PostJobStatus.submitting, clearError: true);
 
     try {
-      await _repository.createJob(
+      final jobId = await _repository.createJob(
         category: state.category.trim(),
         skill: state.skill.trim(),
         date: state.selectedDate!,
@@ -242,11 +243,11 @@ class PostJobController extends Notifier<PostJobState> {
 
       state = state.copyWith(status: PostJobStatus.success, clearError: true);
 
-      return true;
+      return jobId;
     } catch (e) {
       state = state.copyWith(status: PostJobStatus.failure, errorMessage: e.toString());
 
-      return false;
+      return null;
     }
   }
 
