@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,14 +7,31 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/employer/invitations/presentation/providers/employer_invitations_providers.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_content.dart';
+import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_invite_job_sheet.dart';
+
 import '../controllers/employer_workers_state.dart';
 import '../providers/employer_workers_providers.dart';
 import '../widgets/employer_workers_filter_sheet.dart';
 
 class EmployerWorkersPage extends ConsumerStatefulWidget {
-  const EmployerWorkersPage({super.key, this.initialTab = EmployerWorkersTab.workers});
+  const EmployerWorkersPage({
+    super.key,
+    this.initialTab = EmployerWorkersTab.workers,
+    this.jobId,
+    this.category,
+    this.skill,
+  });
 
   final EmployerWorkersTab initialTab;
+
+  /// When this is provided, the page is being used as the
+  /// job-specific "Invite Workers" screen.
+  final String? jobId;
+
+  final String? category;
+  final String? skill;
+
+  bool get isJobSpecific => jobId != null && jobId!.trim().isNotEmpty;
 
   @override
   ConsumerState<EmployerWorkersPage> createState() => _EmployerWorkersPageState();
@@ -25,10 +43,6 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   late final ValueNotifier<int> _invitationTimerTick;
 
   Timer? _invitationTimer;
-
-  bool _jobFilterApplied = false;
-
-  String? _jobId;
 
   @override
   void initState() {
@@ -43,21 +57,17 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         return;
       }
 
-      final uri = GoRouterState.of(context).uri;
-
-      _jobId = uri.queryParameters['jobId'];
-
       final controller = ref.read(employerWorkersControllerProvider.notifier);
 
       controller.loadWorkers();
 
       controller.selectTab(widget.initialTab);
 
-      _applyJobFilterFromRoute();
+      if (widget.isJobSpecific) {
+        _applyJobFilters();
 
-      final jobId = _jobId;
+        final jobId = widget.jobId!;
 
-      if (jobId != null && jobId.isNotEmpty) {
         ref.read(employerInvitationsControllerProvider(jobId).notifier).initialize();
 
         _startInvitationExpirationTimer();
@@ -91,8 +101,37 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     super.dispose();
   }
 
+  // JOB-SPECIFIC FILTERS
+
+  void _applyJobFilters() {
+    final category = widget.category?.trim();
+
+    final skill = widget.skill?.trim();
+
+    if ((category == null || category.isEmpty) && (skill == null || skill.isEmpty)) {
+      return;
+    }
+
+    ref
+        .read(employerWorkersControllerProvider.notifier)
+        .applyJobFilters(
+          category: category == null || category.isEmpty ? 'All' : category,
+          skill: skill ?? '',
+        );
+
+    if (skill != null && skill.isNotEmpty) {
+      _searchController.text = skill;
+    }
+  }
+
+  // INVITATION EXPIRATION TIMER
+
   void _startInvitationExpirationTimer() {
     _stopInvitationExpirationTimer();
+
+    if (!widget.isJobSpecific) {
+      return;
+    }
 
     _invitationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) {
@@ -108,31 +147,7 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     _invitationTimer = null;
   }
 
-  void _applyJobFilterFromRoute() {
-    if (_jobFilterApplied) {
-      return;
-    }
-
-    final uri = GoRouterState.of(context).uri;
-
-    final category = uri.queryParameters['category']?.trim();
-
-    final skill = uri.queryParameters['skill']?.trim();
-
-    if ((category == null || category.isEmpty) && (skill == null || skill.isEmpty)) {
-      return;
-    }
-
-    ref
-        .read(employerWorkersControllerProvider.notifier)
-        .applyJobFilters(category: category ?? 'All', skill: skill ?? '');
-
-    if (skill != null && skill.isNotEmpty) {
-      _searchController.text = skill;
-    }
-
-    _jobFilterApplied = true;
-  }
+  // FILTER
 
   Future<void> _openFilter() async {
     final currentFilters = ref.read(employerWorkersControllerProvider).filters;
@@ -157,9 +172,13 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     ref.read(employerWorkersControllerProvider.notifier).updateFilters(result);
   }
 
+  // WORKER DETAILS
+
   void _openWorkerDetails(String workerId) {
     context.pushNamed(RouteNames.employerWorkerProfile, extra: workerId);
   }
+
+  // FAVOURITE
 
   Future<void> _toggleFavourite(String workerId) async {
     try {
@@ -169,12 +188,18 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         return;
       }
 
-      AppSnackbar.error(context, 'Unable to update favourite worker. Please try again.');
+      AppSnackbar.error(
+        context,
+        'Unable to update favourite worker. '
+        'Please try again.',
+      );
     }
   }
 
-  Future<void> _inviteWorker(String workerId) async {
-    final jobId = _jobId;
+  // JOB-SPECIFIC INVITE
+
+  Future<void> _inviteWorkerForCurrentJob(String workerId) async {
+    final jobId = widget.jobId;
 
     if (jobId == null || jobId.isEmpty) {
       return;
@@ -203,6 +228,21 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     }
   }
 
+  Future<void> _openJobSelector(String workerId) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return FractionallySizedBox(
+          heightFactor: 0.86,
+          child: EmployerWorkerInviteJobSheet(workerId: workerId),
+        );
+      },
+    );
+  }
+
   Future<void> _refresh() async {
     try {
       await ref.read(employerWorkersControllerProvider.notifier).refreshWorkers();
@@ -211,26 +251,42 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         return;
       }
 
-      AppSnackbar.error(context, 'Unable to refresh workers. Please try again.');
+      AppSnackbar.error(
+        context,
+        'Unable to refresh workers. '
+        'Please try again.',
+      );
     }
   }
+
+  // BUILD
 
   @override
   Widget build(BuildContext context) {
     final workerState = ref.watch(employerWorkersControllerProvider);
 
-    final jobId = _jobId;
+    final jobId = widget.jobId;
 
-    final invitationState = jobId == null || jobId.isEmpty
-        ? null
-        : ref.watch(employerInvitationsControllerProvider(jobId));
+    final invitationState = widget.isJobSpecific
+        ? ref.watch(employerInvitationsControllerProvider(jobId!))
+        : null;
 
     return ValueListenableBuilder<int>(
       valueListenable: _invitationTimerTick,
       builder: (context, _, child) {
-        final currentInvitationState = invitationState;
-
         return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: widget.isJobSpecific
+              ? AppBar(
+                  leading: IconButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  ),
+                  title: const Text('Invite Workers'),
+                )
+              : null,
           body: SafeArea(
             child: EmployerWorkersContent(
               state: workerState,
@@ -254,13 +310,20 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
               onRetry: _loadWorkers,
 
-              onInviteTap: jobId == null || jobId.isEmpty ? null : _inviteWorker,
+              /*
+               * Job-specific screen:
+               *     invite directly for this job.
+               *
+               * Normal Workers tab:
+               *     open job selector.
+               */
+              onInviteTap: widget.isJobSpecific ? _inviteWorkerForCurrentJob : _openJobSelector,
 
-              showInviteButton: jobId != null && jobId.isNotEmpty,
+              showInviteButton: true,
 
-              invitingWorkerId: currentInvitationState?.invitingWorkerId,
+              invitingWorkerId: invitationState?.invitingWorkerId,
 
-              invitedWorkerIds: currentInvitationState?.activeWorkerIds ?? const {},
+              invitedWorkerIds: invitationState?.activeWorkerIds ?? const {},
             ),
           ),
         );
@@ -268,22 +331,31 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     );
   }
 
+  // NOTIFICATIONS
 
   void _openNotifications() {
     context.pushNamed(RouteNames.employerNotifications);
   }
 
+  // SEARCH
+
   void _updateSearch(String value) {
     ref.read(employerWorkersControllerProvider.notifier).updateSearchQuery(value);
   }
+
+  // TAB
 
   void _selectTab(EmployerWorkersTab tab) {
     ref.read(employerWorkersControllerProvider.notifier).selectTab(tab);
   }
 
+  // CATEGORY
+
   void _selectCategory(String category) {
     ref.read(employerWorkersControllerProvider.notifier).selectCategory(category);
   }
+
+  // LOAD WORKERS
 
   void _loadWorkers() {
     ref.read(employerWorkersControllerProvider.notifier).loadWorkers();

@@ -33,14 +33,9 @@ class JobDetailActionButtons extends StatelessWidget {
             leadingIcon: const Icon(Icons.people_outline),
             labelStyle: const TextStyle(fontSize: 14),
             onPressed: () {
-              context.goNamed(
-                RouteNames.employerWorkers,
-                queryParameters: {
-                  'tab': 'workers',
-                  'jobId': job.id,
-                  'category': job.category,
-                  'skill': job.skill,
-                },
+              context.pushNamed(
+                RouteNames.employerInviteWorkers,
+                queryParameters: {'jobId': job.id, 'category': job.category, 'skill': job.skill},
               );
             },
           ),
