@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,6 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/employer/invitations/presentation/providers/employer_invitations_providers.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_content.dart';
-
 import '../controllers/employer_workers_state.dart';
 import '../providers/employer_workers_providers.dart';
 import '../widgets/employer_workers_filter_sheet.dart';
@@ -22,6 +22,10 @@ class EmployerWorkersPage extends ConsumerStatefulWidget {
 class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
   late final TextEditingController _searchController;
 
+  late final ValueNotifier<int> _invitationTimerTick;
+
+  Timer? _invitationTimer;
+
   bool _jobFilterApplied = false;
 
   String? _jobId;
@@ -31,6 +35,8 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     super.initState();
 
     _searchController = TextEditingController();
+
+    _invitationTimerTick = ValueNotifier<int>(0);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -49,8 +55,12 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
       _applyJobFilterFromRoute();
 
-      if (_jobId != null && _jobId!.isNotEmpty) {
-        ref.read(employerInvitationsControllerProvider(_jobId!).notifier).initialize();
+      final jobId = _jobId;
+
+      if (jobId != null && jobId.isNotEmpty) {
+        ref.read(employerInvitationsControllerProvider(jobId).notifier).initialize();
+
+        _startInvitationExpirationTimer();
       }
     });
   }
@@ -72,13 +82,31 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
   @override
   void dispose() {
+    _stopInvitationExpirationTimer();
+
+    _invitationTimerTick.dispose();
+
     _searchController.dispose();
+
     super.dispose();
   }
 
-  // ============================================================
-  // JOB FILTER
-  // ============================================================
+  void _startInvitationExpirationTimer() {
+    _stopInvitationExpirationTimer();
+
+    _invitationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _invitationTimerTick.value++;
+    });
+  }
+
+  void _stopInvitationExpirationTimer() {
+    _invitationTimer?.cancel();
+    _invitationTimer = null;
+  }
 
   void _applyJobFilterFromRoute() {
     if (_jobFilterApplied) {
@@ -106,10 +134,6 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     _jobFilterApplied = true;
   }
 
-  // ============================================================
-  // FILTER
-  // ============================================================
-
   Future<void> _openFilter() async {
     final currentFilters = ref.read(employerWorkersControllerProvider).filters;
 
@@ -133,17 +157,9 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     ref.read(employerWorkersControllerProvider.notifier).updateFilters(result);
   }
 
-  // ============================================================
-  // WORKER DETAILS
-  // ============================================================
-
   void _openWorkerDetails(String workerId) {
     context.pushNamed(RouteNames.employerWorkerProfile, extra: workerId);
   }
-
-  // ============================================================
-  // FAVOURITE
-  // ============================================================
 
   Future<void> _toggleFavourite(String workerId) async {
     try {
@@ -156,10 +172,6 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
       AppSnackbar.error(context, 'Unable to update favourite worker. Please try again.');
     }
   }
-
-  // ============================================================
-  // INVITE
-  // ============================================================
 
   Future<void> _inviteWorker(String workerId) async {
     final jobId = _jobId;
@@ -177,7 +189,8 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
 
       AppSnackbar.success(
         context,
-        'Worker invited successfully. The invitation is valid for 15 minutes.',
+        'Worker invited successfully. '
+        'The invitation is valid for 15 minutes.',
       );
     } catch (error) {
       if (!mounted) {
@@ -189,10 +202,6 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
       AppSnackbar.error(context, message.replaceFirst('Exception: ', ''));
     }
   }
-
-  // ============================================================
-  // REFRESH
-  // ============================================================
 
   Future<void> _refresh() async {
     try {
@@ -206,10 +215,6 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
     }
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
     final workerState = ref.watch(employerWorkersControllerProvider);
@@ -220,28 +225,49 @@ class _EmployerWorkersPageState extends ConsumerState<EmployerWorkersPage> {
         ? null
         : ref.watch(employerInvitationsControllerProvider(jobId));
 
-    return Scaffold(
-      body: SafeArea(
-        child: EmployerWorkersContent(
-          state: workerState,
-          searchController: _searchController,
-          onNotificationTap: _openNotifications,
-          onSearchChanged: _updateSearch,
-          onFilterTap: _openFilter,
-          onTabChanged: _selectTab,
-          onCategorySelected: _selectCategory,
-          onWorkerTap: _openWorkerDetails,
-          onFavouriteTap: _toggleFavourite,
-          onRefresh: _refresh,
-          onRetry: _loadWorkers,
-          onInviteTap: jobId == null ? null : _inviteWorker,
-          showInviteButton: jobId != null && jobId.isNotEmpty,
-          invitingWorkerId: invitationState?.invitingWorkerId,
-          invitedWorkerIds: invitationState?.activeWorkerIds ?? const {},
-        ),
-      ),
+    return ValueListenableBuilder<int>(
+      valueListenable: _invitationTimerTick,
+      builder: (context, _, child) {
+        final currentInvitationState = invitationState;
+
+        return Scaffold(
+          body: SafeArea(
+            child: EmployerWorkersContent(
+              state: workerState,
+              searchController: _searchController,
+
+              onNotificationTap: _openNotifications,
+
+              onSearchChanged: _updateSearch,
+
+              onFilterTap: _openFilter,
+
+              onTabChanged: _selectTab,
+
+              onCategorySelected: _selectCategory,
+
+              onWorkerTap: _openWorkerDetails,
+
+              onFavouriteTap: _toggleFavourite,
+
+              onRefresh: _refresh,
+
+              onRetry: _loadWorkers,
+
+              onInviteTap: jobId == null || jobId.isEmpty ? null : _inviteWorker,
+
+              showInviteButton: jobId != null && jobId.isNotEmpty,
+
+              invitingWorkerId: currentInvitationState?.invitingWorkerId,
+
+              invitedWorkerIds: currentInvitationState?.activeWorkerIds ?? const {},
+            ),
+          ),
+        );
+      },
     );
   }
+
 
   void _openNotifications() {
     context.pushNamed(RouteNames.employerNotifications);

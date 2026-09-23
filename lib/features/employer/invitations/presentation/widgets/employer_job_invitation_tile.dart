@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/features/employer/invitations/presentation/widgets/employer_job_invitation_expirey_text.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
@@ -10,7 +9,7 @@ class EmploterJobInvitationTile
     required this.invitation,
   });
 
-  final JobInvitationEntity
+  final JobInvitationEntity 
       invitation;
 
   @override

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
 class EmployerJobInvitationSectionHeader
