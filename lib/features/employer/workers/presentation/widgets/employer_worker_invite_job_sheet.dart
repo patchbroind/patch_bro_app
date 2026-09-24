@@ -4,9 +4,9 @@ import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/employer/invitations/presentation/providers/employer_invitations_providers.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
+import 'package:patch_bro/features/employer/jobs/presentation/controllers/employer_jobs_state.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/providers/employer_jobs_providers.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_job_invite_title.dart';
-import 'package:patch_bro/features/employer/jobs/presentation/controllers/employer_jobs_state.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 class EmployerWorkerInviteJobSheet extends ConsumerStatefulWidget {
@@ -43,7 +43,6 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
   @override
   void dispose() {
     _invitingJobId.dispose();
-
     super.dispose();
   }
 
@@ -55,9 +54,10 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
     _invitingJobId.value = job.id;
 
     try {
+
       await ref
-          .read(employerInvitationsRepositoryProvider)
-          .inviteWorker(jobId: job.id, workerId: widget.workerId);
+          .read(employerInvitationsControllerProvider(job.id).notifier)
+          .inviteWorker(widget.workerId);
 
       ref.invalidate(employerWorkerInvitationStatusesProvider(widget.workerId));
 
@@ -109,8 +109,8 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
       child: SafeArea(
         top: false,
         child: Column(
+          spacing: 12,
           children: [
-            const SizedBox(height: 12),
 
             Container(
               width: 42,
@@ -121,11 +121,12 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 6),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
+                spacing: 12,
                 children: [
                   Container(
                     width: 42,
@@ -136,9 +137,10 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
                     ),
                     child: const Icon(Icons.send_outlined, color: AppColors.employerPrimary),
                   ),
-                  const SizedBox(width: 12),
+
                   const Expanded(
                     child: Column(
+                      spacing: 3,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -149,7 +151,7 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        SizedBox(height: 3),
+                        
                         Text(
                           'Select an active job',
                           style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
@@ -157,6 +159,7 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
                       ],
                     ),
                   ),
+
                   IconButton(
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -166,8 +169,6 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
                 ],
               ),
             ),
-
-            const SizedBox(height: 12),
 
             const Divider(height: 1),
 
@@ -207,21 +208,26 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
+            spacing: 8,
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.cloud_off_outlined, size: 42, color: AppColors.textSecondary),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 4),
+
               const Text(
                 'Unable to load jobs',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+
               Text(
                 jobsState.errorMessage ?? 'Please try again.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 8),
+
               ElevatedButton(
                 onPressed: () {
                   ref.read(employerJobsControllerProvider.notifier).loadJobs();
@@ -239,10 +245,13 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Column(
+            spacing: 6,
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.work_outline, size: 48, color: AppColors.imagePlaceholderIcon),
-              SizedBox(height: 14),
+
+              SizedBox(height: 8),
+
               Text(
                 'No active jobs',
                 style: TextStyle(
@@ -251,7 +260,7 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 6),
+
               Text(
                 'Create an active job before inviting this worker.',
                 textAlign: TextAlign.center,
@@ -266,15 +275,15 @@ class _EmployerWorkerInviteJobSheetState extends ConsumerState<EmployerWorkerInv
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       itemCount: activeJobs.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final job = activeJobs[index];
 
         final invitation = invitationByJobId[job.id];
 
-        final isInvited = invitation != null && invitation.statusLabel == 'Pending';
+        final isInvited = invitation?.status == JobInvitationStatus.pending;
 
-        final isAccepted = invitation != null && invitation.statusLabel == 'Accepted';
+        final isAccepted = invitation?.status == JobInvitationStatus.accepted;
 
         return EmployerWorkerJobInviteTile(
           job: job,
