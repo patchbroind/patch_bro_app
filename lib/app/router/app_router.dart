@@ -3,27 +3,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
-
-import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_page.dart';
-import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
+import 'package:patch_bro/features/employer/addresses/presentation/pages/employer_addresses_page.dart';
 import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
+import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
+import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
+import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_page.dart';
+import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
+import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_settings_and_support.dart';
 import 'package:patch_bro/features/employer/trust/presentation/pages/employer_trust_page.dart';
-import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
-import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
-import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
-import 'package:patch_bro/features/employer/addresses/presentation/pages/employer_addresses_page.dart';
 import 'package:patch_bro/features/employer/workers/presentation/controllers/employer_workers_state.dart';
-
+import 'package:patch_bro/features/employer/workers/presentation/pages/employer_invite_workers_page.dart';
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_worker_details_page.dart';
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_workers_page.dart';
-
-import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
-
+import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -34,15 +31,11 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
-
 import '../../features/navigation/presentation/pages/main_navigation_page.dart';
-
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/presentation/pages/profile_details_page.dart';
-
 import '../config/app_config.dart';
 import 'route_names.dart';
-import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 
 class AppRouter {
   AppRouter._();
@@ -420,6 +413,24 @@ class AppRouter {
             }
 
             return EmployerWorkerDetailsPage(workerId: workerId);
+          },
+        ),
+
+        GoRoute(
+          path: '/employer/invite-workers',
+          name: RouteNames.employerInviteWorkers,
+          builder: (context, state) {
+            final jobId = state.uri.queryParameters['jobId'];
+
+            if (jobId == null || jobId.isEmpty) {
+              return const _PlaceholderPage(title: 'Invalid Job');
+            }
+
+            return EmployerInviteWorkersPage(
+              jobId: jobId,
+              category: state.uri.queryParameters['category'],
+              skill: state.uri.queryParameters['skill'],
+            );
           },
         ),
 

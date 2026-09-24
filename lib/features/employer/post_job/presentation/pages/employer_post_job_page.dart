@@ -203,7 +203,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   }
 
   void _openWorkers({required String jobId, required String category, required String skill}) {
-    final queryParameters = <String, String>{'tab': 'workers', 'jobId': jobId};
+    final queryParameters = <String, String>{'jobId': jobId};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();
@@ -213,7 +213,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
       queryParameters['skill'] = skill.trim();
     }
 
-    context.goNamed(RouteNames.employerWorkers, queryParameters: queryParameters);
+    context.pushNamed(RouteNames.employerInviteWorkers, queryParameters: queryParameters);
   }
 
   @override

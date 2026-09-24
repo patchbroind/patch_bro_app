@@ -1,4 +1,3 @@
-
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 abstract class EmployerInvitationsRepository {
@@ -10,6 +9,11 @@ abstract class EmployerInvitationsRepository {
   Future<List<JobInvitationEntity>>
       getJobInvitations(
     String jobId,
+  );
+
+  Future<List<JobInvitationEntity>>
+      getWorkerInvitationStatuses(
+    String workerId,
   );
 
   Stream<void> watchJobInvitations(

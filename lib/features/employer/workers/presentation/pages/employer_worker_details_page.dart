@@ -10,6 +10,7 @@ import 'package:patch_bro/features/employer/workers/presentation/widgets/employe
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_details_section_title.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_details_skills.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_details_stats.dart';
+import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_invite_job_sheet.dart';
 
 class EmployerWorkerDetailsPage extends ConsumerWidget {
   const EmployerWorkerDetailsPage({super.key, required this.workerId});
@@ -20,9 +21,7 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(employerWorkersControllerProvider);
 
-    final worker = ref
-        .read(employerWorkersControllerProvider.notifier)
-        .workerById(workerId);
+    final worker = ref.read(employerWorkersControllerProvider.notifier).workerById(workerId);
 
     if (worker == null) {
       return const Scaffold(body: Center(child: Text('Worker not found')));
@@ -37,31 +36,48 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               EmployerWorkerDetailsHero(worker: worker),
+
               const SizedBox(height: 18),
+
               EmployerWorkerDetailsStats(worker: worker),
+
               const SizedBox(height: 24),
+
               EmployerWorkerDetailsSectionTitle(title: 'About'),
+
               const SizedBox(height: 8),
+
               _AboutText(text: worker.about),
+
               const SizedBox(height: 22),
+
               EmployerWorkerDetailsSectionTitle(title: 'Skills'),
+
               const SizedBox(height: 10),
+
               EmployerWorkerDetailsSkills(worker: worker),
+
               const SizedBox(height: 22),
+
               EmployerWorkerDetailsSectionTitle(title: 'Availability'),
+
               const SizedBox(height: 10),
+
               EmployerWorkerDetailsAvailability(worker: worker),
+
               const SizedBox(height: 22),
+
               EmployerWorkerDetailsSectionTitle(
                 title: 'Reviews',
-                trailing: TextButton(
-                  onPressed: () {},
-                  child: const Text('See All'),
-                ),
+                trailing: TextButton(onPressed: () {}, child: const Text('See All')),
               ),
+
               const SizedBox(height: 8),
+
               const EmployerWorkerDetailsReviewCard(),
+
               const SizedBox(height: 12),
+
               const EmployerWorkerDetailsReviewCard(
                 reviewer: 'Fahad P',
                 text: 'Very professional and completed the work on time.',
@@ -70,17 +86,11 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
           ),
         ),
       ),
-      bottomSheet: EmployerWorkerDetailsInviteBar(
-        onInvite: () => _handleInvite(context),
-      ),
+      bottomSheet: EmployerWorkerDetailsInviteBar(onInvite: () => _handleInvite(context)),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(
-    BuildContext context,
-    WidgetRef ref,
-    bool isFavourite,
-  ) {
+  PreferredSizeWidget _buildAppBar(BuildContext context, WidgetRef ref, bool isFavourite) {
     return AppBar(
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -90,14 +100,10 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
       actions: [
         IconButton(
           onPressed: () {
-            ref
-                .read(employerWorkersControllerProvider.notifier)
-                .toggleFavourite(workerId);
+            ref.read(employerWorkersControllerProvider.notifier).toggleFavourite(workerId);
           },
           icon: Icon(
-            isFavourite
-                ? Icons.favorite_rounded
-                : Icons.favorite_border_rounded,
+            isFavourite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
             color: isFavourite ? AppColors.error : AppColors.textPrimary,
           ),
         ),
@@ -105,11 +111,18 @@ class EmployerWorkerDetailsPage extends ConsumerWidget {
     );
   }
 
-  void _handleInvite(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite flow will be connected to the job backend next.'),
-      ),
+  Future<void> _handleInvite(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return FractionallySizedBox(
+          heightFactor: 0.86,
+          child: EmployerWorkerInviteJobSheet(workerId: workerId),
+        );
+      },
     );
   }
 }
@@ -123,10 +136,9 @@ class _AboutText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        height: 1.5,
-        color: AppColors.textSecondary,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(height: 1.5, color: AppColors.textSecondary),
     );
   }
 }
