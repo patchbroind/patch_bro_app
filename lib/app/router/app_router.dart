@@ -22,6 +22,7 @@ import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_na
 import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
+import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -415,6 +416,20 @@ class AppRouter {
             return EmployerWorkerDetailsPage(workerId: workerId);
           },
         ),
+
+        GoRoute(
+  path: '/employer/edit-job',
+  name: RouteNames.employerEditJob,
+  builder: (context, state) {
+    final job = state.extra as EmployerJobEntity?;
+
+    if (job == null) {
+      return const _PlaceholderPage(title: 'Invalid Job');
+    }
+
+    return EmployerPostJobPage(job: job);
+  },
+),
 
         GoRoute(
           path: '/employer/invite-workers',
