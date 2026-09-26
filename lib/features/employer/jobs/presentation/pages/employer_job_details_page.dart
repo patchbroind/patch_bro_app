@@ -98,6 +98,7 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
 
                   const SizedBox(height: 8),
 
+                  if (_job.status == EmployerJobStatus.active)
                   JobDetailActionButtons(job: _job, onJobEdited: _refreshJob),
                 ],
               ),
