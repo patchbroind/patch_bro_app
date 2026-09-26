@@ -45,6 +45,8 @@ abstract final class RouteNames {
   static const employerJobs = 'employer-jobs';
 
   static const employerPostJob = 'employer-post-job';
+  
+  static const employerEditJob = 'employer-edit-job';
 
   static const employerWorkers = 'employer-workers';
   

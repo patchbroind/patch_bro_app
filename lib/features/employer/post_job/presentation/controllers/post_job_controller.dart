@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:record/record.dart';
 
 import '../../../../profile/domain/entities/profile_location.dart';
@@ -25,6 +26,10 @@ class PostJobController extends Notifier<PostJobState> {
 
     return const PostJobState();
   }
+
+  // ---------------------------------------------------------------------------
+  // FORM FIELDS
+  // ---------------------------------------------------------------------------
 
   void setCategory(String value) {
     state = state.copyWith(category: value, status: PostJobStatus.initial, clearError: true);
@@ -56,12 +61,75 @@ class PostJobController extends Notifier<PostJobState> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // EDIT MODE INITIALIZATION
+  // ---------------------------------------------------------------------------
+
+  /// Prefills the Post Job form with an existing job.
+  ///
+  /// This is called when Job Details -> Edit Job is opened.
+  void initializeForEdit(EmployerJobEntity job) {
+    final existingImages = <PostJobExistingImage>[];
+
+    if (job.imageUrls.isNotEmpty) {
+      for (var index = 0; index < job.imageUrls.length; index++) {
+        final imageUrl = job.imageUrls[index];
+
+        if (imageUrl.trim().isEmpty) {
+          continue;
+        }
+
+        existingImages.add(
+          PostJobExistingImage(
+            url: imageUrl,
+            storagePath: job.imagePaths.length > index ? job.imagePaths[index] : '',
+            sortOrder: index,
+          ),
+        );
+      }
+    } else if (job.imageUrl != null && job.imageUrl!.trim().isNotEmpty) {
+      existingImages.add(
+        PostJobExistingImage(
+          url: job.imageUrl!,
+          storagePath: job.imagePaths.isNotEmpty ? job.imagePaths.first : '',
+          sortOrder: 0,
+        ),
+      );
+    }
+
+    state = PostJobState(
+      editingJobId: job.id,
+      category: job.category,
+      skill: job.skill,
+      selectedDate: job.date,
+      selectedTime: job.time,
+      latitude: job.latitude,
+      longitude: job.longitude,
+      locationAddress: job.locationAddress,
+      description: job.description,
+      existingAudioUrl: job.audioUrl,
+      existingAudioPath: job.audioPath,
+      existingImages: existingImages,
+      images: const [],
+      deletedImagePaths: const [],
+      status: PostJobStatus.initial,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // IMAGES
+  // ---------------------------------------------------------------------------
+
   Future<void> pickImages() async {
-    if (state.images.length >= 2) {
+    if (!state.canAddImage) {
       return;
     }
 
-    final remaining = 2 - state.images.length;
+    final remaining = state.remainingImageSlots;
+
+    if (remaining <= 0) {
+      return;
+    }
 
     final pickedImages = await _imagePicker.pickMultiImage(imageQuality: 85, limit: remaining);
 
@@ -78,16 +146,53 @@ class PostJobController extends Notifier<PostJobState> {
     );
   }
 
+  /// Removes a newly selected local image.
   Future<void> removeImage(int index) async {
     if (index < 0 || index >= state.images.length) {
       return;
     }
 
     final updatedImages = [...state.images];
+
     updatedImages.removeAt(index);
 
     state = state.copyWith(images: updatedImages, status: PostJobStatus.initial, clearError: true);
   }
+
+  /// Removes an existing server-side image.
+  ///
+  /// The image isn't immediately deleted from Supabase.
+  /// Its storage path is added to [deletedImagePaths].
+  ///
+  /// The backend deletes it when the user saves the edit.
+  void removeExistingImage(int index) {
+    if (index < 0 || index >= state.existingImages.length) {
+      return;
+    }
+
+    final image = state.existingImages[index];
+
+    final updatedImages = [...state.existingImages];
+
+    updatedImages.removeAt(index);
+
+    final updatedDeletedPaths = [...state.deletedImagePaths];
+
+    if (image.storagePath.trim().isNotEmpty && !updatedDeletedPaths.contains(image.storagePath)) {
+      updatedDeletedPaths.add(image.storagePath);
+    }
+
+    state = state.copyWith(
+      existingImages: updatedImages,
+      deletedImagePaths: updatedDeletedPaths,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // VOICE RECORDING
+  // ---------------------------------------------------------------------------
 
   void updateRecordingDuration(Duration duration) {
     if (!state.isRecording) {
@@ -123,7 +228,7 @@ class PostJobController extends Notifier<PostJobState> {
         status: PostJobStatus.initial,
         clearError: true,
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isRecording: false,
         status: PostJobStatus.failure,
@@ -148,10 +253,11 @@ class PostJobController extends Notifier<PostJobState> {
       state = state.copyWith(
         isRecording: false,
         voiceRecording: File(path),
+        recordingDuration: state.recordingDuration,
         status: PostJobStatus.initial,
         clearError: true,
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isRecording: false,
         status: PostJobStatus.failure,
@@ -175,14 +281,32 @@ class PostJobController extends Notifier<PostJobState> {
     }
   }
 
+  /// Removes a newly recorded local voice file.
+  ///
+  /// If an existing server audio file exists,
+  /// this also marks that existing audio for deletion.
   void removeVoiceRecording() {
     state = state.copyWith(
       clearVoiceRecording: true,
       recordingDuration: Duration.zero,
+      removeExistingAudio: state.existingAudioUrl != null,
       status: PostJobStatus.initial,
       clearError: true,
     );
   }
+
+  /// Explicitly removes the existing server-side voice.
+  void removeExistingVoice() {
+    state = state.copyWith(
+      removeExistingAudio: true,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // VALIDATION
+  // ---------------------------------------------------------------------------
 
   String? _validate() {
     if (state.category.trim().isEmpty) {
@@ -209,13 +333,31 @@ class PostJobController extends Notifier<PostJobState> {
       return 'Please select a valid job location.';
     }
 
-    if (state.description.trim().isEmpty && state.voiceRecording == null) {
+    final hasTextDescription = state.description.trim().isNotEmpty;
+
+    final hasNewVoice = state.voiceRecording != null;
+
+    final hasExistingVoice = state.hasExistingAudio;
+
+    if (!hasTextDescription && !hasNewVoice && !hasExistingVoice) {
       return 'Please add a text or voice description.';
+    }
+
+    if (state.totalImageCount > 2) {
+      return 'You can add a maximum of 2 images.';
     }
 
     return null;
   }
 
+  // ---------------------------------------------------------------------------
+  // SUBMIT
+  // ---------------------------------------------------------------------------
+
+  /// Creates a new job or updates the existing job depending on the mode.
+  ///
+  /// NOTE:
+  /// The update repository method will be added in the next step.
   Future<String?> submitJob() async {
     final validationError = _validate();
 
@@ -228,6 +370,44 @@ class PostJobController extends Notifier<PostJobState> {
     state = state.copyWith(status: PostJobStatus.submitting, clearError: true);
 
     try {
+      if (state.isEditMode) {
+        final keepImagePaths = state.existingImages
+            .map((image) => image.storagePath)
+            .where((path) => path.trim().isNotEmpty)
+            .toList();
+
+        final updatedJob = await _repository.updateJob(
+          jobId: state.editingJobId!,
+          category: state.category.trim(),
+          skill: state.skill.trim(),
+          date: state.selectedDate!,
+          time: state.selectedTime!,
+          latitude: state.latitude!,
+          longitude: state.longitude!,
+          locationAddress: state.locationAddress!,
+          description: state.description.trim(),
+
+          // Existing images that should remain.
+          keepImagePaths: keepImagePaths,
+
+          // New images selected during editing.
+          newImages: state.images,
+
+          // Existing audio storage path.
+          existingAudioPath: state.existingAudioPath,
+
+          // Delete existing audio if requested.
+          removeExistingAudio: state.removeExistingAudio,
+
+          // New audio, if recorded.
+          newAudio: state.voiceRecording,
+        );
+
+        state = state.copyWith(status: PostJobStatus.success, clearError: true);
+
+        return updatedJob.id;
+      }
+
       final jobId = await _repository.createJob(
         category: state.category.trim(),
         skill: state.skill.trim(),
@@ -250,6 +430,10 @@ class PostJobController extends Notifier<PostJobState> {
       return null;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // RESET
+  // ---------------------------------------------------------------------------
 
   void reset() {
     state = const PostJobState();

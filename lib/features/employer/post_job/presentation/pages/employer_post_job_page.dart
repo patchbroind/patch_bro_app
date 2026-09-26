@@ -9,8 +9,10 @@ import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/date_time_utils.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
+import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/job_post_existing_voice.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
@@ -22,7 +24,12 @@ import '../widgets/post_job_location_field.dart';
 import '../widgets/post_job_voice_recorder.dart';
 
 class EmployerPostJobPage extends ConsumerStatefulWidget {
-  const EmployerPostJobPage({super.key});
+  const EmployerPostJobPage({super.key, this.job});
+
+  /// Null = create mode.
+  ///
+  /// Non-null = edit mode.
+  final EmployerJobEntity? job;
 
   @override
   ConsumerState<EmployerPostJobPage> createState() => _EmployerPostJobPageState();
@@ -30,12 +37,12 @@ class EmployerPostJobPage extends ConsumerStatefulWidget {
 
 class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   late final TextEditingController _categoryController;
-
   late final TextEditingController _skillController;
-
   late final TextEditingController _descriptionController;
 
   Timer? _recordingTimer;
+
+  bool get _isEditMode => widget.job != null;
 
   @override
   void initState() {
@@ -46,36 +53,86 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     _skillController = TextEditingController();
 
     _descriptionController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      _initializePage();
+    });
+  }
+
+  void _initializePage() {
+    final controller = ref.read(postJobControllerProvider.notifier);
+
+    final job = widget.job;
+
+    if (job == null) {
+      controller.reset();
+
+      _categoryController.clear();
+      _skillController.clear();
+      _descriptionController.clear();
+
+      return;
+    }
+
+    controller.initializeForEdit(job);
+
+    _categoryController.text = job.category;
+
+    _skillController.text = job.skill;
+
+    _descriptionController.text = job.description;
   }
 
   @override
   void dispose() {
     _recordingTimer?.cancel();
+
     _categoryController.dispose();
     _skillController.dispose();
     _descriptionController.dispose();
+
     super.dispose();
   }
+  // RESE====================
 
   void _resetForm() {
     _categoryController.clear();
     _skillController.clear();
     _descriptionController.clear();
+
     _recordingTimer?.cancel();
     _recordingTimer = null;
+
     ref.read(postJobControllerProvider.notifier).reset();
   }
+  // DAT====================
 
   Future<void> _selectDate() async {
     final controller = ref.read(postJobControllerProvider.notifier);
 
+    final state = ref.read(postJobControllerProvider);
+
     final now = DateTime.now();
+
+    final currentDate = state.selectedDate;
+
+    final firstDate = DateTime(now.year, now.month, now.day);
+
+    DateTime initialDate = currentDate ?? firstDate;
+
+    if (initialDate.isBefore(firstDate)) {
+      initialDate = firstDate;
+    }
 
     final selected = await showDatePicker(
       context: context,
-      firstDate: now,
+      firstDate: firstDate,
       lastDate: DateTime(now.year + 2, now.month, now.day),
-      initialDate: now,
+      initialDate: initialDate,
     );
 
     if (selected != null) {
@@ -83,10 +140,20 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     }
   }
 
+  // TIM====================
+
   Future<void> _selectTime() async {
     final controller = ref.read(postJobControllerProvider.notifier);
 
-    final selected = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final state = ref.read(postJobControllerProvider);
+
+    final currentTime = state.selectedTime;
+
+    final initialTime = currentTime == null
+        ? TimeOfDay.now()
+        : TimeOfDay(hour: currentTime.hour, minute: currentTime.minute);
+
+    final selected = await showTimePicker(context: context, initialTime: initialTime);
 
     if (selected == null) {
       return;
@@ -96,6 +163,8 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     controller.setTime(DateTime(now.year, now.month, now.day, selected.hour, selected.minute));
   }
+
+  // LOCATIO====================
 
   Future<void> _selectLocation() async {
     final location = await Navigator.of(
@@ -107,8 +176,12 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     }
   }
 
+  // VOICE RECORDIN====================
+
   Future<void> _startRecording() async {
-    await ref.read(postJobControllerProvider.notifier).startRecording();
+    final controller = ref.read(postJobControllerProvider.notifier);
+
+    await controller.startRecording();
 
     if (!mounted) {
       return;
@@ -116,22 +189,29 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     final state = ref.read(postJobControllerProvider);
 
-    if (state.isRecording) {
-      _recordingTimer?.cancel();
-
-      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        final currentState = ref.read(postJobControllerProvider);
-
-        if (!currentState.isRecording) {
-          _recordingTimer?.cancel();
-          return;
-        }
-
-        ref
-            .read(postJobControllerProvider.notifier)
-            .updateRecordingDuration(currentState.recordingDuration + const Duration(seconds: 1));
-      });
+    if (!state.isRecording) {
+      return;
     }
+
+    _recordingTimer?.cancel();
+
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        return;
+      }
+
+      final currentState = ref.read(postJobControllerProvider);
+
+      if (!currentState.isRecording) {
+        _recordingTimer?.cancel();
+        _recordingTimer = null;
+        return;
+      }
+
+      ref
+          .read(postJobControllerProvider.notifier)
+          .updateRecordingDuration(currentState.recordingDuration + const Duration(seconds: 1));
+    });
   }
 
   Future<void> _stopRecording() async {
@@ -140,6 +220,8 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     await ref.read(postJobControllerProvider.notifier).stopRecording();
   }
+
+  // SUBMI====================
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
@@ -164,6 +246,25 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     final state = ref.read(postJobControllerProvider);
 
+    // -------------------------------------------------------------------------
+    // EDIT MODE
+    // -------------------------------------------------------------------------
+
+    if (state.isEditMode) {
+      if (!mounted) {
+        return;
+      }
+
+      // Tell the previous page that the job was successfully updated.
+      context.pop(true);
+
+      return;
+    }
+
+    // -------------------------------------------------------------------------
+    // CREATE MODE
+    // -------------------------------------------------------------------------
+
     final category = state.category.trim();
 
     final skill = state.skill.trim();
@@ -176,6 +277,8 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     _resetForm();
   }
+
+  // INVITE WORKERS DIALO====================
 
   Future<void> _showInviteWorkersDialog({
     required String jobId,
@@ -219,12 +322,19 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postJobControllerProvider);
+
     final isSubmitting = state.status == PostJobStatus.submitting;
+
+    final title = _isEditMode ? 'Edit Job' : 'Post a Job';
+
+    final buttonLabel = _isEditMode ? 'Save Changes' : 'Post Job';
+
+    final buttonIcon = _isEditMode ? Icons.save_outlined : Icons.add_circle_outline;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Post a Job'),
+        title: Text(title),
         centerTitle: false,
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
@@ -245,7 +355,10 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSubHeader(context),
+
                       const SizedBox(height: 24),
+
+                      // JOB DETAILS
                       PostJobSection(
                         title: 'Job Details',
                         subtitle: 'Tell workers what kind of work you need.',
@@ -258,7 +371,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                               textInputAction: TextInputAction.next,
                               onChanged: ref.read(postJobControllerProvider.notifier).setCategory,
                             ),
+
                             const SizedBox(height: 14),
+
                             AppTextField(
                               controller: _skillController,
                               hintText: 'Required skill',
@@ -269,7 +384,10 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 24),
+
+                      // SCHEDULE
                       PostJobSection(
                         title: 'Schedule',
                         subtitle: 'Choose when the work needs to be done.',
@@ -283,7 +401,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                                 onTap: _selectDate,
                               ),
                             ),
+
                             const SizedBox(width: 12),
+
                             Expanded(
                               child: SelectionTile(
                                 icon: Icons.access_time_outlined,
@@ -295,7 +415,10 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 24),
+
+                      // LOCATION
                       PostJobSection(
                         title: 'Location',
                         subtitle: 'Where should the worker arrive?',
@@ -304,7 +427,10 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                           onTap: _selectLocation,
                         ),
                       ),
+
                       const SizedBox(height: 24),
+
+                      // DESCRIPTION + VOICE
                       PostJobSection(
                         title: 'Description',
                         subtitle: 'Describe the work clearly for workers.',
@@ -320,7 +446,19 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                                   .read(postJobControllerProvider.notifier)
                                   .setDescription,
                             ),
+
                             const SizedBox(height: 12),
+
+                            if (_isEditMode &&
+                                state.hasExistingAudio &&
+                                state.voiceRecording == null)
+                              _buildExistingVoice(context, state),
+
+                            if (_isEditMode &&
+                                state.hasExistingAudio &&
+                                state.voiceRecording == null)
+                              const SizedBox(height: 12),
+
                             PostJobVoiceRecorder(
                               isRecording: state.isRecording,
                               duration: state.recordingDuration,
@@ -334,23 +472,30 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 24),
+
                       PostJobSection(
                         title: 'Job Images',
                         subtitle: 'Add up to 2 images to help workers understand the job.',
                         child: PostJobImagePicker(
+                          existingImages: state.existingImages.map((image) => image.url).toList(),
                           images: state.images,
                           onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
                           onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
+                          onRemoveExisting: ref
+                              .read(postJobControllerProvider.notifier)
+                              .removeExistingImage,
                         ),
                       ),
+
                       const SizedBox(height: 32),
-                      // _buildSubmitButton(context, state),
+
                       AppPrimaryButton(
-                        label: 'Post Job',
+                        label: buttonLabel,
                         isLoading: isSubmitting,
-                        leadingIcon: Icon(Icons.add_circle_outline),
-                        onPressed: _submit,
+                        leadingIcon: Icon(buttonIcon),
+                        onPressed: isSubmitting ? null : _submit,
                       ),
                     ],
                   ),
@@ -363,9 +508,19 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     );
   }
 
+  Widget _buildExistingVoice(BuildContext context, PostJobState state) {
+    return JobPostExistingVoice(
+      onPressed: () {
+        ref.read(postJobControllerProvider.notifier).removeExistingVoice();
+      },
+    );
+  }
+
   Widget _buildSubHeader(BuildContext context) {
     return Text(
-      'Provide the job details so verified workers can understand what you need.',
+      _isEditMode
+          ? 'Update the job details, images or voice description as needed.'
+          : 'Provide the job details so verified workers can understand what you need.',
       style: Theme.of(
         context,
       ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary, height: 1.45),

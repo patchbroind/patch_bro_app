@@ -1,70 +1,110 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
-
 
 class PostJobImagePicker extends StatelessWidget {
-  final List<File> images;
-  final VoidCallback onAdd;
-  final ValueChanged<int> onRemove;
-
   const PostJobImagePicker({
     super.key,
     required this.images,
     required this.onAdd,
     required this.onRemove,
+    this.existingImages = const [],
+    this.onRemoveExisting,
   });
+
+  /// Newly selected local images.
+  final List<File> images;
+
+  /// Existing remote images from the server.
+  final List<String> existingImages;
+
+  final VoidCallback onAdd;
+
+  /// Removes a newly selected local image.
+  final ValueChanged<int> onRemove;
+
+  /// Removes an existing server image.
+  final ValueChanged<int>? onRemoveExisting;
+
+  int get totalImageCount => existingImages.length + images.length;
+
+  bool get canAdd => totalImageCount < 2;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Job Images',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ),
-            Text(
-              '${images.length}/2',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
+        Text(
+          'Images',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 10),
-        Row(
+
+        const SizedBox(height: 8),
+
+        Text('Add up to 2 images', style: Theme.of(context).textTheme.bodySmall),
+
+        const SizedBox(height: 12),
+
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            ...List.generate(
-              images.length,
-              (index) => Padding(
-                padding: EdgeInsets.only(
-                  right: index == images.length - 1
-                      ? 0
-                      : 12,
+            // ---------------------------------------------------------------
+            // EXISTING SERVER IMAGES
+            // ---------------------------------------------------------------
+
+            ...List.generate(existingImages.length, (index) {
+              return _ImageTile(
+                onRemove: onRemoveExisting == null
+                    ? null
+                    : () {
+                        onRemoveExisting!(index);
+                      },
+                child: Image.network(
+                  existingImages[index],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(child: Icon(Icons.broken_image_outlined));
+                  },
                 ),
-                child: _ImageTile(
-                  image: images[index],
-                  onRemove: () => onRemove(index),
-                ),
-              ),
-            ),
-            if (images.length < 2)
-              _AddImageTile(
+              );
+            }),
+
+            // ---------------------------------------------------------------
+            // NEW LOCAL IMAGES
+            // ---------------------------------------------------------------
+            ...List.generate(images.length, (index) {
+              return _ImageTile(
+                child: Image.file(images[index], fit: BoxFit.cover),
+                onRemove: () {
+                  onRemove(index);
+                },
+              );
+            }),
+
+            // ---------------------------------------------------------------
+            // ADD BUTTON
+            // ---------------------------------------------------------------
+            if (canAdd)
+              GestureDetector(
                 onTap: onAdd,
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).dividerColor),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined, size: 28),
+                      SizedBox(height: 6),
+                      Text('Add'),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),
@@ -74,98 +114,38 @@ class PostJobImagePicker extends StatelessWidget {
 }
 
 class _ImageTile extends StatelessWidget {
-  final File image;
-  final VoidCallback onRemove;
+  const _ImageTile({required this.child, required this.onRemove});
 
-  const _ImageTile({
-    required this.image,
-    required this.onRemove,
-  });
+  final Widget child;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.file(
-            image,
-            width: 92,
-            height: 92,
-            fit: BoxFit.cover,
-          ),
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(width: 96, height: 96, child: child),
         ),
-        Positioned(
-          top: 5,
-          right: 5,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: const BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close,
-                size: 16,
-                color: Colors.white,
+
+        if (onRemove != null)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Material(
+              color: Colors.black54,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onRemove,
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.close, size: 16, color: Colors.white),
+                ),
               ),
             ),
           ),
-        ),
       ],
-    );
-  }
-}
-
-class _AddImageTile extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AddImageTile({
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 92,
-        height: 92,
-        decoration: BoxDecoration(
-          color: AppColors.employerLight.withValues(
-            alpha: 0.45,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.employerPrimary.withValues(
-              alpha: 0.35,
-            ),
-          ),
-        ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_photo_alternate_outlined,
-              color: AppColors.employerPrimary,
-              size: 28,
-            ),
-            SizedBox(height: 5),
-            Text(
-              'Add photo',
-              style: TextStyle(
-                color: AppColors.employerPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
