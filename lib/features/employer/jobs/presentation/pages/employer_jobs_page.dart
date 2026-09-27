@@ -163,6 +163,7 @@ class _JobsEmptyState extends StatelessWidget {
     final message = switch (filter) {
       EmployerJobsFilter.all => 'No jobs found',
       EmployerJobsFilter.active => 'No active jobs',
+      EmployerJobsFilter.inprogress => 'No jobs in progress',
       EmployerJobsFilter.completed => 'No completed jobs',
       EmployerJobsFilter.cancelled => 'No cancelled jobs',
     };

@@ -21,6 +21,8 @@ class JobDetailHeader extends StatelessWidget {
         AppColors.success,
       EmployerJobStatus.cancelled =>
         AppColors.textSecondary,
+      EmployerJobStatus.inprogress =>
+        AppColors.textPrimary,
     };
 
     return JobDetailCardContainer(

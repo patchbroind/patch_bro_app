@@ -28,6 +28,12 @@ class EmployerJobFilterTabs extends StatelessWidget {
             onSelected: onSelected,
           ),
           _FilterTab(
+            label: 'In Progress',
+            filter: EmployerJobsFilter.inprogress,
+            selectedFilter: selectedFilter,
+            onSelected: onSelected,
+          ),
+          _FilterTab(
             label: 'Completed',
             filter: EmployerJobsFilter.completed,
             selectedFilter: selectedFilter,

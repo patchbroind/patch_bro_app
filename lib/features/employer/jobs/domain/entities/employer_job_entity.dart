@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-enum EmployerJobStatus { active, completed, cancelled }
+enum EmployerJobStatus { active, completed, cancelled, inprogress }
 
 @immutable
 class EmployerJobEntity {
@@ -91,6 +91,8 @@ class EmployerJobEntity {
 
       case EmployerJobStatus.cancelled:
         return 'Cancelled';
+      case EmployerJobStatus.inprogress:
+        return 'In Progress';
     }
   }
 }

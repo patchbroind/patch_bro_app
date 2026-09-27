@@ -182,9 +182,11 @@ class EmployerJobModel {
       case 'pending':
       case 'assigned':
       case 'accepted':
+        return EmployerJobStatus.active;
+
       case 'in_progress':
       case 'in-progress':
-        return EmployerJobStatus.active;
+        return EmployerJobStatus.inprogress;
 
       case 'completed':
         return EmployerJobStatus.completed;
