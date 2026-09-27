@@ -4,7 +4,7 @@ import '../../domain/entities/employer_job_entity.dart';
 
 enum EmployerJobsStatus { initial, loading, success, failure }
 
-enum EmployerJobsFilter { all, active, completed, cancelled }
+enum EmployerJobsFilter { all, active,inprogress, completed, cancelled }
 
 @immutable
 class EmployerJobsState {
@@ -31,6 +31,8 @@ class EmployerJobsState {
         return jobs;
       case EmployerJobsFilter.active:
         return jobs.where((job) => job.status == EmployerJobStatus.active).toList();
+      case EmployerJobsFilter.inprogress:
+        return jobs.where((job) => job.status == EmployerJobStatus.inprogress).toList();
       case EmployerJobsFilter.completed:
         return jobs.where((job) => job.status == EmployerJobStatus.completed).toList();
       case EmployerJobsFilter.cancelled:

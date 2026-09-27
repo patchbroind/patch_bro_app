@@ -20,6 +20,7 @@ class EmployerJobCard extends StatelessWidget {
       EmployerJobStatus.active => AppColors.info,
 
       EmployerJobStatus.cancelled => AppColors.textSecondary,
+      EmployerJobStatus.inprogress => AppColors.textPrimary,
     };
 
     final dateLabel = MaterialLocalizations.of(context).formatMediumDate(job.date);
