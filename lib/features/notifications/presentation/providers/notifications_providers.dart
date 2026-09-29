@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+import 'package:patch_bro/features/notifications/data/datasources/worker_notifications_remote_data_source.dart';
 
 import '../../data/datasources/notifications_local_data_source.dart';
 import '../../data/repository/notifications_repository_impl.dart';
@@ -21,3 +22,14 @@ final notificationsControllerProvider =
     NotifierProvider<NotificationsController, NotificationsState>(
       NotificationsController.new,
     );
+
+final workerNotificationsRemoteDataSourceProvider =
+    Provider<WorkerNotificationsRemoteDataSource>(
+  (ref) {
+    return WorkerNotificationsRemoteDataSource(
+      ref.read(
+        supabaseClientProvider,
+      ),
+    );
+  },
+);

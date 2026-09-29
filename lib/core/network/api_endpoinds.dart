@@ -42,6 +42,10 @@ abstract final class ApiEndpoints {
   static const jobs = '/jobs';
 
   static String jobById(String id) => '/jobs/$id';
+
+  // static String jobCancel(String id) => '/jobs/$id/cancel';
+
+  static String jobCancel(String id) => '/employer/jobs/$id/cancel';
   // ================================================================
   // EMPLOYER
   // ================================================================

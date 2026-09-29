@@ -23,6 +23,7 @@ class EmployerJobsController extends Notifier<EmployerJobsState> {
 
     try {
       final jobs = await _repository.getEmployerJobs();
+
       state = state.copyWith(
         status: EmployerJobsStatus.success,
         jobs: List.unmodifiable(jobs),
@@ -36,6 +37,7 @@ class EmployerJobsController extends Notifier<EmployerJobsState> {
   Future<void> refreshJobs() async {
     try {
       final jobs = await _repository.getEmployerJobs();
+
       state = state.copyWith(
         status: EmployerJobsStatus.success,
         jobs: List.unmodifiable(jobs),
@@ -46,8 +48,15 @@ class EmployerJobsController extends Notifier<EmployerJobsState> {
         status: state.jobs.isEmpty ? EmployerJobsStatus.failure : EmployerJobsStatus.success,
         errorMessage: error.toString(),
       );
+
       rethrow;
     }
+  }
+
+  Future<void> cancelJob(String jobId) async {
+    await _repository.cancelJob(jobId);
+
+    await refreshJobs();
   }
 
   void selectFilter(EmployerJobsFilter filter) {
