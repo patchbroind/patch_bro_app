@@ -11,4 +11,9 @@ class EmployerJobsRepositoryImpl implements EmployerJobsRepository {
   Future<List<EmployerJobEntity>> getEmployerJobs() {
     return _remoteDataSource.getEmployerJobs();
   }
+
+  @override
+  Future<void> cancelJob(String jobId) {
+    return _remoteDataSource.cancelJob(jobId);
+  }
 }

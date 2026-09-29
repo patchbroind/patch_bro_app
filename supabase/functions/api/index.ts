@@ -786,9 +786,15 @@ Deno.serve(
           /\/employer\/jobs\/([^/]+)$/,
         );
 
+      const employerJobCancelMatch =
+        url.pathname.match(
+          /\/employer\/jobs\/([^/]+)\/cancel$/,
+        );
+
       if (
         !employerJobsRoute &&
-        !employerJobMatch
+        !employerJobMatch &&
+        !employerJobCancelMatch
       ) {
         return jsonCorsResponse(
           {
@@ -948,6 +954,129 @@ Deno.serve(
           },
           403,
         );
+      }
+
+      /*
+       * ============================================================
+       * CANCEL JOB
+       * ============================================================
+       *
+       * The request has already been authenticated above.
+       * The cancel_job RPC uses auth.uid() to make sure the
+       * authenticated employer owns the job.
+       *
+       * The RPC also:
+       *   1. changes the job status to "cancelled"
+       *   2. creates a notification for accepted_worker_id
+       *   3. rejects cancellation of completed/cancelled jobs
+       */
+
+      if (
+        req.method === "POST" &&
+        employerJobCancelMatch
+      ) {
+        const jobId =
+          employerJobCancelMatch[1];
+
+        const {
+          data: cancelledJob,
+          error: cancelError,
+        } = await supabase.rpc(
+          "cancel_job",
+          {
+            p_job_id: jobId,
+          },
+        );
+
+        if (cancelError) {
+          console.error(
+            "Job cancellation failed:",
+            cancelError,
+          );
+
+          const message =
+            cancelError.message ?? "";
+
+          if (
+            message
+              .toLowerCase()
+              .includes(
+                "completed jobs cannot be cancelled",
+              )
+          ) {
+            return jsonCorsResponse(
+              {
+                success: false,
+                message:
+                  "Completed jobs cannot be cancelled.",
+              },
+              409,
+            );
+          }
+
+          if (
+            message
+              .toLowerCase()
+              .includes(
+                "already cancelled",
+              )
+          ) {
+            return jsonCorsResponse(
+              {
+                success: false,
+                message:
+                  "Job is already cancelled.",
+              },
+              409,
+            );
+          }
+
+          if (
+            message
+              .toLowerCase()
+              .includes(
+                "job not found",
+              )
+          ) {
+            return jsonCorsResponse(
+              {
+                success: false,
+                message:
+                  "Job not found.",
+              },
+              404,
+            );
+          }
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Failed to cancel job.",
+            },
+            500,
+          );
+        }
+
+        if (!cancelledJob) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "The server did not return the cancelled job.",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Job cancelled successfully",
+          data: {
+            job: cancelledJob,
+          },
+        });
       }
 
       /*

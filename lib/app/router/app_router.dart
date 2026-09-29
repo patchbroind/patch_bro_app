@@ -20,6 +20,7 @@ import 'package:patch_bro/features/employer/workers/presentation/pages/employer_
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_workers_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
 import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
@@ -418,18 +419,18 @@ class AppRouter {
         ),
 
         GoRoute(
-  path: '/employer/edit-job',
-  name: RouteNames.employerEditJob,
-  builder: (context, state) {
-    final job = state.extra as EmployerJobEntity?;
+          path: '/employer/edit-job',
+          name: RouteNames.employerEditJob,
+          builder: (context, state) {
+            final job = state.extra as EmployerJobEntity?;
 
-    if (job == null) {
-      return const _PlaceholderPage(title: 'Invalid Job');
-    }
+            if (job == null) {
+              return const _PlaceholderPage(title: 'Invalid Job');
+            }
 
-    return EmployerPostJobPage(job: job);
-  },
-),
+            return EmployerPostJobPage(job: job);
+          },
+        ),
 
         GoRoute(
           path: '/employer/invite-workers',
@@ -469,16 +470,18 @@ class AppRouter {
   static StatefulShellRoute _buildWorkerShell() {
     return StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        return WorkerInvitationRealtimeListener(
-          child: MainNavigationPage(
-            navigationShell: navigationShell,
-            destinations: const [
-              AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
-              AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
-              AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
-              AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
-              AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
-            ],
+        return WorkerNotificationRealtimeListener(
+          child: WorkerInvitationRealtimeListener(
+            child: MainNavigationPage(
+              navigationShell: navigationShell,
+              destinations: const [
+                AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
+                AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
+                AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
+                AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
+                AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
+              ],
+            ),
           ),
         );
       },

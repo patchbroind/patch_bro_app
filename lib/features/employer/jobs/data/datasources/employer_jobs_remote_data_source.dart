@@ -10,8 +10,7 @@ class EmployerJobsRemoteDataSource {
   final ApiClient _apiClient;
 
   Future<List<EmployerJobEntity>> getEmployerJobs() async {
-    final response =
-        await _apiClient.get<Map<String, dynamic>>(
+    final response = await _apiClient.get<Map<String, dynamic>>(
       ApiEndpoints.employerJobs,
     );
 
@@ -51,5 +50,26 @@ class EmployerJobsRemoteDataSource {
     return models
         .map((model) => model.toEntity())
         .toList();
+  }
+
+  Future<void> cancelJob(String jobId) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      ApiEndpoints.jobCancel(jobId),
+    );
+
+    final responseData = response.data;
+
+    if (responseData == null) {
+      throw Exception(
+        'Invalid response received from the server.',
+      );
+    }
+
+    if (responseData['success'] != true) {
+      throw Exception(
+        responseData['message']?.toString() ??
+            'Failed to cancel job.',
+      );
+    }
   }
 }
