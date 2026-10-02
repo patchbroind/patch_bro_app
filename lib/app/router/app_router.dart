@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:patch_bro/features/auth/presentation/models/otp_verification_args.dart';
+
 import 'package:patch_bro/features/employer/addresses/presentation/pages/employer_addresses_page.dart';
 import 'package:patch_bro/features/employer/benefit/presentation/pages/employer_benefit_page.dart';
 import 'package:patch_bro/features/employer/favourite_workers/presentation/pages/employer_favourite_workers_page.dart';
@@ -18,11 +20,17 @@ import 'package:patch_bro/features/employer/workers/presentation/controllers/emp
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_invite_workers_page.dart';
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_worker_details_page.dart';
 import 'package:patch_bro/features/employer/workers/presentation/pages/employer_workers_page.dart';
+
+import 'package:patch_bro/features/navigation/presentation/pages/main_navigation_page.dart';
 import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_nav_bar.dart';
+
 import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:patch_bro/features/notifications/presentation/pages/worker_notifications_page.dart';
 import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
+
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
+
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
@@ -33,9 +41,10 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
-import '../../features/navigation/presentation/pages/main_navigation_page.dart';
+
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/presentation/pages/profile_details_page.dart';
+
 import '../config/app_config.dart';
 import 'route_names.dart';
 
@@ -316,6 +325,24 @@ class AppRouter {
         ),
 
         // ==========================================================
+        // WORKER NOTIFICATIONS
+        //
+        // This is intentionally OUTSIDE the Worker shell.
+        //
+        // Reason:
+        // The notification inbox is a separate full-screen page.
+        // Therefore the Worker bottom navigation is not displayed
+        // while the user is viewing notifications.
+        // ==========================================================
+        GoRoute(
+          path: '/worker/notifications',
+          name: RouteNames.workerNotifications,
+          builder: (context, state) {
+            return const WorkerNotificationsPage();
+          },
+        ),
+
+        // ==========================================================
         // EMPLOYER TRUST
         // ==========================================================
         GoRoute(
@@ -418,6 +445,9 @@ class AppRouter {
           },
         ),
 
+        // ==========================================================
+        // EMPLOYER EDIT JOB
+        // ==========================================================
         GoRoute(
           path: '/employer/edit-job',
           name: RouteNames.employerEditJob,
@@ -432,6 +462,9 @@ class AppRouter {
           },
         ),
 
+        // ==========================================================
+        // EMPLOYER INVITE WORKERS
+        // ==========================================================
         GoRoute(
           path: '/employer/invite-workers',
           name: RouteNames.employerInviteWorkers,
@@ -552,7 +585,7 @@ class AppRouter {
         //
         // This is the actual Worker Profile page after the
         // professional profile has been created.
-        // ==============================================================
+        // ==========================================================
         StatefulShellBranch(
           routes: [
             GoRoute(
