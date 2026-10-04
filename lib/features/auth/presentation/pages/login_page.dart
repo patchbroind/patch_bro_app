@@ -8,11 +8,11 @@ import 'package:patch_bro/core/utils/phone_utils.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 import 'package:patch_bro/features/auth/presentation/widgets/login_from_card.dart';
 
+import '../../../../core/widgets/app_primary_button.dart';
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../widgets/auth_bottom_prompt.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/auth_header.dart';
-import '../../../../core/widgets/app_primary_button.dart';
 import '../widgets/social_login_button.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -111,7 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             children: [
               const AuthHeader(
                 title: 'Hi!',
-                subtitle: 'Login up to continue',
+                subtitle: 'Login to continue',
                 imageAsset: 'assets/images/login_image.png',
                 imageWidth: 170,
               ),
