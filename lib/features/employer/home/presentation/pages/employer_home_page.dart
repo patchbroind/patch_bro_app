@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_dialog.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
@@ -12,9 +11,9 @@ import '../providers/employer_home_provider.dart';
 import '../widgets/employer_categories_section.dart';
 import '../widgets/employer_home_carousel.dart';
 import '../widgets/employer_home_header.dart';
+import '../widgets/employer_home_state_views.dart';
 import '../widgets/employer_popular_projects_section.dart';
 import '../widgets/employer_search_bar.dart';
-import '../widgets/employer_home_state_views.dart';
 
 class EmployerHomePage extends ConsumerStatefulWidget {
   const EmployerHomePage({super.key});
@@ -108,7 +107,7 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
 
     try {
       await ref
-          .read(employerHomeRepositoryProvider)
+          .read(employerHomeControllerProvider.notifier)
           .updateLocation(
             latitude: result.latitude,
             longitude: result.longitude,

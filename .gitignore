@@ -48,3 +48,7 @@ app.*.map.json
 node_modules/
 
 .env
+
+# flavour key setup files
+/config/employer.json
+/config/worker.json
