@@ -11,6 +11,23 @@ Future<void> main() async {
 
   final config = AppConfig.fromEnvironment();
 
+
+  //----------------------------------------------------
+
+  debugPrint('========================================');
+  debugPrint('PATCH BRO CONFIG');
+  debugPrint('Flavor: ${config.flavor}');
+  debugPrint('Supabase URL: ${SupabaseConfig.url}');
+  debugPrint(
+    'Supabase key present: ${SupabaseConfig.publishableKey.isNotEmpty}',
+  );
+  debugPrint(
+    'Supabase key length: ${SupabaseConfig.publishableKey.length}',
+  );
+  debugPrint('========================================');
+
+  //----------------------------------------------------
+
   if (!SupabaseConfig.isConfigured) {
     throw StateError(
       'Supabase configuration is missing. '

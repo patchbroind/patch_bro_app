@@ -4,6 +4,7 @@ class ProfileLocation {
     required this.longitude,
     required this.address,
     this.city,
+    this.district,
     this.state,
     this.postCode,
     this.country,
@@ -11,11 +12,17 @@ class ProfileLocation {
 
   final double latitude;
   final double longitude;
-
   final String address;
 
+  /// Local place / locality.
   final String? city;
+
+  /// District / sub-administrative area.
+  final String? district;
+
+  /// State.
   final String? state;
+
   final String? postCode;
   final String? country;
 }

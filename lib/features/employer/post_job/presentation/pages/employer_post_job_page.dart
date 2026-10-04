@@ -312,9 +312,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
       queryParameters['category'] = category.trim();
     }
 
-    if (skill.trim().isNotEmpty) {
-      queryParameters['skill'] = skill.trim();
-    }
+    // if (skill.trim().isNotEmpty) {
+    //   queryParameters['skill'] = skill.trim();
+    // }
 
     context.pushNamed(RouteNames.employerInviteWorkers, queryParameters: queryParameters);
   }
