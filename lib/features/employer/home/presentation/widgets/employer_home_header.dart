@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
-import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 
 import '../../domain/entities/employer_home_entity.dart';
 
@@ -96,42 +95,4 @@ class EmployerHomeHeader extends StatelessWidget {
     );
   }
 
-  String _locationText(ProfileLocation? location) {
-    if (location == null) {
-      return 'Add location';
-    }
-
-    final parts = <String>[];
-
-    void add(String? value) {
-      if (value == null || value.trim().isEmpty) {
-        return;
-      }
-
-      final text = value.trim();
-
-      if (!parts.contains(text)) {
-        parts.add(text);
-      }
-    }
-
-    // Preferred structured values.
-    add(location.city);
-    add(location.district);
-    add(location.state);
-
-    // If structured values are not available,
-    // use the address stored in the database.
-    if (parts.isEmpty) {
-      final address = location.address.trim();
-
-      if (address.isNotEmpty && address != 'Selected location') {
-        return address;
-      }
-
-      return 'Add location';
-    }
-
-    return parts.join(', ');
-  }
 }
