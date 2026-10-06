@@ -106,12 +106,12 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
                       onJobCancelled: () async {
                         await _refreshJob();
 
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.of(context).pop();
                         } else {
                           return;
                         }
-                        ;
+                        
                       },
                     ),
                 ],
