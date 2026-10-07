@@ -1,30 +1,31 @@
-import 'dart:developer';
-
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
 
 class EmployerHomeRemoteDataSource {
-  EmployerHomeRemoteDataSource(this._supabase);
+  EmployerHomeRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   // ================================================================
   // GET HOME DATA
   // ================================================================
 
   Future<Map<String, dynamic>?> getHomeData() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(ApiEndpoints.employerHome);
 
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      return null;
     }
 
-    final homeData = await _supabase
-        .from('profiles')
-        .select('id, name, location, location_address')
-        .eq('id', user.id)
-        .maybeSingle();
-      log("it is homeData: $homeData");
-        return homeData;
+    final data = responseData['data'];
+
+    if (data is! Map) {
+      return null;
+    }
+
+    return Map<String, dynamic>.from(data);
   }
 
   // ================================================================
@@ -36,22 +37,24 @@ class EmployerHomeRemoteDataSource {
     required double longitude,
     required String address,
   }) async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.patch(
+      ApiEndpoints.profileLocation,
+      data: {'latitude': latitude, 'longitude': longitude, 'location_address': address.trim()},
+    );
 
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      return {};
     }
 
-    final location = 'POINT($longitude $latitude)';
+    final data = responseData['data'];
 
-    final updatedRow = await _supabase
-        .from('profiles')
-        .update({'location': location, 'location_address': address.trim()})
-        .eq('id', user.id)
-        .select('id, name, location, location_address')
-        .single();
+    if (data is! Map) {
+      return {};
+    }
 
-    return updatedRow;
+    return Map<String, dynamic>.from(data);
   }
 
   // ================================================================
@@ -59,20 +62,6 @@ class EmployerHomeRemoteDataSource {
   // ================================================================
 
   String? getAvatarUrl() {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      return null;
-    }
-
-    final metadata = user.userMetadata;
-
-    final avatarUrl = metadata?['avatar_url'] ?? metadata?['picture'] ?? metadata?['avatar'];
-
-    if (avatarUrl is String && avatarUrl.trim().isNotEmpty) {
-      return avatarUrl.trim();
-    }
-
     return null;
   }
 }

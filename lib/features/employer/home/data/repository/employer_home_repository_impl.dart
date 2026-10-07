@@ -14,16 +14,10 @@ class EmployerHomeRepositoryImpl implements EmployerHomeRepository {
     final data = await _remoteDataSource.getHomeData();
 
     if (data == null) {
-      return EmployerHomeModel(
-        name: 'User',
-        avatarUrl: _remoteDataSource.getAvatarUrl(),
-      );
+      return const EmployerHomeModel(name: 'User');
     }
 
-    return EmployerHomeModel.fromMap(
-      data,
-      avatarUrl: _remoteDataSource.getAvatarUrl(),
-    );
+    return EmployerHomeModel.fromMap(data, avatarUrl: data['avatar_url']?.toString());
   }
 
   @override
@@ -31,8 +25,8 @@ class EmployerHomeRepositoryImpl implements EmployerHomeRepository {
     required double latitude,
     required double longitude,
     required String address,
-  }) {
-    return _remoteDataSource.updateLocation(
+  }) async {
+    await _remoteDataSource.updateLocation(
       latitude: latitude,
       longitude: longitude,
       address: address,

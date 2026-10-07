@@ -3,16 +3,14 @@
 /// Keep endpoint paths here instead of scattering strings throughout
 /// feature implementations.
 ///
-/// These endpoints are application-level endpoints, not Supabase REST
-/// endpoint syntax.
+/// These are application-level API endpoints.
 ///
-/// Example:
+/// The Flutter application should depend only on these contracts,
+/// not on Supabase table names, RPC names, or database implementation
+/// details.
 ///
-/// GET    /jobs
-/// GET    /jobs/{id}
-/// POST   /jobs
-///
-/// Later our FastAPI/Node.js backend can expose the exact same contract.
+/// The backend can later be replaced with FastAPI / Node.js without
+/// changing the feature data sources.
 abstract final class ApiEndpoints {
   ApiEndpoints._();
 
@@ -20,10 +18,11 @@ abstract final class ApiEndpoints {
   // AUTH
   // ================================================================
   //
-  // These are reserved for the future custom authentication API.
+  // Reserved for future custom authentication API.
   //
   // DO NOT USE THESE YET.
   //
+
   static const signIn = '/auth/sign-in';
   static const signUp = '/auth/sign-up';
   static const refreshToken = '/auth/refresh';
@@ -35,6 +34,18 @@ abstract final class ApiEndpoints {
 
   static const profile = '/profile';
 
+  static const profileLocation = '/profile/location';
+
+  static const workerProfileStatus = '/profile/worker-status';
+
+  static const employerProfileStatus = '/profile/employer-status';
+
+  // ================================================================
+  // WORKER
+  // ================================================================
+
+  static const workerProfile = '/worker/profile';
+
   // ================================================================
   // JOBS
   // ================================================================
@@ -43,9 +54,8 @@ abstract final class ApiEndpoints {
 
   static String jobById(String id) => '/jobs/$id';
 
-  // static String jobCancel(String id) => '/jobs/$id/cancel';
-
   static String jobCancel(String id) => '/employer/jobs/$id/cancel';
+
   // ================================================================
   // EMPLOYER
   // ================================================================
@@ -53,6 +63,8 @@ abstract final class ApiEndpoints {
   static const employerProfile = '/employer/profile';
 
   static const employerHome = '/employer/home';
+
+  static const employerHomeLocation = '/employer/home/location';
 
   static const employerJobs = '/employer/jobs';
 

@@ -1,49 +1,32 @@
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
 import 'package:patch_bro/features/worker/profile/data/models/worker_profile_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WorkerProfileRemoteDataSource {
-  WorkerProfileRemoteDataSource(this._supabase);
+  WorkerProfileRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   // ============================================================
   // GET CURRENT WORKER PROFILE
   // ============================================================
 
   Future<WorkerProfileModel?> getCurrentProfile() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(ApiEndpoints.workerProfile);
 
-    if (user == null) {
-      throw const AuthException(
-        'No authenticated user found.',
-      );
-    }
+    final responseData = response.data;
 
-    final response = await _supabase
-        .from('worker_profiles')
-        .select(
-          '''
-          id,
-          profession,
-          skills,
-          about,
-          experience_years,
-          availability_days,
-          available_today,
-          available_tomorrow,
-          avatar_url
-          ''',
-        )
-        .eq('id', user.id)
-        .maybeSingle();
-
-    if (response == null) {
+    if (responseData is! Map) {
       return null;
     }
 
-    return WorkerProfileModel.fromMap(
-      Map<String, dynamic>.from(response),
-    );
+    final data = responseData['data'];
+
+    if (data is! Map) {
+      return null;
+    }
+
+    return WorkerProfileModel.fromMap(Map<String, dynamic>.from(data));
   }
 
   // ============================================================
@@ -59,19 +42,9 @@ class WorkerProfileRemoteDataSource {
     required bool availableToday,
     required bool availableTomorrow,
   }) async {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      throw const AuthException(
-        'No authenticated user found.',
-      );
-    }
-
-    await _supabase
-        .from('worker_profiles')
-        .upsert(
-      {
-        'id': user.id,
+    await _apiClient.patch(
+      ApiEndpoints.workerProfile,
+      data: {
         'profession': profession.trim(),
         'skills': skills,
         'about': about.trim(),
@@ -80,7 +53,6 @@ class WorkerProfileRemoteDataSource {
         'available_today': availableToday,
         'available_tomorrow': availableTomorrow,
       },
-      onConflict: 'id',
     );
   }
 }

@@ -111,7 +111,6 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
                         } else {
                           return;
                         }
-                        
                       },
                     ),
                 ],

@@ -776,6 +776,32 @@ Deno.serve(
        * ============================================================
        */
 
+      const profileRoute =
+        url.pathname.endsWith("/profile");
+
+      const profileLocationRoute =
+        url.pathname.endsWith("/profile/location");
+
+      const workerProfileStatusRoute =
+        url.pathname.endsWith(
+          "/profile/worker-status",
+        );
+
+      const employerProfileStatusRoute =
+        url.pathname.endsWith(
+          "/profile/employer-status",
+        );
+
+      const employerHomeRoute =
+        url.pathname.endsWith(
+          "/employer/home",
+        );
+
+      const workerProfileRoute =
+        url.pathname.endsWith(
+          "/worker/profile",
+        );
+
       const employerJobsRoute =
         url.pathname.endsWith(
           "/employer/jobs",
@@ -792,6 +818,12 @@ Deno.serve(
         );
 
       if (
+        !profileRoute &&
+        !profileLocationRoute &&
+        !workerProfileStatusRoute &&
+        !employerProfileStatusRoute &&
+        !employerHomeRoute &&
+        !workerProfileRoute &&
         !employerJobsRoute &&
         !employerJobMatch &&
         !employerJobCancelMatch
@@ -909,7 +941,819 @@ Deno.serve(
       const userId =
         authData.user.id;
 
-      /*
+            /*
+       * ============================================================
+       * PROFILE / HOME / WORKER PROFILE API
+       * ============================================================
+       *
+       * These routes are authenticated but are not employer-job
+       * routes. They therefore must be handled before the existing
+       * employer verification below.
+       */
+
+      // ============================================================
+      // GET CURRENT PROFILE
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        profileRoute &&
+        !profileLocationRoute
+      ) {
+        const {
+          data: profile,
+          error: profileError,
+        } = await supabaseAdmin
+          .from("profiles")
+          .select(
+            "id, name, phone, address_1, address_2, " +
+            "pin_code, state, location, location_address",
+          )
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error(
+            "Profile lookup failed:",
+            profileError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Unable to load profile",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message: "Profile loaded successfully",
+          data: profile,
+        });
+      }
+
+      // ============================================================
+      // SAVE / UPDATE CURRENT PROFILE
+      // ============================================================
+
+      if (
+        req.method === "PUT" &&
+        profileRoute
+      ) {
+        const body = await req.json();
+
+        const name =
+          typeof body.name === "string"
+            ? body.name.trim()
+            : "";
+
+        const phone =
+          typeof body.phone === "string"
+            ? body.phone.trim()
+            : "";
+
+        const address1 =
+          typeof body.address_1 === "string"
+            ? body.address_1.trim()
+            : "";
+
+        const address2 =
+          typeof body.address_2 === "string"
+            ? body.address_2.trim()
+            : null;
+
+        const pinCode =
+          typeof body.pin_code === "string"
+            ? body.pin_code.trim()
+            : "";
+
+        const state =
+          typeof body.state === "string"
+            ? body.state.trim()
+            : "";
+
+        const locationAddress =
+          typeof body.location_address === "string"
+            ? body.location_address.trim()
+            : "";
+
+        const latitude =
+          Number(body.latitude);
+
+        const longitude =
+          Number(body.longitude);
+
+        const isWorker =
+          body.is_worker === true;
+
+        if (
+          !name ||
+          !phone ||
+          !address1 ||
+          !pinCode ||
+          !state
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Name, phone, address, PIN code and state are required",
+            },
+            400,
+          );
+        }
+
+        if (
+          !Number.isFinite(latitude) ||
+          latitude < -90 ||
+          latitude > 90
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid latitude",
+            },
+            400,
+          );
+        }
+
+        if (
+          !Number.isFinite(longitude) ||
+          longitude < -180 ||
+          longitude > 180
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid longitude",
+            },
+            400,
+          );
+        }
+
+        const location =
+          `POINT(${longitude} ${latitude})`;
+
+        const {
+          data: existingProfile,
+          error: existingProfileError,
+        } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (existingProfileError) {
+          console.error(
+            "Existing profile lookup failed:",
+            existingProfileError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to verify existing profile",
+            },
+            500,
+          );
+        }
+
+        let profile;
+        let profileError;
+
+        if (existingProfile) {
+          const result = await supabaseAdmin
+            .from("profiles")
+            .update({
+              name,
+              phone,
+              address_1: address1,
+              address_2:
+                address2 && address2.length > 0
+                  ? address2
+                  : null,
+              pin_code: pinCode,
+              state,
+              location,
+              location_address:
+                locationAddress,
+            })
+            .eq("id", userId)
+            .select(
+              "id, name, phone, address_1, address_2, " +
+              "pin_code, state, location, location_address",
+            )
+            .single();
+
+          profile = result.data;
+          profileError = result.error;
+        } else {
+          const result = await supabaseAdmin
+            .from("profiles")
+            .insert({
+              id: userId,
+              name,
+              phone,
+              address_1: address1,
+              address_2:
+                address2 && address2.length > 0
+                  ? address2
+                  : null,
+              pin_code: pinCode,
+              state,
+              location,
+              location_address:
+                locationAddress,
+            })
+            .select(
+              "id, name, phone, address_1, address_2, " +
+              "pin_code, state, location, location_address",
+            )
+            .single();
+
+          profile = result.data;
+          profileError = result.error;
+        }
+
+        if (profileError || !profile) {
+          console.error(
+            "Profile save failed:",
+            profileError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Failed to save profile",
+            },
+            500,
+          );
+        }
+
+        /*
+         * Preserve the existing application behavior:
+         *
+         * Employer profile is created here for employer signup.
+         *
+         * Worker profile is completed separately through
+         * /worker/profile.
+         */
+        if (!isWorker) {
+          const {
+            error: employerUpsertError,
+          } = await supabaseAdmin
+            .from("employer_profiles")
+            .upsert(
+              {
+                id: userId,
+              },
+              {
+                onConflict: "id",
+              },
+            );
+
+          if (employerUpsertError) {
+            console.error(
+              "Employer profile creation failed:",
+              employerUpsertError,
+            );
+
+            return jsonCorsResponse(
+              {
+                success: false,
+                message:
+                  "Profile saved but employer profile could not be created",
+              },
+              500,
+            );
+          }
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Profile saved successfully",
+          data: profile,
+        });
+      }
+
+      // ============================================================
+      // UPDATE PROFILE LOCATION
+      // ============================================================
+
+      if (
+        req.method === "PATCH" &&
+        profileLocationRoute
+      ) {
+        const body = await req.json();
+
+        const latitude =
+          Number(body.latitude);
+
+        const longitude =
+          Number(body.longitude);
+
+        const locationAddress =
+          typeof body.location_address === "string"
+            ? body.location_address.trim()
+            : "";
+
+        if (
+          !Number.isFinite(latitude) ||
+          latitude < -90 ||
+          latitude > 90
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid latitude",
+            },
+            400,
+          );
+        }
+
+        if (
+          !Number.isFinite(longitude) ||
+          longitude < -180 ||
+          longitude > 180
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid longitude",
+            },
+            400,
+          );
+        }
+
+        if (!locationAddress) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Location address is required",
+            },
+            400,
+          );
+        }
+
+        const location =
+          `POINT(${longitude} ${latitude})`;
+
+        const {
+          data: updatedProfile,
+          error: updateError,
+        } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            location,
+            location_address:
+              locationAddress,
+          })
+          .eq("id", userId)
+          .select(
+            "id, name, phone, address_1, address_2, " +
+            "pin_code, state, location, location_address",
+          )
+          .single();
+
+        if (updateError || !updatedProfile) {
+          console.error(
+            "Profile location update failed:",
+            updateError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Failed to update profile location",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Location updated successfully",
+          data: updatedProfile,
+        });
+      }
+
+      // ============================================================
+      // WORKER PROFILE STATUS
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        workerProfileStatusRoute
+      ) {
+        const {
+          data: workerProfile,
+          error: workerError,
+        } = await supabaseAdmin
+          .from("worker_profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (workerError) {
+          console.error(
+            "Worker profile status lookup failed:",
+            workerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to check worker profile",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          data: {
+            exists:
+              workerProfile != null,
+          },
+        });
+      }
+
+      // ============================================================
+      // EMPLOYER PROFILE STATUS
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        employerProfileStatusRoute
+      ) {
+        const {
+          data: employerProfile,
+          error: employerError,
+        } = await supabaseAdmin
+          .from("employer_profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (employerError) {
+          console.error(
+            "Employer profile status lookup failed:",
+            employerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to check employer profile",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          data: {
+            exists:
+              employerProfile != null,
+          },
+        });
+      }
+
+      // ============================================================
+      // EMPLOYER HOME
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        employerHomeRoute
+      ) {
+        const {
+          data: employerProfile,
+          error: employerError,
+        } = await supabaseAdmin
+          .from("employer_profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (employerError) {
+          console.error(
+            "Employer profile lookup failed:",
+            employerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to verify employer profile",
+            },
+            500,
+          );
+        }
+
+        if (!employerProfile) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Only registered employers can access employer home",
+            },
+            403,
+          );
+        }
+
+        const {
+          data: profile,
+          error: profileError,
+        } = await supabaseAdmin
+          .from("profiles")
+          .select(
+            "id, name, location, location_address",
+          )
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error(
+            "Employer home profile lookup failed:",
+            profileError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to load employer home",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Employer home loaded successfully",
+          data: {
+            ...(profile ?? {}),
+            avatar_url:
+              authData.user.user_metadata
+                ?.avatar_url ??
+              authData.user.user_metadata
+                ?.picture ??
+              authData.user.user_metadata
+                ?.avatar ??
+              null,
+          },
+        });
+      }
+
+      // ============================================================
+      // GET WORKER PROFILE
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        workerProfileRoute
+      ) {
+        const {
+          data: workerProfile,
+          error: workerError,
+        } = await supabaseAdmin
+          .from("worker_profiles")
+          .select(
+            "id, profession, skills, about, " +
+            "experience_years, availability_days, " +
+            "available_today, available_tomorrow, avatar_url",
+          )
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (workerError) {
+          console.error(
+            "Worker profile lookup failed:",
+            workerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to load worker profile",
+            },
+            500,
+          );
+        }
+
+        if (!workerProfile) {
+          return jsonCorsResponse({
+            success: true,
+            message:
+              "Worker profile not found",
+            data: null,
+          });
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Worker profile loaded successfully",
+          data: workerProfile,
+        });
+      }
+
+      // ============================================================
+      // SAVE WORKER PROFILE
+      // ============================================================
+
+      if (
+        req.method === "PATCH" &&
+        workerProfileRoute
+      ) {
+        const {
+          data: existingWorkerProfile,
+          error: existingWorkerError,
+        } = await supabaseAdmin
+          .from("worker_profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (existingWorkerError) {
+          console.error(
+            "Worker profile verification failed:",
+            existingWorkerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Unable to verify worker profile",
+            },
+            500,
+          );
+        }
+
+        if (!existingWorkerProfile) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Worker profile does not exist",
+            },
+            404,
+          );
+        }
+
+        const body = await req.json();
+
+        const profession =
+          typeof body.profession === "string"
+            ? body.profession.trim()
+            : "";
+
+        const skills =
+          Array.isArray(body.skills)
+            ? body.skills
+                .filter(
+                  (item: unknown) =>
+                    typeof item === "string",
+                )
+                .map(
+                  (item: string) =>
+                    item.trim(),
+                )
+                .filter(
+                  (item: string) =>
+                    item.length > 0,
+                )
+            : [];
+
+        const about =
+          typeof body.about === "string"
+            ? body.about.trim()
+            : "";
+
+        const experienceYears =
+          Number(body.experience_years);
+
+        const availabilityDays =
+          Array.isArray(
+            body.availability_days,
+          )
+            ? body.availability_days
+                .filter(
+                  (item: unknown) =>
+                    typeof item === "string",
+                )
+                .map(
+                  (item: string) =>
+                    item.trim(),
+                )
+                .filter(
+                  (item: string) =>
+                    item.length > 0,
+                )
+            : [];
+
+        const availableToday =
+          body.available_today === true;
+
+        const availableTomorrow =
+          body.available_tomorrow === true;
+
+        if (!profession) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Profession is required",
+            },
+            400,
+          );
+        }
+
+        if (
+          !Number.isInteger(
+            experienceYears,
+          ) ||
+          experienceYears < 0
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Experience years must be a valid non-negative integer",
+            },
+            400,
+          );
+        }
+
+        const {
+          data: updatedWorkerProfile,
+          error: updateWorkerError,
+        } = await supabaseAdmin
+          .from("worker_profiles")
+          .update({
+            profession,
+            skills,
+            about,
+            experience_years:
+              experienceYears,
+            availability_days:
+              availabilityDays,
+            available_today:
+              availableToday,
+            available_tomorrow:
+              availableTomorrow,
+          })
+          .eq("id", userId)
+          .select(
+            "id, profession, skills, about, " +
+            "experience_years, availability_days, " +
+            "available_today, available_tomorrow, avatar_url",
+          )
+          .single();
+
+        if (
+          updateWorkerError ||
+          !updatedWorkerProfile
+        ) {
+          console.error(
+            "Worker profile update failed:",
+            updateWorkerError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Failed to save worker profile",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Worker profile saved successfully",
+          data: updatedWorkerProfile,
+        });
+      }
+      
+      
+        /*
        * ============================================================
        * VERIFY EMPLOYER
        * ============================================================
