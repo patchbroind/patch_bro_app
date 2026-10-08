@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:patch_bro/core/network/api_client.dart';
 import 'package:patch_bro/core/network/api_endpoinds.dart';
 
@@ -95,6 +97,8 @@ class ProfileRemoteDataSource {
 
     final responseData = response.data;
 
+    log("it is the worker response data: $responseData");
+
     if (responseData is! Map) {
       return false;
     }
@@ -117,7 +121,10 @@ class ProfileRemoteDataSource {
       ApiEndpoints.employerProfileStatus,
     );
 
+
     final responseData = response.data;
+
+    log("it is the response data: $responseData");
 
     if (responseData is! Map) {
       return false;

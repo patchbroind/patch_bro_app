@@ -3,25 +3,15 @@
 /// Keep endpoint paths here instead of scattering strings throughout
 /// feature implementations.
 ///
-/// These are application-level API endpoints.
-///
-/// The Flutter application should depend only on these contracts,
-/// not on Supabase table names, RPC names, or database implementation
-/// details.
-///
+/// The Flutter application depends only on these API contracts.
 /// The backend can later be replaced with FastAPI / Node.js without
-/// changing the feature data sources.
+/// changing feature data sources.
 abstract final class ApiEndpoints {
   ApiEndpoints._();
 
   // ================================================================
   // AUTH
   // ================================================================
-  //
-  // Reserved for future custom authentication API.
-  //
-  // DO NOT USE THESE YET.
-  //
 
   static const signIn = '/auth/sign-in';
   static const signUp = '/auth/sign-up';
@@ -72,6 +62,12 @@ abstract final class ApiEndpoints {
 
   static String employerAddressById(String id) {
     return '/employer/addresses/$id';
+  }
+
+  static const employerWorkers = '/employer/workers';
+
+  static String employerWorkerFavourite(String workerId) {
+    return '/employer/workers/$workerId/favourite';
   }
 
   static const employerBenefits = '/employer/benefits';
