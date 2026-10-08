@@ -1,34 +1,35 @@
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
+
 import 'package:patch_bro/features/employer/workers/data/models/employer_worker_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EmployerWorkersRemoteDataSource {
-  EmployerWorkersRemoteDataSource(this._supabase);
+  EmployerWorkersRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   // ============================================================
   // GET WORKERS
   // ============================================================
 
   Future<List<EmployerWorkerModel>> getWorkers() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(ApiEndpoints.employerWorkers);
 
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      return const <EmployerWorkerModel>[];
     }
 
-    final response = await _supabase.rpc('get_employer_workers');
+    final data = responseData['data'];
 
-    if (response is! List) {
-      throw const PostgrestException(message: 'Invalid workers response.');
+    if (data is! List) {
+      return const <EmployerWorkerModel>[];
     }
 
-    return response
-        .map(
-          (row) => EmployerWorkerModel.fromMap(
-            Map<String, dynamic>.from(row as Map),
-          ),
-        )
+    return data
+        .whereType<Map>()
+        .map((row) => EmployerWorkerModel.fromMap(Map<String, dynamic>.from(row)))
         .toList(growable: false);
   }
 
@@ -37,32 +38,6 @@ class EmployerWorkersRemoteDataSource {
   // ============================================================
 
   Future<void> toggleFavourite(String workerId) async {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
-    }
-
-    final existing = await _supabase
-        .from('employer_worker_favourites')
-        .select('employer_id')
-        .eq('employer_id', user.id)
-        .eq('worker_id', workerId)
-        .maybeSingle();
-
-    if (existing != null) {
-      await _supabase
-          .from('employer_worker_favourites')
-          .delete()
-          .eq('employer_id', user.id)
-          .eq('worker_id', workerId);
-
-      return;
-    }
-
-    await _supabase.from('employer_worker_favourites').insert({
-      'employer_id': user.id,
-      'worker_id': workerId,
-    });
+    await _apiClient.patch(ApiEndpoints.employerWorkerFavourite(workerId));
   }
 }

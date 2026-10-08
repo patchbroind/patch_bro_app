@@ -1,53 +1,69 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
 
 import '../../domain/entities/employer_profile_entity.dart';
 
 class EmployerProfileRemoteDataSource {
-  EmployerProfileRemoteDataSource(this._supabase);
+  EmployerProfileRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   Future<EmployerProfileEntity> getEmployerProfile() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(ApiEndpoints.employerProfile);
 
-    if (user == null) {
-      throw Exception('User is not authenticated.');
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      throw Exception('Invalid employer profile response.');
     }
 
-    final profile = await _supabase
-        .from('profiles')
-        .select('id, name, phone, location_address')
-        .eq('id', user.id)
-        .maybeSingle();
+    final data = responseData['data'];
 
-    if (profile == null) {
-      throw const PostgrestException(message: 'Employer profile not found.');
+    if (data is! Map) {
+      throw Exception('Employer profile not found.');
     }
-
-    final avatarUrl =
-        user.userMetadata?['avatar_url'] ??
-        user.userMetadata?['picture'] ??
-        user.userMetadata?['avatar'];
 
     return EmployerProfileEntity(
-      id: user.id,
-      fullName: (profile['name'] as String?)?.trim() ?? '',
-      roleLabel: 'Employer',
-      isTrusted: false,
-      jobsPosted: 0,
-      jobsCompleted: 0,
-      cancelledJobs: 0,
-      successfulJobs: 0,
-      hasWorkerProfile: false,
-      qualifyingWorkerJobs: 0,
-      requiredWorkerJobs: 0,
-      platformFeeBenefitEligible: false,
-      phone: (profile['phone'] as String?)?.trim(),
-      avatarUrl: avatarUrl is String && avatarUrl.trim().isNotEmpty ? avatarUrl.trim() : null,
-      phoneVerified: user.phoneConfirmedAt != null,
-      email: user.email,
-      emailVerified: user.emailConfirmedAt != null,
-      locationAddress: (profile['location_address'] as String?)?.trim(),
+      id: data['id']?.toString() ?? '',
+      fullName: data['full_name']?.toString().trim() ?? data['name']?.toString().trim() ?? '',
+      roleLabel: data['role_label']?.toString() ?? 'Employer',
+      isTrusted: data['is_trusted'] == true,
+      jobsPosted: _intValue(data['jobs_posted']),
+      jobsCompleted: _intValue(data['jobs_completed']),
+      cancelledJobs: _intValue(data['cancelled_jobs']),
+      successfulJobs: _intValue(data['successful_jobs']),
+      hasWorkerProfile: data['has_worker_profile'] == true,
+      qualifyingWorkerJobs: _intValue(data['qualifying_worker_jobs']),
+      requiredWorkerJobs: _intValue(data['required_worker_jobs']),
+      platformFeeBenefitEligible: data['platform_fee_benefit_eligible'] == true,
+      phone: _nullableString(data['phone']),
+      avatarUrl: _nullableString(data['avatar_url']),
+      phoneVerified: data['phone_verified'] == true,
+      email: _nullableString(data['email']),
+      emailVerified: data['email_verified'] == true,
+      locationAddress: _nullableString(data['location_address']),
     );
+  }
+
+  static int _intValue(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String? _nullableString(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    final text = value.toString().trim();
+
+    return text.isEmpty ? null : text;
   }
 }

@@ -1,9 +1,12 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:developer';
+
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
 
 class ProfileRemoteDataSource {
-  ProfileRemoteDataSource(this._supabase);
+  ProfileRemoteDataSource(this._apiClient);
 
-  final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   // ================================================================
   // SAVE PROFILE
@@ -21,57 +24,23 @@ class ProfileRemoteDataSource {
     required String locationAddress,
     required bool isWorker,
   }) async {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
-    }
-
-    final userId = user.id;
-
-    // PostGIS uses:
-    //
-    // POINT(longitude latitude)
-    //
-    final location = 'POINT($longitude $latitude)';
-
-    await _supabase.from('profiles').upsert({
-      'id': userId,
-      'name': name.trim(),
-      'phone': phone.trim(),
-      'address_1': address1.trim(),
-      'address_2': address2?.trim().isEmpty == true ? null : address2?.trim(),
-      'pin_code': pinCode.trim(),
-      'state': state.trim(),
-      'location': location,
-      'location_address': locationAddress.trim(),
-    }, onConflict: 'id');
-
-    // ==============================================================
-    // ROLE-SPECIFIC PROFILE
-    // ==============================================================
-    if (!isWorker) {
-      await _supabase.from('employer_profiles').upsert({'id': userId}, onConflict: 'id');
-    }
-    // if (isWorker) {
-    //   await _supabase
-    //       .from('worker_profiles')
-    //       .upsert(
-    //         {
-    //           'id': userId,
-    //         },
-    //         onConflict: 'id',
-    //       );
-    // } else {
-    //   await _supabase
-    //       .from('employer_profiles')
-    //       .upsert(
-    //         {
-    //           'id': userId,
-    //         },
-    //         onConflict: 'id',
-    //       );
-    // }
+    await _apiClient.put(
+      ApiEndpoints.profile,
+      data: {
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'address_1': address1.trim(),
+        'address_2': address2?.trim().isEmpty == true
+            ? null
+            : address2?.trim(),
+        'pin_code': pinCode.trim(),
+        'state': state.trim(),
+        'latitude': latitude,
+        'longitude': longitude,
+        'location_address': locationAddress.trim(),
+        'is_worker': isWorker,
+      },
+    );
   }
 
   // ================================================================
@@ -79,20 +48,23 @@ class ProfileRemoteDataSource {
   // ================================================================
 
   Future<Map<String, dynamic>?> getCurrentProfile() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(
+      ApiEndpoints.profile,
+    );
 
-    if (user == null) {
+    final responseData = response.data;
+
+    if (responseData is! Map) {
       return null;
     }
 
-    return _supabase
-        .from('profiles')
-        .select(
-          'id, name, phone, address_1, address_2, '
-          'pin_code, state, location, location_address',
-        )
-        .eq('id', user.id)
-        .maybeSingle();
+    final data = responseData['data'];
+
+    if (data is! Map) {
+      return null;
+    }
+
+    return Map<String, dynamic>.from(data);
   }
 
   // ================================================================
@@ -104,18 +76,14 @@ class ProfileRemoteDataSource {
     required double longitude,
     required String locationAddress,
   }) async {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      throw const AuthException('No authenticated user found.');
-    }
-
-    final location = 'POINT($longitude $latitude)';
-
-    await _supabase
-        .from('profiles')
-        .update({'location': location, 'location_address': locationAddress.trim()})
-        .eq('id', user.id);
+    await _apiClient.patch(
+      ApiEndpoints.profileLocation,
+      data: {
+        'latitude': latitude,
+        'longitude': longitude,
+        'location_address': locationAddress.trim(),
+      },
+    );
   }
 
   // ================================================================
@@ -123,19 +91,25 @@ class ProfileRemoteDataSource {
   // ================================================================
 
   Future<bool> hasWorkerProfile() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(
+      ApiEndpoints.workerProfileStatus,
+    );
 
-    if (user == null) {
+    final responseData = response.data;
+
+    log("it is the worker response data: $responseData");
+
+    if (responseData is! Map) {
       return false;
     }
 
-    final result = await _supabase
-        .from('worker_profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+    final data = responseData['data'];
 
-    return result != null;
+    if (data is! Map) {
+      return false;
+    }
+
+    return data['exists'] == true;
   }
 
   // ================================================================
@@ -143,18 +117,25 @@ class ProfileRemoteDataSource {
   // ================================================================
 
   Future<bool> hasEmployerProfile() async {
-    final user = _supabase.auth.currentUser;
+    final response = await _apiClient.get(
+      ApiEndpoints.employerProfileStatus,
+    );
 
-    if (user == null) {
+
+    final responseData = response.data;
+
+    log("it is the response data: $responseData");
+
+    if (responseData is! Map) {
       return false;
     }
 
-    final result = await _supabase
-        .from('employer_profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+    final data = responseData['data'];
 
-    return result != null;
+    if (data is! Map) {
+      return false;
+    }
+
+    return data['exists'] == true;
   }
 }

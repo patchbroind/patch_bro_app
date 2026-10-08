@@ -3,27 +3,16 @@
 /// Keep endpoint paths here instead of scattering strings throughout
 /// feature implementations.
 ///
-/// These endpoints are application-level endpoints, not Supabase REST
-/// endpoint syntax.
-///
-/// Example:
-///
-/// GET    /jobs
-/// GET    /jobs/{id}
-/// POST   /jobs
-///
-/// Later our FastAPI/Node.js backend can expose the exact same contract.
+/// The Flutter application depends only on these API contracts.
+/// The backend can later be replaced with FastAPI / Node.js without
+/// changing feature data sources.
 abstract final class ApiEndpoints {
   ApiEndpoints._();
 
   // ================================================================
   // AUTH
   // ================================================================
-  //
-  // These are reserved for the future custom authentication API.
-  //
-  // DO NOT USE THESE YET.
-  //
+
   static const signIn = '/auth/sign-in';
   static const signUp = '/auth/sign-up';
   static const refreshToken = '/auth/refresh';
@@ -35,6 +24,18 @@ abstract final class ApiEndpoints {
 
   static const profile = '/profile';
 
+  static const profileLocation = '/profile/location';
+
+  static const workerProfileStatus = '/profile/worker-status';
+
+  static const employerProfileStatus = '/profile/employer-status';
+
+  // ================================================================
+  // WORKER
+  // ================================================================
+
+  static const workerProfile = '/worker/profile';
+
   // ================================================================
   // JOBS
   // ================================================================
@@ -43,9 +44,8 @@ abstract final class ApiEndpoints {
 
   static String jobById(String id) => '/jobs/$id';
 
-  // static String jobCancel(String id) => '/jobs/$id/cancel';
-
   static String jobCancel(String id) => '/employer/jobs/$id/cancel';
+
   // ================================================================
   // EMPLOYER
   // ================================================================
@@ -54,12 +54,20 @@ abstract final class ApiEndpoints {
 
   static const employerHome = '/employer/home';
 
+  static const employerHomeLocation = '/employer/home/location';
+
   static const employerJobs = '/employer/jobs';
 
   static const employerAddresses = '/employer/addresses';
 
   static String employerAddressById(String id) {
     return '/employer/addresses/$id';
+  }
+
+  static const employerWorkers = '/employer/workers';
+
+  static String employerWorkerFavourite(String workerId) {
+    return '/employer/workers/$workerId/favourite';
   }
 
   static const employerBenefits = '/employer/benefits';
