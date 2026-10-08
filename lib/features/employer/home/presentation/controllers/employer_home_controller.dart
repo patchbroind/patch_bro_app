@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/employer/home/domain/repository/employer_home_repository.dart';
 import 'package:patch_bro/features/employer/home/presentation/controllers/employer_home_state.dart';
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
@@ -6,8 +7,7 @@ import 'package:patch_bro/features/employer/home/presentation/providers/employer
 import '../../domain/entities/employer_home_entity.dart';
 
 class EmployerHomeController extends Notifier<EmployerHomeState> {
-  EmployerHomeRepository get _repository =>
-      ref.read(employerHomeRepositoryProvider);
+  EmployerHomeRepository get _repository => ref.read(employerHomeRepositoryProvider);
 
   @override
   EmployerHomeState build() {
@@ -25,10 +25,7 @@ class EmployerHomeController extends Notifier<EmployerHomeState> {
       return;
     }
 
-    state = state.copyWith(
-      status: EmployerHomeStatus.loading,
-      clearError: true,
-    );
+    state = state.copyWith(status: EmployerHomeStatus.loading, clearError: true);
 
     try {
       final EmployerHomeEntity data = await _repository.getHomeData();
@@ -41,10 +38,7 @@ class EmployerHomeController extends Notifier<EmployerHomeState> {
         clearError: true,
       );
     } catch (error) {
-      state = state.copyWith(
-        status: EmployerHomeStatus.failure,
-        errorMessage: error.toString(),
-      );
+      state = state.copyWith(status: EmployerHomeStatus.failure, errorMessage: error.toString());
     }
   }
 
@@ -104,11 +98,7 @@ class EmployerHomeController extends Notifier<EmployerHomeState> {
     state = state.copyWith(isUpdatingLocation: true, clearError: true);
 
     try {
-      await _repository.updateLocation(
-        latitude: latitude,
-        longitude: longitude,
-        address: address,
-      );
+      await _repository.updateLocation(latitude: latitude, longitude: longitude, address: address);
 
       // Reload profile/home data after
       // successful location update.
@@ -125,12 +115,19 @@ class EmployerHomeController extends Notifier<EmployerHomeState> {
 
       return true;
     } catch (error) {
-      state = state.copyWith(
-        isUpdatingLocation: false,
-        errorMessage: error.toString(),
-      );
+      state = state.copyWith(isUpdatingLocation: false, errorMessage: error.toString());
 
       return false;
+    }
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      final List<CategoryEntity> categories = await _repository.getCategories();
+
+      state = state.copyWith(categories: categories, clearError: true);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 }
