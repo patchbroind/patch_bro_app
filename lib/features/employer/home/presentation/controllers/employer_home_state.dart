@@ -1,3 +1,4 @@
+import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 
 enum EmployerHomeStatus { initial, loading, success, failure }
@@ -13,6 +14,7 @@ class EmployerHomeState {
     this.isUpdatingLocation = false,
     this.locationPromptShown = false,
     this.errorMessage,
+    this.categories = const [],
   });
 
   final EmployerHomeStatus status;
@@ -33,6 +35,8 @@ class EmployerHomeState {
 
   final String? errorMessage;
 
+  final List<CategoryEntity> categories;
+
   bool get hasLocation => location != null;
 
   bool get isLoading => status == EmployerHomeStatus.loading;
@@ -49,6 +53,7 @@ class EmployerHomeState {
     bool? isUpdatingLocation,
     bool? locationPromptShown,
     String? errorMessage,
+    List<CategoryEntity> categories = const [],
     bool clearLocation = false,
     bool clearAvatarUrl = false,
     bool clearError = false,
@@ -63,6 +68,7 @@ class EmployerHomeState {
       isUpdatingLocation: isUpdatingLocation ?? this.isUpdatingLocation,
       locationPromptShown: locationPromptShown ?? this.locationPromptShown,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      categories: categories.isNotEmpty ? categories : this.categories
     );
   }
 }
