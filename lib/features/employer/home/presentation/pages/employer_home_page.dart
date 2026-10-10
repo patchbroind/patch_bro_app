@@ -37,8 +37,6 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLocationRequirement();
     });
-
-    ref.read(employerHomeControllerProvider.notifier).loadCategories();
   }
 
   @override
@@ -193,7 +191,6 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
   @override
   Widget build(BuildContext context) {
     final homeAsync = ref.watch(employerHomeProvider);
-    final categories = ref.watch(employerHomeControllerProvider.select((state) => state.categories));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -252,7 +249,6 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
                     // CATEGORIES
                     // ------------------------------------------------
                     EmployerCategoriesSection(
-                      categories: categories,
                       searchQuery: _searchQuery,
                       onCategoryTap: _onCategoryTap,
                       onViewAll: _onViewAllCategories,
