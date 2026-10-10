@@ -806,6 +806,11 @@ Deno.serve(
           "/employer/home",
         );
 
+      const categoriesRoute =
+        url.pathname.endsWith(
+          "/categories",
+        );
+
       const workerProfileRoute =
         url.pathname.endsWith(
           "/worker/profile",
@@ -852,6 +857,7 @@ Deno.serve(
         !workerProfileStatusRoute &&
         !employerProfileStatusRoute &&
         !employerHomeRoute &&
+        !categoriesRoute &&
         !workerProfileRoute &&
         !employerProfileRoute &&
         !employerAddressesRoute &&
@@ -974,7 +980,56 @@ Deno.serve(
       const userId =
         authData.user.id;
 
-            /*
+        // ============================================================
+      // GET CATEGORIES
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        categoriesRoute
+      ) {
+        const {
+          data: categories,
+          error: categoriesError,
+        } = await supabaseAdmin
+          .from("categories")
+          .select(
+            "id, name, slug, description, icon, icon_url, " +
+            "is_active, display_order, active_workers_count",
+          )
+          .eq("is_active", true)
+          .order("display_order", {
+            ascending: true,
+          })
+          .order("name", {
+            ascending: true,
+          });
+
+        if (categoriesError) {
+          console.error(
+            "Categories fetch failed:",
+            categoriesError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message:
+                "Failed to fetch categories",
+            },
+            500,
+          );
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Categories fetched successfully",
+          data: categories ?? [],
+        });
+      }
+
+        /*
        * ============================================================
        * PROFILE / HOME / WORKER PROFILE API
        * ============================================================

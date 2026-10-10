@@ -1,5 +1,6 @@
 import 'package:patch_bro/core/network/api_client.dart';
 import 'package:patch_bro/core/network/api_endpoinds.dart';
+import 'package:patch_bro/features/employer/home/data/model/category_model.dart';
 
 class EmployerHomeRemoteDataSource {
   EmployerHomeRemoteDataSource(this._apiClient);
@@ -63,5 +64,41 @@ class EmployerHomeRemoteDataSource {
 
   String? getAvatarUrl() {
     return null;
+  }
+
+
+//===============================================================
+//FETCH CATEGORIES
+//===============================================================
+Future<List<CategoryModel>> getCategories() async {
+    final response = await _apiClient.get('/categories');
+
+    final data = response.data;
+
+    if (data is List) {
+      return data
+          .map(
+            (item) => CategoryModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+    }
+
+    if (data is Map<String, dynamic>) {
+      final categories = data['data'];
+
+      if (categories is List) {
+        return categories
+            .map(
+              (item) => CategoryModel.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList();
+      }
+    }
+
+    throw Exception('Invalid categories response');
   }
 }
