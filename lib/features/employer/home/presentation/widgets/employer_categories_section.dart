@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/employer/home/presentation/widgets/employer_category_card.dart';
 
 import 'employer_section_header.dart';
@@ -7,25 +6,22 @@ import 'employer_section_header.dart';
 class EmployerCategoriesSection extends StatelessWidget {
   const EmployerCategoriesSection({
     super.key,
-    required this.categories,
     required this.searchQuery,
     required this.onCategoryTap,
     required this.onViewAll,
-
   });
 
-  final List<CategoryEntity> categories;
   final String searchQuery;
   final ValueChanged<String> onCategoryTap;
   final VoidCallback onViewAll;
 
-  // static const categories = [
-  //   (title: 'Cleaning', icon: Icons.cleaning_services_outlined),
-  //   (title: 'Electrical', icon: Icons.electric_bolt_outlined),
-  //   (title: 'Handyperson', icon: Icons.build_outlined),
-  //   (title: 'HVAC', icon: Icons.ac_unit_outlined),
-  //   (title: 'Plumbing', icon: Icons.plumbing_outlined),
-  // ];
+  static const categories = [
+    (title: 'Cleaning', icon: Icons.cleaning_services_outlined),
+    (title: 'Electrical', icon: Icons.electric_bolt_outlined),
+    (title: 'Handyperson', icon: Icons.build_outlined),
+    (title: 'HVAC', icon: Icons.ac_unit_outlined),
+    (title: 'Plumbing', icon: Icons.plumbing_outlined),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +30,7 @@ class EmployerCategoriesSection extends StatelessWidget {
     final filtered = query.isEmpty
         ? categories
         : categories
-              .where((category) => category.name.toLowerCase().contains(query))
+              .where((category) => category.title.toLowerCase().contains(query))
               .toList();
 
     if (filtered.isEmpty) {
@@ -58,10 +54,10 @@ class EmployerCategoriesSection extends StatelessWidget {
               final category = filtered[index];
 
               return EmployerCategoryCard(
-                title: category.name,
-                icon: _getCategoryIcon(category.icon),
+                title: category.title,
+                icon: category.icon,
                 onTap: () {
-                  onCategoryTap(category.name);
+                  onCategoryTap(category.title);
                 },
               );
             },
@@ -70,29 +66,4 @@ class EmployerCategoriesSection extends StatelessWidget {
       ],
     );
   }
-
-  IconData _getCategoryIcon(String? icon) {
-    switch (icon) {
-      case 'Cleaning':
-        return Icons.cleaning_services_outlined;
-
-      case 'Zap':
-        return Icons.electric_bolt_outlined;
-
-      case 'Wrench':
-        return Icons.build_outlined;
-
-      case 'Snowflake':
-        return Icons.ac_unit_outlined;
-
-      case 'Droplets':
-        return Icons.plumbing_outlined;
-
-      default:
-        return Icons.handyman_outlined;
-    }
-  }
-
-
 }
-

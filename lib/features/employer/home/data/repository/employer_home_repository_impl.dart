@@ -1,5 +1,4 @@
 import 'package:patch_bro/features/employer/home/data/model/employer_home_model.dart';
-import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/employer/home/domain/repository/employer_home_repository.dart';
 
 import '../../domain/entities/employer_home_entity.dart';
@@ -32,10 +31,5 @@ class EmployerHomeRepositoryImpl implements EmployerHomeRepository {
       longitude: longitude,
       address: address,
     );
-  }
-
-  @override
-  Future<List<CategoryEntity>> getCategories() async {
-    return _remoteDataSource.getCategories();
   }
 }
