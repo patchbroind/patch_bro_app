@@ -53,7 +53,7 @@ class EmployerHomeState {
     bool? isUpdatingLocation,
     bool? locationPromptShown,
     String? errorMessage,
-    List<CategoryEntity> categories = const [],
+    List<CategoryEntity>? categories,
     bool clearLocation = false,
     bool clearAvatarUrl = false,
     bool clearError = false,
@@ -68,7 +68,7 @@ class EmployerHomeState {
       isUpdatingLocation: isUpdatingLocation ?? this.isUpdatingLocation,
       locationPromptShown: locationPromptShown ?? this.locationPromptShown,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-      categories: categories.isNotEmpty ? categories : this.categories
+      categories: categories ?? this.categories,
     );
   }
 }

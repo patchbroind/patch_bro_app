@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +33,7 @@ class PostJobController extends Notifier<PostJobState> {
   // ---------------------------------------------------------------------------
 
   void setCategory(String value) {
+    log("it is selected category $value");
     state = state.copyWith(category: value, status: PostJobStatus.initial, clearError: true);
   }
 

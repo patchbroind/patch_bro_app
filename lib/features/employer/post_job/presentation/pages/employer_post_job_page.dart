@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,8 @@ import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/date_time_utils.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
+import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
+import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
@@ -26,9 +29,6 @@ import '../widgets/post_job_voice_recorder.dart';
 class EmployerPostJobPage extends ConsumerStatefulWidget {
   const EmployerPostJobPage({super.key, this.job});
 
-  /// Null = create mode.
-  ///
-  /// Non-null = edit mode.
   final EmployerJobEntity? job;
 
   @override
@@ -36,9 +36,9 @@ class EmployerPostJobPage extends ConsumerStatefulWidget {
 }
 
 class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
-  late final TextEditingController _categoryController;
   late final TextEditingController _skillController;
   late final TextEditingController _descriptionController;
+  late final ValueNotifier<String?> _categoryValueNotifier;
 
   Timer? _recordingTimer;
 
@@ -48,11 +48,10 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   void initState() {
     super.initState();
 
-    _categoryController = TextEditingController();
-
     _skillController = TextEditingController();
 
     _descriptionController = TextEditingController();
+    _categoryValueNotifier = ValueNotifier<String?>(null);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -71,7 +70,6 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     if (job == null) {
       controller.reset();
 
-      _categoryController.clear();
       _skillController.clear();
       _descriptionController.clear();
 
@@ -79,8 +77,6 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     }
 
     controller.initializeForEdit(job);
-
-    _categoryController.text = job.category;
 
     _skillController.text = job.skill;
 
@@ -91,16 +87,15 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   void dispose() {
     _recordingTimer?.cancel();
 
-    _categoryController.dispose();
     _skillController.dispose();
     _descriptionController.dispose();
+    _categoryValueNotifier.dispose();
 
     super.dispose();
   }
   // RESE====================
 
   void _resetForm() {
-    _categoryController.clear();
     _skillController.clear();
     _descriptionController.clear();
 
@@ -322,6 +317,16 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postJobControllerProvider);
+    ref.listen<String>(
+  postJobControllerProvider.select((state) => state.category),
+  (previous, next) {
+    _categoryValueNotifier.value =
+        next.isEmpty ? null : next;
+  },
+);
+    final categories = ref.watch(
+      employerHomeControllerProvider.select((homeState) => homeState.categories),
+    );
 
     final isSubmitting = state.status == PostJobStatus.submitting;
 
@@ -364,12 +369,11 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                         subtitle: 'Tell workers what kind of work you need.',
                         child: Column(
                           children: [
-                            AppTextField(
-                              controller: _categoryController,
-                              hintText: 'Enter job category',
-                              icon: Icons.category_outlined,
-                              textInputAction: TextInputAction.next,
-                              onChanged: ref.read(postJobControllerProvider.notifier).setCategory,
+                            _buildCategoryDropdown(
+                              categories: categories,
+                              selectedCategory: state.category,
+                              onChanged: (value) =>
+                                  ref.read(postJobControllerProvider.notifier).setCategory(value),
                             ),
 
                             const SizedBox(height: 14),
@@ -505,6 +509,60 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoryDropdown({
+    required List<CategoryEntity> categories,
+    required String selectedCategory,
+    required ValueChanged<String> onChanged,
+  }) {
+    final activeCategories = categories.where((category) => category.isActive).toList();
+
+    final activeNames = activeCategories.map((category) => category.name).toSet();
+
+    final keepLegacyValue =
+        selectedCategory.trim().isNotEmpty && !activeNames.contains(selectedCategory);
+
+    final dropdownNames = <String>[
+      if (keepLegacyValue) selectedCategory,
+      ...activeCategories.map((category) => category.name),
+    ];
+    return DropdownButtonFormField2<String>(
+      valueListenable: _categoryValueNotifier,
+      isExpanded: true,
+      decoration: InputDecoration(
+        hintText: 'Enter job category',
+        prefixIcon: Icon(
+          Icons.category_outlined,
+          color: Theme.of(context).colorScheme.primary,
+          size: 28,
+        ),
+      ),
+      items: dropdownNames.toSet().map((name) {
+        return DropdownItem<String>(value: name, child: Text(name));
+      }).toList(),
+      onChanged: (value) {
+        if (value != null) {
+          onChanged(value);
+        }
+      },
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Please select a category.';
+        }
+        return null;
+      },
+      dropdownStyleData: DropdownStyleData(
+        width: MediaQuery.sizeOf(context).width - 34,
+        offset: const Offset(-30, 0),
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Theme.of(context).colorScheme.surface,
+        ),
+      ),
+      menuItemStyleData: const MenuItemStyleData(padding: EdgeInsets.symmetric(horizontal: 16)),
     );
   }
 
