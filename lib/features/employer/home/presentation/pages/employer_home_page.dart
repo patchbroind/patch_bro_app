@@ -163,7 +163,8 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
   // ================================================================
 
   void _onCategoryTap(String category) {
-    AppSnackbar.success(context, 'Selected $category');
+    // ref.read(postJobControllerProvider.notifier).startCreateSession(category: category);
+    // context.goNamed(RouteNames.employerPostJob);
   }
 
   void _onProjectTap(String project) {

@@ -31,6 +31,23 @@ class PostJobState {
   final PostJobStatus status;
   final String? errorMessage;
 
+  /// Zero-based step used by the create-job wizard. Edit mode continues to
+  /// render the original, single-page form.
+  final int currentStep;
+
+  /// Job ID is retained after successful creation to prevent duplicate
+  /// submissions while invitations are being resolved.
+  final String? createdJobId;
+
+  /// Selected worker IDs and card position are kept in the wizard state so
+  /// returning from Worker Details preserves the selection experience.
+  final List<String> selectedWorkerIds;
+  final int activeWorkerCardIndex;
+
+  /// Changes whenever a fresh create flow begins. The persistent shell uses
+  /// this to recreate only its text controllers, not the shared form state.
+  final int createSessionId;
+
   /// Null when creating a new job.
   /// Contains the job ID when editing an existing job.
   final String? editingJobId;
@@ -78,6 +95,11 @@ class PostJobState {
   const PostJobState({
     this.status = PostJobStatus.initial,
     this.errorMessage,
+    this.currentStep = 0,
+    this.createdJobId,
+    this.selectedWorkerIds = const [],
+    this.activeWorkerCardIndex = 0,
+    this.createSessionId = 0,
 
     this.editingJobId,
 
@@ -135,6 +157,12 @@ class PostJobState {
     PostJobStatus? status,
     String? errorMessage,
     bool clearError = false,
+    int? currentStep,
+    String? createdJobId,
+    bool clearCreatedJobId = false,
+    List<String>? selectedWorkerIds,
+    int? activeWorkerCardIndex,
+    int? createSessionId,
 
     String? editingJobId,
     bool clearEditingJobId = false,
@@ -175,6 +203,16 @@ class PostJobState {
       status: status ?? this.status,
 
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+
+      currentStep: currentStep ?? this.currentStep,
+
+      createdJobId: clearCreatedJobId ? null : createdJobId ?? this.createdJobId,
+
+      selectedWorkerIds: selectedWorkerIds ?? this.selectedWorkerIds,
+
+      activeWorkerCardIndex: activeWorkerCardIndex ?? this.activeWorkerCardIndex,
+
+      createSessionId: createSessionId ?? this.createSessionId,
 
       editingJobId: clearEditingJobId ? null : editingJobId ?? this.editingJobId,
 
