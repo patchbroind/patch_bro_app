@@ -50,9 +50,8 @@ class PostJobImagePicker extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            // ---------------------------------------------------------------
+ 
             // EXISTING SERVER IMAGES
-            // ---------------------------------------------------------------
 
             ...List.generate(existingImages.length, (index) {
               return _ImageTile(

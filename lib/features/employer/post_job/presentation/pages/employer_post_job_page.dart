@@ -14,6 +14,7 @@ import 'package:patch_bro/features/employer/home/domain/entities/category_entity
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_wizard.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/job_post_existing_voice.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
@@ -68,11 +69,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     final job = widget.job;
 
     if (job == null) {
-      controller.reset();
-
-      _skillController.clear();
-      _descriptionController.clear();
-
+      // Create-mode session ownership belongs to the wizard entry points.
+      // This prevents this persistent shell branch from erasing a category
+      // selected on the Employer Home screen.
       return;
     }
 
@@ -316,6 +315,15 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
   @override
   Widget build(BuildContext context) {
+    // The edit route retains the established full form and update flow. Only
+    // newly created jobs use the five-step wizard.
+    if (!_isEditMode) {
+      final sessionId = ref.watch(
+        postJobControllerProvider.select((state) => state.createSessionId),
+      );
+      return EmployerPostJobWizard(key: ValueKey(sessionId));
+    }
+
     final state = ref.watch(postJobControllerProvider);
     ref.listen<String>(
   postJobControllerProvider.select((state) => state.category),

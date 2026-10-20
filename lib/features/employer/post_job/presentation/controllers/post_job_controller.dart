@@ -1,9 +1,11 @@
-import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:patch_bro/features/employer/invitations/presentation/providers/employer_invitations_providers.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
+import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 import 'package:record/record.dart';
 
 import '../../../../profile/domain/entities/profile_location.dart';
@@ -11,11 +13,21 @@ import '../../domain/repositories/post_job_repository.dart';
 import '../providers/post_job_providers.dart';
 import 'post_job_state.dart';
 
+class PostJobSubmissionResult {
+  const PostJobSubmissionResult({required this.jobId, required this.failedWorkers});
+
+  final String? jobId;
+  final List<EmployerWorkerEntity> failedWorkers;
+
+  bool get jobCreated => jobId != null;
+}
+
 class PostJobController extends Notifier<PostJobState> {
   late final PostJobRepository _repository;
 
   final ImagePicker _imagePicker = ImagePicker();
   final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _invitationBatchInProgress = false;
 
   @override
   PostJobState build() {
@@ -33,12 +45,44 @@ class PostJobController extends Notifier<PostJobState> {
   // ---------------------------------------------------------------------------
 
   void setCategory(String value) {
-    log("it is selected category $value");
     state = state.copyWith(category: value, status: PostJobStatus.initial, clearError: true);
   }
 
   void setSkill(String value) {
     state = state.copyWith(skill: value, status: PostJobStatus.initial, clearError: true);
+  }
+
+  bool toggleSelectedWorker(String workerId) {
+    final selected = [...state.selectedWorkerIds];
+    if (selected.contains(workerId)) {
+      selected.remove(workerId);
+    } else {
+      if (selected.length >= 5) return false;
+      selected.add(workerId);
+    }
+    state = state.copyWith(
+      selectedWorkerIds: selected,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+    return true;
+  }
+
+  void reconcileSelectedWorkers(Set<String> eligibleWorkerIds) {
+    final eligibleSelections = state.selectedWorkerIds
+        .where(eligibleWorkerIds.contains)
+        .toSet()
+        .toList(growable: false);
+    if (eligibleSelections.length != state.selectedWorkerIds.length) {
+      state = state.copyWith(selectedWorkerIds: eligibleSelections);
+    }
+  }
+
+  void setActiveWorkerCardIndex(int index) {
+    final nextIndex = index < 0 ? 0 : index;
+    if (nextIndex != state.activeWorkerCardIndex) {
+      state = state.copyWith(activeWorkerCardIndex: nextIndex);
+    }
   }
 
   void setDate(DateTime date) {
@@ -61,6 +105,48 @@ class PostJobController extends Notifier<PostJobState> {
       status: PostJobStatus.initial,
       clearError: true,
     );
+  }
+
+  /// Starts an isolated create-job session. This is intentionally separate
+  /// from [reset] so the home-category entry point can preselect a category.
+  void startCreateSession({String? category}) {
+    state = PostJobState(
+      category: category?.trim() ?? '',
+      createSessionId: state.createSessionId + 1,
+    );
+  }
+
+  void goToPreviousStep() {
+    if (state.currentStep == 0 || state.status == PostJobStatus.submitting) {
+      return;
+    }
+
+    state = state.copyWith(
+      currentStep: state.currentStep - 1,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+  }
+
+  /// Validates only the visible create-job step and advances when valid.
+  bool goToNextStep() {
+    if (state.status == PostJobStatus.submitting || state.currentStep >= 5) {
+      return false;
+    }
+
+    final validationError = validateStep(state.currentStep);
+
+    if (validationError != null) {
+      state = state.copyWith(status: PostJobStatus.failure, errorMessage: validationError);
+      return false;
+    }
+
+    state = state.copyWith(
+      currentStep: state.currentStep + 1,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -310,45 +396,67 @@ class PostJobController extends Notifier<PostJobState> {
   // VALIDATION
   // ---------------------------------------------------------------------------
 
+  String? validateStep(int step) {
+    switch (step) {
+      case 0:
+        if (state.category.trim().isEmpty) {
+          return 'Please select a category.';
+        }
+        // The current API stores one required-skill string; do not fabricate a
+        // multi-skill payload until the backend supplies that contract.
+        if (state.skill.trim().isEmpty) {
+          return 'Please enter the required skill.';
+        }
+        return null;
+      case 1:
+        if (state.selectedDate == null) {
+          return 'Please select the job date.';
+        }
+        if (state.selectedTime == null) {
+          return 'Please select the job time.';
+        }
+        return null;
+      case 2:
+        if (state.locationAddress == null || state.locationAddress!.trim().isEmpty) {
+          return 'Please select the job location.';
+        }
+        if (state.latitude == null || state.longitude == null) {
+          return 'Please select a valid job location.';
+        }
+        return null;
+      case 3:
+        if (state.description.trim().isEmpty &&
+            state.voiceRecording == null &&
+            !state.hasExistingAudio) {
+          return 'Please add a text or voice description.';
+        }
+        return null;
+      case 4:
+        if (state.totalImageCount > 2) {
+          return 'You can add a maximum of 2 images.';
+        }
+        return null;
+      case 5:
+        if (state.selectedWorkerIds.isEmpty) {
+          return 'Please select at least one worker.';
+        }
+        if (state.selectedWorkerIds.length > 5) {
+          return 'You can select up to 5 workers.';
+        }
+        return null;
+    }
+    return null;
+  }
+
   String? _validate() {
-    if (state.category.trim().isEmpty) {
-      return 'Please select a category.';
+    for (var step = 0; step < 5; step++) {
+      final error = validateStep(step);
+      if (error != null) return error;
     }
-
-    if (state.skill.trim().isEmpty) {
-      return 'Please enter the required skill.';
+    if (!state.isEditMode) {
+      final workerError = validateStep(5);
+      if (workerError != null) return workerError;
     }
-
-    if (state.selectedDate == null) {
-      return 'Please select the job date.';
-    }
-
-    if (state.selectedTime == null) {
-      return 'Please select the job time.';
-    }
-
-    if (state.locationAddress == null || state.locationAddress!.trim().isEmpty) {
-      return 'Please select the job location.';
-    }
-
-    if (state.latitude == null || state.longitude == null) {
-      return 'Please select a valid job location.';
-    }
-
-    final hasTextDescription = state.description.trim().isNotEmpty;
-
-    final hasNewVoice = state.voiceRecording != null;
-
-    final hasExistingVoice = state.hasExistingAudio;
-
-    if (!hasTextDescription && !hasNewVoice && !hasExistingVoice) {
-      return 'Please add a text or voice description.';
-    }
-
-    if (state.totalImageCount > 2) {
-      return 'You can add a maximum of 2 images.';
-    }
-
     return null;
   }
 
@@ -361,6 +469,18 @@ class PostJobController extends Notifier<PostJobState> {
   /// NOTE:
   /// The update repository method will be added in the next step.
   Future<String?> submitJob() async {
+    if (state.status == PostJobStatus.submitting) {
+      return null;
+    }
+
+    if (!state.isEditMode && state.createdJobId != null) {
+      state = state.copyWith(
+        status: PostJobStatus.failure,
+        errorMessage: 'This job has already been posted.',
+      );
+      return null;
+    }
+
     final validationError = _validate();
 
     if (validationError != null) {
@@ -423,7 +543,15 @@ class PostJobController extends Notifier<PostJobState> {
         images: state.images,
       );
 
-      state = state.copyWith(status: PostJobStatus.success, clearError: true);
+      if (jobId == null || jobId.trim().isEmpty) {
+        state = state.copyWith(
+          status: PostJobStatus.failure,
+          errorMessage: 'The job could not be created because the server returned no job ID.',
+        );
+        return null;
+      }
+
+      state = state.copyWith(status: PostJobStatus.success, createdJobId: jobId, clearError: true);
 
       return jobId;
     } catch (e) {
@@ -433,11 +561,69 @@ class PostJobController extends Notifier<PostJobState> {
     }
   }
 
+  Future<PostJobSubmissionResult> submitAndInviteWorkers(List<EmployerWorkerEntity> workers) async {
+    final workerIds = workers.map((worker) => worker.id).toSet();
+    if (workers.isEmpty ||
+        workers.length > 5 ||
+        workerIds.length != workers.length ||
+        state.selectedWorkerIds.length != workers.length ||
+        !state.selectedWorkerIds.toSet().containsAll(workerIds)) {
+      state = state.copyWith(
+        status: PostJobStatus.failure,
+        errorMessage: 'Select between 1 and 5 distinct eligible workers.',
+      );
+      return const PostJobSubmissionResult(jobId: null, failedWorkers: []);
+    }
+
+    final jobId = await submitJob();
+    if (jobId == null || jobId.trim().isEmpty) {
+      return const PostJobSubmissionResult(jobId: null, failedWorkers: []);
+    }
+
+    final failures = await _inviteWorkers(jobId, workers);
+    return PostJobSubmissionResult(jobId: jobId, failedWorkers: failures);
+  }
+
+  Future<List<EmployerWorkerEntity>> retryFailedWorkerInvitations({
+    required String jobId,
+    required List<EmployerWorkerEntity> failedWorkers,
+  }) {
+    if (state.createdJobId != jobId || jobId.trim().isEmpty) {
+      throw StateError('Cannot retry invitations without the created job ID.');
+    }
+    return _inviteWorkers(jobId, failedWorkers);
+  }
+
+  Future<List<EmployerWorkerEntity>> _inviteWorkers(
+    String jobId,
+    List<EmployerWorkerEntity> workers,
+  ) async {
+    if (_invitationBatchInProgress) {
+      throw StateError('Worker invitations are already being processed.');
+    }
+    _invitationBatchInProgress = true;
+    final failures = <EmployerWorkerEntity>[];
+    try {
+      final controller = ref.read(employerInvitationsControllerProvider(jobId).notifier);
+      for (final worker in workers) {
+        try {
+          await controller.inviteWorker(worker.id);
+        } catch (error) {
+          debugPrint('Invitation for worker ${worker.id} failed: $error');
+          failures.add(worker);
+        }
+      }
+      return failures;
+    } finally {
+      _invitationBatchInProgress = false;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // RESET
   // ---------------------------------------------------------------------------
 
   void reset() {
-    state = const PostJobState();
+    state = PostJobState(createSessionId: state.createSessionId + 1);
   }
 }
