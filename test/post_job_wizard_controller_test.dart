@@ -189,6 +189,7 @@ void main() {
                   activeIndex: activeIndex,
                   selectedWorkerIds: selectedIds,
                   eligibleWorkerIds: {'worker-1', 'worker-2'},
+                  allowIneligibleSelection: false,
                   height: 440,
                   onIndexChanged: (index) => setState(() => activeIndex = index),
                   onToggleSelected: (id) {
@@ -257,7 +258,7 @@ void main() {
   });
 
   testWidgets('worker step toggles all/eligible view and searches by name', (tester) async {
-    final workers = [_worker('worker-1'), _worker('worker-2')];
+    final workers = [_worker('worker-1'), _worker('worker-2', profession: 'Electrical')];
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -279,6 +280,18 @@ void main() {
     expect(find.text('Show Eligible Workers'), findsOneWidget);
     expect(find.text('No eligible workers found'), findsNothing);
     expect(find.text('Worker worker-1'), findsOneWidget);
+
+    await tester.drag(find.byType(PostJobWorkerCardStack), const Offset(-150, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 2'), findsOneWidget);
+    await tester.tap(find.text('Worker worker-2'));
+    await tester.pumpAndSettle();
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byType(PostJobWorkerSelectionStep)),
+      ).read(postJobControllerProvider).selectedWorkerIds,
+      ['worker-2'],
+    );
 
     await tester.enterText(find.byType(TextField), 'worker-2');
     await tester.pumpAndSettle();
@@ -314,10 +327,10 @@ void _fillJobForm(PostJobController controller, List<String> selectedWorkerIds) 
   }
 }
 
-EmployerWorkerEntity _worker(String id) => EmployerWorkerEntity(
+EmployerWorkerEntity _worker(String id, {String profession = 'Plumbing'}) => EmployerWorkerEntity(
   id: id,
   name: 'Worker $id',
-  profession: 'Plumbing',
+  profession: profession,
   rating: 4.5,
   reviewCount: 2,
   distanceKm: 1,

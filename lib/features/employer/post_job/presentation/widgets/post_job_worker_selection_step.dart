@@ -189,6 +189,7 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
               activeIndex: activeIndex,
               selectedWorkerIds: jobState.selectedWorkerIds.toSet(),
               eligibleWorkerIds: eligibleWorkerIds,
+              allowIneligibleSelection: _showAllWorkers,
               height: cardStackHeight.toDouble(),
               onIndexChanged: ref.read(postJobControllerProvider.notifier).setActiveWorkerCardIndex,
               onToggleSelected: _toggleWorker,
