@@ -18,7 +18,11 @@ class PostJobExistingImage {
     required this.sortOrder,
   });
 
-  PostJobExistingImage copyWith({String? url, String? storagePath, int? sortOrder}) {
+  PostJobExistingImage copyWith({
+    String? url,
+    String? storagePath,
+    int? sortOrder,
+  }) {
     return PostJobExistingImage(
       url: url ?? this.url,
       storagePath: storagePath ?? this.storagePath,
@@ -57,6 +61,7 @@ class PostJobState {
 
   final DateTime? selectedDate;
   final DateTime? selectedTime;
+  final List<String> selectedSlotIds;
 
   final double? latitude;
   final double? longitude;
@@ -108,6 +113,7 @@ class PostJobState {
 
     this.selectedDate,
     this.selectedTime,
+    this.selectedSlotIds = const [],
 
     this.latitude,
     this.longitude,
@@ -172,6 +178,7 @@ class PostJobState {
 
     DateTime? selectedDate,
     DateTime? selectedTime,
+    List<String>? selectedSlotIds,
 
     double? latitude,
     double? longitude,
@@ -206,15 +213,20 @@ class PostJobState {
 
       currentStep: currentStep ?? this.currentStep,
 
-      createdJobId: clearCreatedJobId ? null : createdJobId ?? this.createdJobId,
+      createdJobId: clearCreatedJobId
+          ? null
+          : createdJobId ?? this.createdJobId,
 
       selectedWorkerIds: selectedWorkerIds ?? this.selectedWorkerIds,
 
-      activeWorkerCardIndex: activeWorkerCardIndex ?? this.activeWorkerCardIndex,
+      activeWorkerCardIndex:
+          activeWorkerCardIndex ?? this.activeWorkerCardIndex,
 
       createSessionId: createSessionId ?? this.createSessionId,
 
-      editingJobId: clearEditingJobId ? null : editingJobId ?? this.editingJobId,
+      editingJobId: clearEditingJobId
+          ? null
+          : editingJobId ?? this.editingJobId,
 
       category: category ?? this.category,
       skill: skill ?? this.skill,
@@ -222,6 +234,8 @@ class PostJobState {
       selectedDate: selectedDate ?? this.selectedDate,
 
       selectedTime: selectedTime ?? this.selectedTime,
+
+      selectedSlotIds: selectedSlotIds ?? this.selectedSlotIds,
 
       latitude: latitude ?? this.latitude,
 
@@ -231,9 +245,13 @@ class PostJobState {
 
       description: description ?? this.description,
 
-      voiceRecording: clearVoiceRecording ? null : voiceRecording ?? this.voiceRecording,
+      voiceRecording: clearVoiceRecording
+          ? null
+          : voiceRecording ?? this.voiceRecording,
 
-      existingAudioUrl: clearExistingAudioUrl ? null : existingAudioUrl ?? this.existingAudioUrl,
+      existingAudioUrl: clearExistingAudioUrl
+          ? null
+          : existingAudioUrl ?? this.existingAudioUrl,
 
       existingAudioPath: clearExistingAudioPath
           ? null

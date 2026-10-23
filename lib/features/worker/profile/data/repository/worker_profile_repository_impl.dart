@@ -2,11 +2,8 @@ import 'package:patch_bro/features/worker/profile/data/datasource/worker_profile
 import 'package:patch_bro/features/worker/profile/domain/entities/worker_profile_entity.dart';
 import 'package:patch_bro/features/worker/profile/domain/repository/worker_profile_repository.dart';
 
-class WorkerProfileRepositoryImpl
-    implements WorkerProfileRepository {
-  WorkerProfileRepositoryImpl(
-    this._remoteDataSource,
-  );
+class WorkerProfileRepositoryImpl implements WorkerProfileRepository {
+  WorkerProfileRepositoryImpl(this._remoteDataSource);
 
   final WorkerProfileRemoteDataSource _remoteDataSource;
 
@@ -24,6 +21,7 @@ class WorkerProfileRepositoryImpl
     required List<String> availabilityDays,
     required bool availableToday,
     required bool availableTomorrow,
+    required Map<String, Map<String, String>> availabilitySchedule,
   }) {
     return _remoteDataSource.saveProfile(
       profession: profession,
@@ -33,6 +31,14 @@ class WorkerProfileRepositoryImpl
       availabilityDays: availabilityDays,
       availableToday: availableToday,
       availableTomorrow: availableTomorrow,
+      availabilitySchedule: availabilitySchedule,
     );
+  }
+
+  @override
+  Future<void> saveAvailabilitySchedule(
+    Map<String, Map<String, String>> schedule,
+  ) {
+    return _remoteDataSource.saveAvailabilitySchedule(schedule);
   }
 }

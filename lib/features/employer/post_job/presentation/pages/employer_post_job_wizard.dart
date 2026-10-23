@@ -11,6 +11,7 @@ import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/date_time_utils.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
+import 'package:patch_bro/core/widgets/work_time_slot_grid.dart';
 import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/providers/employer_jobs_providers.dart';
@@ -20,6 +21,8 @@ import 'package:patch_bro/features/employer/post_job/presentation/widgets/employ
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_image_picker.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_voice_recorder.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_header.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_location_option.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_selection_step.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
@@ -30,7 +33,8 @@ class EmployerPostJobWizard extends ConsumerStatefulWidget {
   const EmployerPostJobWizard({super.key});
 
   @override
-  ConsumerState<EmployerPostJobWizard> createState() => _EmployerPostJobWizardState();
+  ConsumerState<EmployerPostJobWizard> createState() =>
+      _EmployerPostJobWizardState();
 }
 
 class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
@@ -46,7 +50,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
     final state = ref.read(postJobControllerProvider);
     _skillController = TextEditingController(text: state.skill);
     _descriptionController = TextEditingController(text: state.description);
-    _categoryValueNotifier = ValueNotifier<String?>(state.category.isEmpty ? null : state.category);
+    _categoryValueNotifier = ValueNotifier<String?>(
+      state.category.isEmpty ? null : state.category,
+    );
   }
 
   @override
@@ -81,20 +87,6 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
       initialDate: initialDate,
     );
     if (selected != null) controller.setDate(selected);
-  }
-
-  Future<void> _selectTime() async {
-    final controller = ref.read(postJobControllerProvider.notifier);
-    final current = ref.read(postJobControllerProvider).selectedTime;
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: current == null
-          ? TimeOfDay.now()
-          : TimeOfDay(hour: current.hour, minute: current.minute),
-    );
-    if (selected == null) return;
-    final now = DateTime.now();
-    controller.setTime(DateTime(now.year, now.month, now.day, selected.hour, selected.minute));
   }
 
   Future<void> _chooseLocation() async {
@@ -148,7 +140,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
         _recordingTimer?.cancel();
         return;
       }
-      controller.updateRecordingDuration(state.recordingDuration + const Duration(seconds: 1));
+      controller.updateRecordingDuration(
+        state.recordingDuration + const Duration(seconds: 1),
+      );
     });
   }
 
@@ -159,7 +153,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    final jobId = await ref.read(postJobControllerProvider.notifier).submitJob();
+    final jobId = await ref
+        .read(postJobControllerProvider.notifier)
+        .submitJob();
     if (!mounted) return;
     if (jobId == null || jobId.isEmpty) {
       final error = ref.read(postJobControllerProvider).errorMessage;
@@ -181,7 +177,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
   }
 
   void _next() {
-    final advanced = ref.read(postJobControllerProvider.notifier).goToNextStep();
+    final advanced = ref
+        .read(postJobControllerProvider.notifier)
+        .goToNextStep();
     if (!advanced && mounted) {
       final error = ref.read(postJobControllerProvider).errorMessage;
       if (error != null) AppSnackbar.error(context, error);
@@ -191,14 +189,16 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postJobControllerProvider);
-    ref.listen<String>(postJobControllerProvider.select((state) => state.category), (
-      previous,
-      next,
-    ) {
-      _categoryValueNotifier.value = next.isEmpty ? null : next;
-    });
+    ref.listen<String>(
+      postJobControllerProvider.select((state) => state.category),
+      (previous, next) {
+        _categoryValueNotifier.value = next.isEmpty ? null : next;
+      },
+    );
     final categories = ref.watch(
-      employerHomeControllerProvider.select((homeState) => homeState.categories),
+      employerHomeControllerProvider.select(
+        (homeState) => homeState.categories,
+      ),
     );
     final isSubmitting = state.status == PostJobStatus.submitting;
 
@@ -210,7 +210,7 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
         body: SafeArea(
           child: Column(
             children: [
-              _WizardHeader(step: state.currentStep),
+              PostJobWizardHeader(step: state.currentStep),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
@@ -227,7 +227,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
                         child: OutlinedButton(
                           onPressed: isSubmitting
                               ? null
-                              : ref.read(postJobControllerProvider.notifier).goToPreviousStep,
+                              : ref
+                                    .read(postJobControllerProvider.notifier)
+                                    .goToPreviousStep,
                           child: const Text('Back'),
                         ),
                       ),
@@ -239,9 +241,13 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
                         label: state.currentStep == 5 ? 'Post Job' : 'Next',
                         isLoading: isSubmitting,
                         leadingIcon: Icon(
-                          state.currentStep == 5 ? Icons.add_circle_outline : Icons.arrow_forward,
+                          state.currentStep == 5
+                              ? Icons.add_circle_outline
+                              : Icons.arrow_forward,
                         ),
-                        onPressed: isSubmitting ? null : (state.currentStep == 5 ? _submit : _next),
+                        onPressed: isSubmitting
+                            ? null
+                            : (state.currentStep == 5 ? _submit : _next),
                       ),
                     ),
                   ],
@@ -266,7 +272,10 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
   }
 
   Widget _categoryStep(PostJobState state, List<CategoryEntity> categories) {
-    final names = categories.where((item) => item.isActive).map((item) => item.name).toList();
+    final names = categories
+        .where((item) => item.isActive)
+        .map((item) => item.name)
+        .toList();
     final selected = names.contains(state.category) ? state.category : null;
     if (_categoryValueNotifier.value != selected) {
       _categoryValueNotifier.value = selected;
@@ -284,10 +293,15 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
               prefixIcon: Icon(Icons.category_outlined),
             ),
             items: names
-                .map((name) => DropdownItem<String>(value: name, child: Text(name)))
+                .map(
+                  (name) =>
+                      DropdownItem<String>(value: name, child: Text(name)),
+                )
                 .toList(),
             onChanged: (value) {
-              if (value != null) ref.read(postJobControllerProvider.notifier).setCategory(value);
+              if (value != null) {
+                ref.read(postJobControllerProvider.notifier).setCategory(value);
+              }
             },
           ),
           const SizedBox(height: 14),
@@ -301,7 +315,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
           const SizedBox(height: 10),
           Text(
             'Skills are stored as one required-skill value by the current job API.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -310,25 +326,32 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
 
   Widget _scheduleStep(PostJobState state) => PostJobSection(
     title: 'Schedule',
-    subtitle: 'Choose when the work needs to be done.',
-    child: Row(
+    subtitle: 'Choose a date and one or more two-hour work slots.',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: SelectionTile(
-            icon: Icons.calendar_today_outlined,
-            title: 'Date',
-            value: DateTimeUtils.formatDate(state.selectedDate),
-            onTap: _selectDate,
-          ),
+        SelectionTile(
+          icon: Icons.calendar_today_outlined,
+          title: 'Date',
+          value: DateTimeUtils.formatDate(state.selectedDate),
+          onTap: _selectDate,
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SelectionTile(
-            icon: Icons.access_time_outlined,
-            title: 'Time',
-            value: DateTimeUtils.formatTime(state.selectedTime),
-            onTap: _selectTime,
-          ),
+        const SizedBox(height: 16),
+        WorkTimeSlotGrid(
+          selectedSlotIds: state.selectedSlotIds.toSet(),
+          onSlotToggled: ref
+              .read(postJobControllerProvider.notifier)
+              .toggleTimeSlot,
+          color: AppColors.employerPrimary,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '${state.selectedSlotIds.length} time slot${state.selectedSlotIds.length == 1 ? '' : 's'} selected'
+          '${state.selectedSlotIds.isNotEmpty ? ' · ${state.selectedSlotIds.length * 2} working hours' : ''}'
+          ' (lunch break is 12–1 PM)',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     ),
@@ -336,7 +359,8 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
 
   Widget _locationStep(PostJobState state) {
     final savedLocation = ref.watch(employerHomeProvider).value?.location;
-    final hasSelectedLocation = state.locationAddress?.trim().isNotEmpty == true;
+    final hasSelectedLocation =
+        state.locationAddress?.trim().isNotEmpty == true;
     final isSavedSelected =
         savedLocation != null &&
         state.latitude == savedLocation.latitude &&
@@ -350,14 +374,19 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
               ? 'No saved profile location is available.'
               : 'Use your profile location or select another place.',
           child: savedLocation == null
-              ? const Text('Choose a different location or use your current location.')
-              : _LocationOption(
+              ? const Text(
+                  'Choose a different location or use your current location.',
+                )
+              : PostJobWizardLocationOption(
                   icon: Icons.home_outlined,
                   title: savedLocation.address,
-                  subtitle: isSavedSelected ? 'Selected for this job' : 'Use this saved location',
+                  subtitle: isSavedSelected
+                      ? 'Selected for this job'
+                      : 'Use this saved location',
                   selected: isSavedSelected,
-                  onTap: () =>
-                      ref.read(postJobControllerProvider.notifier).setLocation(savedLocation),
+                  onTap: () => ref
+                      .read(postJobControllerProvider.notifier)
+                      .setLocation(savedLocation),
                 ),
         ),
         const SizedBox(height: 18),
@@ -369,7 +398,7 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
           child: Column(
             children: [
               if (hasSelectedLocation) ...[
-                _LocationOption(
+                PostJobWizardLocationOption(
                   icon: Icons.location_on_outlined,
                   title: state.locationAddress!,
                   subtitle: 'Currently selected',
@@ -407,7 +436,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
           icon: Icons.description_outlined,
           maxLength: 1000,
           keyboardType: TextInputType.multiline,
-          onChanged: ref.read(postJobControllerProvider.notifier).setDescription,
+          onChanged: ref
+              .read(postJobControllerProvider.notifier)
+              .setDescription,
         ),
         const SizedBox(height: 12),
         PostJobVoiceRecorder(
@@ -416,7 +447,9 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
           hasRecording: state.voiceRecording != null,
           onStart: _startRecording,
           onStop: _stopRecording,
-          onRemove: ref.read(postJobControllerProvider.notifier).removeVoiceRecording,
+          onRemove: ref
+              .read(postJobControllerProvider.notifier)
+              .removeVoiceRecording,
         ),
       ],
     ),
@@ -429,81 +462,6 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
       images: state.images,
       onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
       onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
-    ),
-  );
-}
-
-class _WizardHeader extends StatelessWidget {
-  const _WizardHeader({required this.step});
-
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = (step + 1) / 6;
-    final labels = ['Category', 'Schedule', 'Location', 'Description', 'Images', 'Workers'];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Step ${step + 1} of 6 · ${labels[step]}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(value: progress, minHeight: 7),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LocationOption extends StatelessWidget {
-  const _LocationOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: selected ? AppColors.employerPrimary : AppColors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.employerPrimary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          if (selected) const Icon(Icons.check_circle, color: AppColors.employerPrimary),
-        ],
-      ),
     ),
   );
 }

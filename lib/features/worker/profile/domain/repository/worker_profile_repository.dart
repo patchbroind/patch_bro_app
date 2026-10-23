@@ -11,5 +11,10 @@ abstract interface class WorkerProfileRepository {
     required List<String> availabilityDays,
     required bool availableToday,
     required bool availableTomorrow,
+    required Map<String, Map<String, String>> availabilitySchedule,
   });
+
+  Future<void> saveAvailabilitySchedule(
+    Map<String, Map<String, String>> schedule,
+  );
 }

@@ -17,20 +17,15 @@ import '../widgets/worker_profile_profession.dart';
 import '../widgets/worker_profile_skills.dart';
 
 class WorkerProfilePage extends ConsumerStatefulWidget {
-  const WorkerProfilePage({
-    super.key,
-    this.isSetup = false,
-  });
+  const WorkerProfilePage({super.key, this.isSetup = false});
 
   final bool isSetup;
 
   @override
-  ConsumerState<WorkerProfilePage> createState() =>
-      _WorkerProfilePageState();
+  ConsumerState<WorkerProfilePage> createState() => _WorkerProfilePageState();
 }
 
-class _WorkerProfilePageState
-    extends ConsumerState<WorkerProfilePage> {
+class _WorkerProfilePageState extends ConsumerState<WorkerProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
   final _aboutController = TextEditingController();
@@ -69,15 +64,7 @@ class _WorkerProfilePageState
     'General Maintenance',
   ];
 
-  static const _days = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
+  static const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   String _profession = _professions.first;
 
@@ -96,9 +83,7 @@ class _WorkerProfilePageState
         return;
       }
 
-      ref
-          .read(workerProfileControllerProvider.notifier)
-          .loadProfile();
+      ref.read(workerProfileControllerProvider.notifier).loadProfile();
     });
   }
 
@@ -110,9 +95,7 @@ class _WorkerProfilePageState
   }
 
   void _populateProfile() {
-    final profile = ref
-        .read(workerProfileControllerProvider)
-        .profile;
+    final profile = ref.read(workerProfileControllerProvider).profile;
 
     if (profile == null) {
       return;
@@ -136,8 +119,7 @@ class _WorkerProfilePageState
 
     _aboutController.text = profile.about;
 
-    _experienceController.text =
-        profile.experienceYears.toString();
+    _experienceController.text = profile.experienceYears.toString();
 
     _availableToday = profile.availableToday;
     _availableTomorrow = profile.availableTomorrow;
@@ -149,30 +131,19 @@ class _WorkerProfilePageState
     }
 
     if (_selectedSkills.isEmpty) {
-      AppSnackbar.error(
-        context,
-        'Please select at least one skill.',
-      );
+      AppSnackbar.error(context, 'Please select at least one skill.');
       return;
     }
 
     if (_selectedDays.isEmpty) {
-      AppSnackbar.error(
-        context,
-        'Please select your available days.',
-      );
+      AppSnackbar.error(context, 'Please select your available days.');
       return;
     }
 
-    final experience = int.tryParse(
-      _experienceController.text.trim(),
-    );
+    final experience = int.tryParse(_experienceController.text.trim());
 
     if (experience == null || experience < 0) {
-      AppSnackbar.error(
-        context,
-        'Please enter a valid experience.',
-      );
+      AppSnackbar.error(context, 'Please enter a valid experience.');
       return;
     }
 
@@ -186,6 +157,12 @@ class _WorkerProfilePageState
           availabilityDays: _selectedDays.toList(),
           availableToday: _availableToday,
           availableTomorrow: _availableTomorrow,
+          availabilitySchedule:
+              ref
+                  .read(workerProfileControllerProvider)
+                  .profile
+                  ?.availabilitySchedule ??
+              const {},
         );
 
     if (!mounted) {
@@ -193,14 +170,9 @@ class _WorkerProfilePageState
     }
 
     if (!success) {
-      final error = ref
-          .read(workerProfileControllerProvider)
-          .errorMessage;
+      final error = ref.read(workerProfileControllerProvider).errorMessage;
 
-      AppSnackbar.error(
-        context,
-        error ?? 'Unable to save worker profile.',
-      );
+      AppSnackbar.error(context, error ?? 'Unable to save worker profile.');
 
       return;
     }
@@ -208,10 +180,7 @@ class _WorkerProfilePageState
     if (widget.isSetup) {
       context.goNamed(RouteNames.workerHome);
     } else {
-      AppSnackbar.success(
-        context,
-        'Worker profile updated.',
-      );
+      AppSnackbar.success(context, 'Worker profile updated.');
     }
   }
 
@@ -221,10 +190,7 @@ class _WorkerProfilePageState
     });
   }
 
-  void _onSkillChanged(
-    String skill,
-    bool selected,
-  ) {
+  void _onSkillChanged(String skill, bool selected) {
     setState(() {
       if (selected) {
         _selectedSkills.add(skill);
@@ -234,10 +200,7 @@ class _WorkerProfilePageState
     });
   }
 
-  void _onDayChanged(
-    String day,
-    bool selected,
-  ) {
+  void _onDayChanged(String day, bool selected) {
     setState(() {
       if (selected) {
         _selectedDays.add(day);
@@ -261,16 +224,12 @@ class _WorkerProfilePageState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(
-      workerProfileControllerProvider,
-    );
+    final state = ref.watch(workerProfileControllerProvider);
 
     if (state.isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.workerPrimary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.workerPrimary),
         ),
       );
     }
@@ -283,9 +242,7 @@ class _WorkerProfilePageState
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          widget.isSetup
-              ? 'Set Up Worker Profile'
-              : 'Worker Profile',
+          widget.isSetup ? 'Set Up Worker Profile' : 'Worker Profile',
         ),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -295,16 +252,9 @@ class _WorkerProfilePageState
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
-              32,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             children: [
-              WorkerProfileHeader(
-                isSetup: widget.isSetup,
-              ),
+              WorkerProfileHeader(isSetup: widget.isSetup),
               const SizedBox(height: 24),
 
               WorkerProfileProfession(
@@ -331,9 +281,7 @@ class _WorkerProfilePageState
               ),
               const SizedBox(height: 24),
 
-              WorkerProfileAbout(
-                controller: _aboutController,
-              ),
+              WorkerProfileAbout(controller: _aboutController),
               const SizedBox(height: 24),
 
               WorkerProfileAvailability(
@@ -342,23 +290,16 @@ class _WorkerProfilePageState
                 availableToday: _availableToday,
                 availableTomorrow: _availableTomorrow,
                 onDayChanged: _onDayChanged,
-                onAvailableTodayChanged:
-                    _onAvailableTodayChanged,
-                onAvailableTomorrowChanged:
-                    _onAvailableTomorrowChanged,
+                onAvailableTodayChanged: _onAvailableTodayChanged,
+                onAvailableTomorrowChanged: _onAvailableTomorrowChanged,
               ),
               const SizedBox(height: 32),
 
               AppPrimaryButton(
-                label: widget.isSetup
-                    ? 'Complete Profile'
-                    : 'Save Changes',
+                label: widget.isSetup ? 'Complete Profile' : 'Save Changes',
                 isLoading: state.isSaving,
-                backgroundColor:
-                    AppColors.workerPrimary,
-                onPressed: state.isSaving
-                    ? null
-                    : _save,
+                backgroundColor: AppColors.workerPrimary,
+                onPressed: state.isSaving ? null : _save,
               ),
             ],
           ),

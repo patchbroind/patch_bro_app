@@ -18,6 +18,7 @@ class EmployerWorkerModel extends EmployerWorkerEntity {
     super.jobsCompleted,
     super.responseRate,
     super.availabilityDays,
+    super.availabilitySchedule,
     super.location,
     super.phone,
     super.verified,
@@ -41,6 +42,7 @@ class EmployerWorkerModel extends EmployerWorkerEntity {
       jobsCompleted: _intValue(map['jobs_completed']),
       responseRate: _intValue(map['response_rate']),
       availabilityDays: _stringList(map['availability_days']),
+      availabilitySchedule: _scheduleMap(map['availability_schedule']),
       location: _stringValue(map['location']),
       phone: _stringValue(map['phone']),
       verified: _boolValue(map['verified']),
@@ -65,6 +67,7 @@ class EmployerWorkerModel extends EmployerWorkerEntity {
       jobsCompleted: entity.jobsCompleted,
       responseRate: entity.responseRate,
       availabilityDays: entity.availabilityDays,
+      availabilitySchedule: entity.availabilitySchedule,
       location: entity.location,
       phone: entity.phone,
       verified: entity.verified,
@@ -135,5 +138,17 @@ class EmployerWorkerModel extends EmployerWorkerEntity {
     }
 
     return const [];
+  }
+
+  static Map<String, Map<String, String>> _scheduleMap(dynamic value) {
+    if (value is! Map) return const {};
+    return {
+      for (final entry in value.entries)
+        if (entry.value is Map)
+          entry.key.toString(): {
+            for (final slot in (entry.value as Map).entries)
+              slot.key.toString(): slot.value.toString(),
+          },
+    };
   }
 }

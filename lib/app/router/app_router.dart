@@ -26,6 +26,7 @@ import 'package:patch_bro/features/notifications/presentation/pages/worker_notif
 import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
+import 'package:patch_bro/features/worker/availability/presentation/pages/worker_availability_page.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -551,7 +552,7 @@ class AppRouter {
               path: '/worker/availability',
               name: RouteNames.workerAvailability,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Worker Availability');
+                return const WorkerAvailabilityPage();
               },
             ),
           ],

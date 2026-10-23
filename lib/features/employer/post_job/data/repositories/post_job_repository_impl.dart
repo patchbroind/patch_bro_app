@@ -5,9 +5,7 @@ import '../../domain/repositories/post_job_repository.dart';
 import '../datasource/post_job_remote_data_source.dart';
 
 class PostJobRepositoryImpl implements PostJobRepository {
-  const PostJobRepositoryImpl(
-    this._remoteDataSource,
-  );
+  const PostJobRepositoryImpl(this._remoteDataSource);
 
   final PostJobRemoteDataSource _remoteDataSource;
 
@@ -17,6 +15,7 @@ class PostJobRepositoryImpl implements PostJobRepository {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -29,6 +28,7 @@ class PostJobRepositoryImpl implements PostJobRepository {
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -45,6 +45,7 @@ class PostJobRepositoryImpl implements PostJobRepository {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -55,13 +56,13 @@ class PostJobRepositoryImpl implements PostJobRepository {
     required bool removeExistingAudio,
     required File? newAudio,
   }) async {
-    final model =
-        await _remoteDataSource.updateJob(
+    final model = await _remoteDataSource.updateJob(
       jobId: jobId,
       category: category,
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -69,8 +70,7 @@ class PostJobRepositoryImpl implements PostJobRepository {
       keepImagePaths: keepImagePaths,
       newImages: newImages,
       existingAudioPath: existingAudioPath,
-      removeExistingAudio:
-          removeExistingAudio,
+      removeExistingAudio: removeExistingAudio,
       newAudio: newAudio,
     );
 

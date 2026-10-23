@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/app/router/route_names.dart';
+import 'package:patch_bro/core/scheduling/work_time_slot.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/no_eligible_workers_widget.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_worker_search_message.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_selected_workers_count.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_load_error.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_search_bar.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_selection_time_slot.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 import 'package:patch_bro/features/employer/workers/presentation/controllers/employer_workers_state.dart';
 import 'package:patch_bro/features/employer/workers/presentation/providers/employer_workers_providers.dart';
@@ -24,7 +29,6 @@ class PostJobWorkerSelectionStep extends ConsumerStatefulWidget {
 
 class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelectionStep> {
   late final TextEditingController _searchController;
-  bool _showAllWorkers = false;
   String _searchQuery = '';
 
   @override
@@ -58,7 +62,9 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
   @override
   Widget build(BuildContext context) {
     ref.listen<PostJobState>(postJobControllerProvider, (previous, next) {
-      if (previous?.category != next.category || previous?.skill != next.skill) {
+      if (previous?.category != next.category ||
+          previous?.selectedDate != next.selectedDate ||
+          previous?.selectedSlotIds.join(',') != next.selectedSlotIds.join(',')) {
         _scheduleReconciliation();
       }
     });
@@ -73,11 +79,11 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
     final eligibleWorkers = _matchingWorkers(
       workerState.workers,
       category: jobState.category,
-      skill: jobState.skill,
+      date: jobState.selectedDate,
+      slotIds: jobState.selectedSlotIds,
     );
     final eligibleWorkerIds = eligibleWorkers.map((worker) => worker.id).toSet();
-    final sourceWorkers = _showAllWorkers ? workerState.workers : eligibleWorkers;
-    final displayedWorkers = sourceWorkers
+    final displayedWorkers = eligibleWorkers
         .where((worker) => worker.name.toLowerCase().contains(_searchQuery))
         .toList(growable: false);
     final activeIndex = displayedWorkers.isEmpty
@@ -88,33 +94,28 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Select Workers',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Choose up to 5 workers for your job',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.employerLight,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            '${jobState.selectedWorkerIds.length} of 5 workers selected',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.employerDark,
-              fontWeight: FontWeight.w700,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Select Workers',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
+            PostJobSelectedWorkersCount(jobState: jobState),
+          ],
         ),
+        // const SizedBox(height: 6),
+        // Text(
+        //   'Choose up to 5 workers for your job',
+        //   style: Theme.of(
+        //     context,
+        //   ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        // ),
+        // const SizedBox(height: 14),
+
         const SizedBox(height: 8),
         Text(
           'Selected workers will receive an invitation after you post the job.',
@@ -127,50 +128,14 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
             child: const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary)),
           )
         else if (workerState.isFailure)
-          _WorkerLoadError(
+          PostJobWorkerLoadError(
             message: workerState.errorMessage ?? 'Unable to load workers.',
             onRetry: _retryLoadingWorkers,
           )
         else ...[
-          TextField(
-            controller: _searchController,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: 'Search workers by name',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _searchQuery.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: _searchController.clear,
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-              filled: true,
-              fillColor: AppColors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.employerPrimary),
-              ),
-            ),
-          ),
+          PostJobWorkerSearchbar(searchController: _searchController, searchQuery: _searchQuery),
           const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => setState(() => _showAllWorkers = !_showAllWorkers),
-              icon: Icon(_showAllWorkers ? Icons.filter_alt_rounded : Icons.people_outline_rounded),
-              label: Text(_showAllWorkers ? 'Show Eligible Workers' : 'Show All Workers'),
-            ),
-          ),
+          PostJobWorkerSelectionTimeSlot(jobState: jobState),
           const SizedBox(height: 8),
           if (displayedWorkers.isEmpty)
             SizedBox(
@@ -178,9 +143,7 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
               child: Center(
                 child: _searchQuery.isNotEmpty
                     ? const _NoWorkersFoundForSearch()
-                    : _showAllWorkers
-                    ? const _NoWorkersAvailable()
-                    : NoEligibleWorkersWidget(),
+                    : const _NoWorkersAvailable(),
               ),
             )
           else
@@ -189,7 +152,7 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
               activeIndex: activeIndex,
               selectedWorkerIds: jobState.selectedWorkerIds.toSet(),
               eligibleWorkerIds: eligibleWorkerIds,
-              allowIneligibleSelection: _showAllWorkers,
+              allowIneligibleSelection: false,
               height: cardStackHeight.toDouble(),
               onIndexChanged: ref.read(postJobControllerProvider.notifier).setActiveWorkerCardIndex,
               onToggleSelected: _toggleWorker,
@@ -205,21 +168,20 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
   List<EmployerWorkerEntity> _matchingWorkers(
     List<EmployerWorkerEntity> workers, {
     required String category,
-    required String skill,
+    required DateTime? date,
+    required List<String> slotIds,
   }) {
     final normalizedCategory = category.trim().toLowerCase();
-    final normalizedSkill = skill.trim().toLowerCase();
-    if (normalizedCategory.isEmpty || normalizedSkill.isEmpty) return const [];
+    if (normalizedCategory.isEmpty || date == null || slotIds.isEmpty) {
+      return const [];
+    }
+    final dateSchedule = formatScheduleDate(date);
 
     return workers
         .where((worker) {
           final matchesCategory = worker.profession.trim().toLowerCase() == normalizedCategory;
-          final matchesSkill = worker.skills.any(
-            (workerSkill) => workerSkill.trim().toLowerCase() == normalizedSkill,
-          );
-          return matchesCategory &&
-              matchesSkill &&
-              (worker.isAvailableToday || worker.availableTomorrow);
+          final availability = worker.availabilitySchedule[dateSchedule] ?? const {};
+          return matchesCategory && slotIds.every((slotId) => availability[slotId] == 'available');
         })
         .toList(growable: false);
   }
@@ -232,7 +194,8 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
     final eligibleWorkers = _matchingWorkers(
       workerState.workers,
       category: jobState.category,
-      skill: jobState.skill,
+      date: jobState.selectedDate,
+      slotIds: jobState.selectedSlotIds,
     );
     final eligibleIds = eligibleWorkers.map((worker) => worker.id).toSet();
     ref.read(postJobControllerProvider.notifier).reconcileSelectedWorkers(eligibleIds);
@@ -270,70 +233,21 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
   }
 }
 
-class _WorkerLoadError extends StatelessWidget {
-  const _WorkerLoadError({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 350,
-    child: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_outlined, size: 38, color: AppColors.textSecondary),
-          const SizedBox(height: 10),
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class _NoWorkersFoundForSearch extends StatelessWidget {
   const _NoWorkersFoundForSearch();
 
   @override
-  Widget build(BuildContext context) => const _EmptyWorkerSearchMessage(
-    title: 'No workers found',
-    message: 'Try a different name.',
-  );
+  Widget build(BuildContext context) =>
+      const EmptyWorkerSearchMessage(title: 'No workers found', message: 'Try a different name.');
 }
 
 class _NoWorkersAvailable extends StatelessWidget {
   const _NoWorkersAvailable();
 
   @override
-  Widget build(BuildContext context) => const _EmptyWorkerSearchMessage(
-    title: 'No workers available',
-    message: 'There are no workers to display right now.',
-  );
-}
-
-class _EmptyWorkerSearchMessage extends StatelessWidget {
-  const _EmptyWorkerSearchMessage({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-      ),
-      const SizedBox(height: 4),
-      Text(message, textAlign: TextAlign.center),
-    ],
+  Widget build(BuildContext context) => const EmptyWorkerSearchMessage(
+    title: 'No available workers',
+    message:
+        'Try another date or time slot. Workers must match the category and be available for every selected slot.',
   );
 }

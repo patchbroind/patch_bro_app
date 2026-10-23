@@ -19,6 +19,7 @@ class EmployerWorkerEntity {
     this.jobsCompleted = 0,
     this.responseRate = 0,
     this.availabilityDays = const [],
+    this.availabilitySchedule = const {},
     this.location = '',
     this.phone = '',
     this.verified = false,
@@ -46,6 +47,7 @@ class EmployerWorkerEntity {
   final int responseRate;
 
   final List<String> availabilityDays;
+  final Map<String, Map<String, String>> availabilitySchedule;
 
   final String location;
   final String phone;
@@ -69,6 +71,7 @@ class EmployerWorkerEntity {
     int? jobsCompleted,
     int? responseRate,
     List<String>? availabilityDays,
+    Map<String, Map<String, String>>? availabilitySchedule,
     String? location,
     String? phone,
     bool? verified,
@@ -90,6 +93,7 @@ class EmployerWorkerEntity {
       jobsCompleted: jobsCompleted ?? this.jobsCompleted,
       responseRate: responseRate ?? this.responseRate,
       availabilityDays: availabilityDays ?? this.availabilityDays,
+      availabilitySchedule: availabilitySchedule ?? this.availabilitySchedule,
       location: location ?? this.location,
       phone: phone ?? this.phone,
       verified: verified ?? this.verified,

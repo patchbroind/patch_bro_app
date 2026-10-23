@@ -21,10 +21,11 @@ import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_enti
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-    const MethodChannel('com.llfbandit.record/messages'),
-    (call) async => 'test-recorder-id',
-  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('com.llfbandit.record/messages'),
+        (call) async => 'test-recorder-id',
+      );
 
   group('PostJobController create wizard', () {
     late ProviderContainer container;
@@ -39,37 +40,53 @@ void main() {
       container = ProviderContainer(
         overrides: [
           postJobRepositoryProvider.overrideWithValue(postJobRepository),
-          employerInvitationsRepositoryProvider.overrideWithValue(invitationRepository),
+          employerInvitationsRepositoryProvider.overrideWithValue(
+            invitationRepository,
+          ),
         ],
       );
     });
 
     tearDown(() => container.dispose());
 
-    test('blocks incomplete steps and keeps entered data while moving back', () {
-      final controller = container.read(postJobControllerProvider.notifier);
+    test(
+      'blocks incomplete steps and keeps entered data while moving back',
+      () {
+        final controller = container.read(postJobControllerProvider.notifier);
 
-      controller.startCreateSession(category: 'Plumbing');
-      expect(container.read(postJobControllerProvider).currentStep, 0);
-      expect(controller.goToNextStep(), isFalse);
-      expect(container.read(postJobControllerProvider).errorMessage, isNotNull);
+        controller.startCreateSession(category: 'Plumbing');
+        expect(container.read(postJobControllerProvider).currentStep, 0);
+        expect(controller.goToNextStep(), isFalse);
+        expect(
+          container.read(postJobControllerProvider).errorMessage,
+          isNotNull,
+        );
 
-      controller.setSkill('Pipe repair');
-      expect(controller.goToNextStep(), isTrue);
-      controller.setDate(DateTime(2030, 1, 2));
-      controller.setTime(DateTime(2030, 1, 2, 9));
-      expect(controller.goToNextStep(), isTrue);
-      controller.setLocation(
-        const ProfileLocation(latitude: 10.0, longitude: 76.0, address: 'Saved address'),
-      );
-      expect(controller.goToNextStep(), isTrue);
+        controller.setSkill('Pipe repair');
+        expect(controller.goToNextStep(), isTrue);
+        controller.setDate(DateTime(2030, 1, 2));
+        expect(
+          controller.validateStep(1),
+          'Please select at least one time slot.',
+        );
+        controller.toggleTimeSlot('morning_1');
+        expect(controller.goToNextStep(), isTrue);
+        controller.setLocation(
+          const ProfileLocation(
+            latitude: 10.0,
+            longitude: 76.0,
+            address: 'Saved address',
+          ),
+        );
+        expect(controller.goToNextStep(), isTrue);
 
-      controller.goToPreviousStep();
-      final state = container.read(postJobControllerProvider);
-      expect(state.currentStep, 2);
-      expect(state.skill, 'Pipe repair');
-      expect(state.locationAddress, 'Saved address');
-    });
+        controller.goToPreviousStep();
+        final state = container.read(postJobControllerProvider);
+        expect(state.currentStep, 2);
+        expect(state.skill, 'Pipe repair');
+        expect(state.locationAddress, 'Saved address');
+      },
+    );
 
     test('new create sessions discard the previous draft', () {
       final controller = container.read(postJobControllerProvider.notifier);
@@ -96,21 +113,27 @@ void main() {
       expect(controller.toggleSelectedWorker('worker-0'), isTrue);
       expect(controller.toggleSelectedWorker('worker-5'), isTrue);
       expect(controller.toggleSelectedWorker('worker-6'), isFalse);
-      expect(container.read(postJobControllerProvider).selectedWorkerIds, hasLength(5));
+      expect(
+        container.read(postJobControllerProvider).selectedWorkerIds,
+        hasLength(5),
+      );
     });
 
-    test('worker selections can be reconciled and the active card index persists', () {
-      final controller = container.read(postJobControllerProvider.notifier);
-      controller.toggleSelectedWorker('worker-1');
-      controller.toggleSelectedWorker('worker-2');
-      controller.setActiveWorkerCardIndex(3);
+    test(
+      'worker selections can be reconciled and the active card index persists',
+      () {
+        final controller = container.read(postJobControllerProvider.notifier);
+        controller.toggleSelectedWorker('worker-1');
+        controller.toggleSelectedWorker('worker-2');
+        controller.setActiveWorkerCardIndex(3);
 
-      controller.reconcileSelectedWorkers({'worker-2'});
-      final state = container.read(postJobControllerProvider);
+        controller.reconcileSelectedWorkers({'worker-2'});
+        final state = container.read(postJobControllerProvider);
 
-      expect(state.selectedWorkerIds, ['worker-2']);
-      expect(state.activeWorkerCardIndex, 3);
-    });
+        expect(state.selectedWorkerIds, ['worker-2']);
+        expect(state.activeWorkerCardIndex, 3);
+      },
+    );
 
     test('final step requires at least one selected worker', () {
       final controller = container.read(postJobControllerProvider.notifier);
@@ -125,52 +148,64 @@ void main() {
       final controller = container.read(postJobControllerProvider.notifier);
       _fillJobForm(controller, ['worker-1']);
 
-      final result = await controller.submitAndInviteWorkers([_worker('worker-1')]);
+      final result = await controller.submitAndInviteWorkers([
+        _worker('worker-1'),
+      ]);
 
       expect(result.jobCreated, isFalse);
       expect(apiCalls, ['create-job']);
       expect(invitationRepository.invitedWorkerIds, isEmpty);
     });
 
-    test('invitations use the job ID returned by successful job creation', () async {
-      postJobRepository.createdJobId = 'created-job';
-      final controller = container.read(postJobControllerProvider.notifier);
-      _fillJobForm(controller, ['worker-1']);
+    test(
+      'invitations use the job ID returned by successful job creation',
+      () async {
+        postJobRepository.createdJobId = 'created-job';
+        final controller = container.read(postJobControllerProvider.notifier);
+        _fillJobForm(controller, ['worker-1']);
 
-      final result = await controller.submitAndInviteWorkers([_worker('worker-1')]);
+        final result = await controller.submitAndInviteWorkers([
+          _worker('worker-1'),
+        ]);
 
-      expect(result.jobId, 'created-job');
-      expect(result.failedWorkers, isEmpty);
-      expect(apiCalls.take(2), ['create-job', 'invite:created-job:worker-1']);
-      expect(invitationRepository.invitedWorkerIds, ['worker-1']);
-    });
+        expect(result.jobId, 'created-job');
+        expect(result.failedWorkers, isEmpty);
+        expect(apiCalls.take(2), ['create-job', 'invite:created-job:worker-1']);
+        expect(invitationRepository.invitedWorkerIds, ['worker-1']);
+      },
+    );
 
-    test('invitation retry targets only workers from the failed result', () async {
-      invitationRepository.failedWorkerIds.add('worker-2');
-      final controller = container.read(postJobControllerProvider.notifier);
-      _fillJobForm(controller, ['worker-1', 'worker-2']);
+    test(
+      'invitation retry targets only workers from the failed result',
+      () async {
+        invitationRepository.failedWorkerIds.add('worker-2');
+        final controller = container.read(postJobControllerProvider.notifier);
+        _fillJobForm(controller, ['worker-1', 'worker-2']);
 
-      final initial = await controller.submitAndInviteWorkers([
-        _worker('worker-1'),
-        _worker('worker-2'),
-      ]);
-      invitationRepository.failedWorkerIds.clear();
-      final retried = await controller.retryFailedWorkerInvitations(
-        jobId: initial.jobId!,
-        failedWorkers: initial.failedWorkers,
-      );
+        final initial = await controller.submitAndInviteWorkers([
+          _worker('worker-1'),
+          _worker('worker-2'),
+        ]);
+        invitationRepository.failedWorkerIds.clear();
+        final retried = await controller.retryFailedWorkerInvitations(
+          jobId: initial.jobId!,
+          failedWorkers: initial.failedWorkers,
+        );
 
-      expect(initial.failedWorkers.map((worker) => worker.id), ['worker-2']);
-      expect(retried, isEmpty);
-      expect(apiCalls.where((call) => call.startsWith('invite:')).toList(), [
-        'invite:job-id:worker-1',
-        'invite:job-id:worker-2',
-        'invite:job-id:worker-2',
-      ]);
-    });
+        expect(initial.failedWorkers.map((worker) => worker.id), ['worker-2']);
+        expect(retried, isEmpty);
+        expect(apiCalls.where((call) => call.startsWith('invite:')).toList(), [
+          'invite:job-id:worker-1',
+          'invite:job-id:worker-2',
+          'invite:job-id:worker-2',
+        ]);
+      },
+    );
   });
 
-  testWidgets('worker card stack swipes without selecting and opens details', (tester) async {
+  testWidgets('worker card stack swipes without selecting and opens details', (
+    tester,
+  ) async {
     var activeIndex = 0;
     final selectedIds = <String>{};
     String? openedDetailsFor;
@@ -191,7 +226,8 @@ void main() {
                   eligibleWorkerIds: {'worker-1', 'worker-2'},
                   allowIneligibleSelection: false,
                   height: 440,
-                  onIndexChanged: (index) => setState(() => activeIndex = index),
+                  onIndexChanged: (index) =>
+                      setState(() => activeIndex = index),
                   onToggleSelected: (id) {
                     setState(() {
                       if (!selectedIds.add(id)) selectedIds.remove(id);
@@ -219,30 +255,43 @@ void main() {
     expect(selectedIds, {'worker-1'});
     expect(
       tester
-          .widget<Checkbox>(find.byKey(const ValueKey('post-job-worker-selection-worker-1')))
+          .widget<Checkbox>(
+            find.byKey(const ValueKey('post-job-worker-selection-worker-1')),
+          )
           .value,
       isTrue,
     );
-    await tester.tap(find.byKey(const ValueKey('post-job-worker-selection-worker-1')));
+    await tester.tap(
+      find.byKey(const ValueKey('post-job-worker-selection-worker-1')),
+    );
     await tester.pumpAndSettle();
     expect(selectedIds, isEmpty);
     expect(
       tester
-          .widget<Checkbox>(find.byKey(const ValueKey('post-job-worker-selection-worker-1')))
+          .widget<Checkbox>(
+            find.byKey(const ValueKey('post-job-worker-selection-worker-1')),
+          )
           .value,
       isFalse,
     );
-    await tester.drag(find.byType(PostJobWorkerCardStack), const Offset(-150, 0));
+    await tester.drag(
+      find.byType(PostJobWorkerCardStack),
+      const Offset(-150, 0),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('2 of 2'), findsOneWidget);
     expect(selectedIds, isEmpty);
-    await tester.tap(find.byKey(const ValueKey('post-job-worker-selection-worker-2')));
+    await tester.tap(
+      find.byKey(const ValueKey('post-job-worker-selection-worker-2')),
+    );
     await tester.pumpAndSettle();
     expect(selectedIds, {'worker-2'});
     expect(
       tester
-          .widget<Checkbox>(find.byKey(const ValueKey('post-job-worker-selection-worker-2')))
+          .widget<Checkbox>(
+            find.byKey(const ValueKey('post-job-worker-selection-worker-2')),
+          )
           .value,
       isTrue,
     );
@@ -257,52 +306,73 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('worker step toggles all/eligible view and searches by name', (tester) async {
-    final workers = [_worker('worker-1'), _worker('worker-2', profession: 'Electrical')];
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          employerWorkersRepositoryProvider.overrideWithValue(
-            _FakeEmployerWorkersRepository(workers),
+  testWidgets(
+    'worker step filters by category and date slots, then searches by name',
+    (tester) async {
+      final workers = [
+        _worker('worker-1', skills: const ['Unrelated skill']),
+        _worker('worker-2'),
+        _worker('worker-3', profession: 'Electrical'),
+      ];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            employerWorkersRepositoryProvider.overrideWithValue(
+              _FakeEmployerWorkersRepository(workers),
+            ),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(child: PostJobWorkerSelectionStep()),
+            ),
           ),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(body: SingleChildScrollView(child: PostJobWorkerSelectionStep())),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Show All Workers'), findsOneWidget);
-    await tester.tap(find.text('Show All Workers'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Show Eligible Workers'), findsOneWidget);
-    expect(find.text('No eligible workers found'), findsNothing);
-    expect(find.text('Worker worker-1'), findsOneWidget);
-
-    await tester.drag(find.byType(PostJobWorkerCardStack), const Offset(-150, 0));
-    await tester.pumpAndSettle();
-    expect(find.text('2 of 2'), findsOneWidget);
-    await tester.tap(find.text('Worker worker-2'));
-    await tester.pumpAndSettle();
-    expect(
-      ProviderScope.containerOf(
+      final controller = ProviderScope.containerOf(
         tester.element(find.byType(PostJobWorkerSelectionStep)),
-      ).read(postJobControllerProvider).selectedWorkerIds,
-      ['worker-2'],
-    );
+      ).read(postJobControllerProvider.notifier);
+      controller
+        ..setCategory('Plumbing')
+        ..setDate(DateTime(2030, 1, 2))
+        ..toggleTimeSlot('morning_1');
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'worker-2');
-    await tester.pumpAndSettle();
-    expect(find.text('Worker worker-2'), findsOneWidget);
-    expect(find.text('Worker worker-1'), findsNothing);
+      expect(find.text('Show All Workers'), findsNothing);
+      expect(find.text('Worker worker-1'), findsOneWidget);
+      expect(find.text('Worker worker-2'), findsOneWidget);
+      expect(find.text('Worker worker-3'), findsNothing);
+      expect(find.text('Eligible workers'), findsNothing);
 
-    await tester.tap(find.text('Show Eligible Workers'));
-    await tester.pumpAndSettle();
-    expect(find.text('No workers found'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      controller.toggleTimeSlot('morning_2');
+      await tester.pumpAndSettle();
+      expect(find.text('No available workers'), findsOneWidget);
+      controller.toggleTimeSlot('morning_2');
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('post-job-worker-selection-worker-1')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        ProviderScope.containerOf(
+          tester.element(find.byType(PostJobWorkerSelectionStep)),
+        ).read(postJobControllerProvider).selectedWorkerIds,
+        ['worker-1'],
+      );
+
+      await tester.enterText(find.byType(TextField), 'worker-2');
+      await tester.pumpAndSettle();
+      expect(find.text('Worker worker-2'), findsOneWidget);
+      expect(find.text('Worker worker-1'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'missing');
+      await tester.pumpAndSettle();
+      expect(find.text('No workers found'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   test('image state never exposes more than two selectable slots', () {
     final state = PostJobState(images: [File('first.jpg'), File('second.jpg')]);
@@ -313,13 +383,20 @@ void main() {
   });
 }
 
-void _fillJobForm(PostJobController controller, List<String> selectedWorkerIds) {
+void _fillJobForm(
+  PostJobController controller,
+  List<String> selectedWorkerIds,
+) {
   controller.startCreateSession(category: 'Plumbing');
   controller.setSkill('Pipe repair');
   controller.setDate(DateTime(2030, 1, 2));
-  controller.setTime(DateTime(2030, 1, 2, 9));
+  controller.toggleTimeSlot('morning_1');
   controller.setLocation(
-    const ProfileLocation(latitude: 10, longitude: 76, address: 'Saved address'),
+    const ProfileLocation(
+      latitude: 10,
+      longitude: 76,
+      address: 'Saved address',
+    ),
   );
   controller.setDescription('Repair a leaking pipe.');
   for (final id in selectedWorkerIds) {
@@ -327,7 +404,11 @@ void _fillJobForm(PostJobController controller, List<String> selectedWorkerIds) 
   }
 }
 
-EmployerWorkerEntity _worker(String id, {String profession = 'Plumbing'}) => EmployerWorkerEntity(
+EmployerWorkerEntity _worker(
+  String id, {
+  String profession = 'Plumbing',
+  List<String> skills = const ['Pipe repair'],
+}) => EmployerWorkerEntity(
   id: id,
   name: 'Worker $id',
   profession: profession,
@@ -337,7 +418,10 @@ EmployerWorkerEntity _worker(String id, {String profession = 'Plumbing'}) => Emp
   isFavourite: false,
   isAvailableToday: true,
   availableTomorrow: true,
-  skills: const ['Pipe repair'],
+  skills: skills,
+  availabilitySchedule: const {
+    '2030-01-02': {'morning_1': 'available'},
+  },
 );
 
 class _FakePostJobRepository implements PostJobRepository {
@@ -352,6 +436,7 @@ class _FakePostJobRepository implements PostJobRepository {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -370,6 +455,7 @@ class _FakePostJobRepository implements PostJobRepository {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -382,7 +468,8 @@ class _FakePostJobRepository implements PostJobRepository {
   }) => throw UnimplementedError();
 }
 
-class _FakeEmployerInvitationsRepository implements EmployerInvitationsRepository {
+class _FakeEmployerInvitationsRepository
+    implements EmployerInvitationsRepository {
   _FakeEmployerInvitationsRepository(this.calls);
 
   final List<String> calls;
@@ -410,10 +497,13 @@ class _FakeEmployerInvitationsRepository implements EmployerInvitationsRepositor
   }
 
   @override
-  Future<List<JobInvitationEntity>> getJobInvitations(String jobId) async => const [];
+  Future<List<JobInvitationEntity>> getJobInvitations(String jobId) async =>
+      const [];
 
   @override
-  Future<List<JobInvitationEntity>> getWorkerInvitationStatuses(String workerId) async => const [];
+  Future<List<JobInvitationEntity>> getWorkerInvitationStatuses(
+    String workerId,
+  ) async => const [];
 
   @override
   Stream<void> watchJobInvitations(String jobId) => const Stream.empty();

@@ -15,6 +15,7 @@ class EmployerJobEntity {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.scheduledSlotIds = const [],
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -34,6 +35,7 @@ class EmployerJobEntity {
   final EmployerJobStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<String> scheduledSlotIds;
 
   final double? latitude;
   final double? longitude;
@@ -63,9 +65,11 @@ class EmployerJobEntity {
 
   bool get hasDescription => description.trim().isNotEmpty;
 
-  bool get hasVoiceDescription => audioUrl != null && audioUrl!.trim().isNotEmpty;
+  bool get hasVoiceDescription =>
+      audioUrl != null && audioUrl!.trim().isNotEmpty;
 
-  bool get hasImage => imageUrls.isNotEmpty || (imageUrl != null && imageUrl!.trim().isNotEmpty);
+  bool get hasImage =>
+      imageUrls.isNotEmpty || (imageUrl != null && imageUrl!.trim().isNotEmpty);
 
   bool get hasLocation => latitude != null && longitude != null;
 

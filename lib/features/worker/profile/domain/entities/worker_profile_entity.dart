@@ -11,6 +11,7 @@ class WorkerProfileEntity {
     required this.availabilityDays,
     required this.availableToday,
     required this.availableTomorrow,
+    this.availabilitySchedule = const {},
     this.avatarUrl,
   });
 
@@ -22,6 +23,7 @@ class WorkerProfileEntity {
   final List<String> availabilityDays;
   final bool availableToday;
   final bool availableTomorrow;
+  final Map<String, Map<String, String>> availabilitySchedule;
   final String? avatarUrl;
 
   WorkerProfileEntity copyWith({
@@ -33,6 +35,7 @@ class WorkerProfileEntity {
     List<String>? availabilityDays,
     bool? availableToday,
     bool? availableTomorrow,
+    Map<String, Map<String, String>>? availabilitySchedule,
     String? avatarUrl,
   }) {
     return WorkerProfileEntity(
@@ -40,14 +43,11 @@ class WorkerProfileEntity {
       profession: profession ?? this.profession,
       skills: skills ?? this.skills,
       about: about ?? this.about,
-      experienceYears:
-          experienceYears ?? this.experienceYears,
-      availabilityDays:
-          availabilityDays ?? this.availabilityDays,
-      availableToday:
-          availableToday ?? this.availableToday,
-      availableTomorrow:
-          availableTomorrow ?? this.availableTomorrow,
+      experienceYears: experienceYears ?? this.experienceYears,
+      availabilityDays: availabilityDays ?? this.availabilityDays,
+      availableToday: availableToday ?? this.availableToday,
+      availableTomorrow: availableTomorrow ?? this.availableTomorrow,
+      availabilitySchedule: availabilitySchedule ?? this.availabilitySchedule,
       avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }

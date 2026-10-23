@@ -21,6 +21,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -36,6 +37,7 @@ class PostJobRemoteDataSource {
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -54,7 +56,10 @@ class PostJobRemoteDataSource {
       }
 
       formData.files.add(
-        MapEntry('images', await MultipartFile.fromFile(image.path, filename: _fileName(image))),
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.path, filename: _fileName(image)),
+        ),
       );
     }
 
@@ -70,7 +75,10 @@ class PostJobRemoteDataSource {
       formData.files.add(
         MapEntry(
           'audio',
-          await MultipartFile.fromFile(voiceRecording.path, filename: _fileName(voiceRecording)),
+          await MultipartFile.fromFile(
+            voiceRecording.path,
+            filename: _fileName(voiceRecording),
+          ),
         ),
       );
     }
@@ -88,7 +96,9 @@ class PostJobRemoteDataSource {
     }
 
     if (responseData['success'] != true) {
-      throw Exception(responseData['message']?.toString() ?? 'Failed to create job.');
+      throw Exception(
+        responseData['message']?.toString() ?? 'Failed to create job.',
+      );
     }
 
     final data = responseData['data'];
@@ -116,6 +126,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -134,6 +145,7 @@ class PostJobRemoteDataSource {
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -147,7 +159,9 @@ class PostJobRemoteDataSource {
     // Any existing image not included in this list will be deleted.
     // -------------------------------------------------------------------------
 
-    formData.fields.add(MapEntry('keep_image_paths', jsonEncode(keepImagePaths)));
+    formData.fields.add(
+      MapEntry('keep_image_paths', jsonEncode(keepImagePaths)),
+    );
 
     // -------------------------------------------------------------------------
     // Existing audio path
@@ -164,7 +178,9 @@ class PostJobRemoteDataSource {
     // Existing audio deletion
     // -------------------------------------------------------------------------
 
-    formData.fields.add(MapEntry('delete_audio', removeExistingAudio ? 'true' : 'false'));
+    formData.fields.add(
+      MapEntry('delete_audio', removeExistingAudio ? 'true' : 'false'),
+    );
 
     // -------------------------------------------------------------------------
     // New images
@@ -176,7 +192,10 @@ class PostJobRemoteDataSource {
       }
 
       formData.files.add(
-        MapEntry('images', await MultipartFile.fromFile(image.path, filename: _fileName(image))),
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.path, filename: _fileName(image)),
+        ),
       );
     }
 
@@ -195,7 +214,10 @@ class PostJobRemoteDataSource {
       formData.files.add(
         MapEntry(
           'audio',
-          await MultipartFile.fromFile(newAudio.path, filename: _fileName(newAudio)),
+          await MultipartFile.fromFile(
+            newAudio.path,
+            filename: _fileName(newAudio),
+          ),
         ),
       );
     }
@@ -217,7 +239,9 @@ class PostJobRemoteDataSource {
     }
 
     if (responseData['success'] != true) {
-      throw Exception(responseData['message']?.toString() ?? 'Failed to update job.');
+      throw Exception(
+        responseData['message']?.toString() ?? 'Failed to update job.',
+      );
     }
 
     final data = responseData['data'];
@@ -245,6 +269,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -257,6 +282,8 @@ class PostJobRemoteDataSource {
     formData.fields.add(MapEntry('scheduled_date', _formatDate(date)));
 
     formData.fields.add(MapEntry('scheduled_time', _formatTime(time)));
+
+    formData.fields.add(MapEntry('scheduled_slots', jsonEncode(slotIds)));
 
     formData.fields.add(MapEntry('latitude', latitude.toString()));
 

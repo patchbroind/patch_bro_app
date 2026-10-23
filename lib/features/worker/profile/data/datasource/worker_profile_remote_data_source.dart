@@ -41,6 +41,7 @@ class WorkerProfileRemoteDataSource {
     required List<String> availabilityDays,
     required bool availableToday,
     required bool availableTomorrow,
+    required Map<String, Map<String, String>> availabilitySchedule,
   }) async {
     await _apiClient.patch(
       ApiEndpoints.workerProfile,
@@ -52,7 +53,17 @@ class WorkerProfileRemoteDataSource {
         'availability_days': availabilityDays,
         'available_today': availableToday,
         'available_tomorrow': availableTomorrow,
+        'availability_schedule': availabilitySchedule,
       },
+    );
+  }
+
+  Future<void> saveAvailabilitySchedule(
+    Map<String, Map<String, String>> schedule,
+  ) async {
+    await _apiClient.patch(
+      ApiEndpoints.workerProfile,
+      data: {'availability_schedule': schedule},
     );
   }
 }
