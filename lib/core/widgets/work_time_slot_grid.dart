@@ -6,31 +6,33 @@ class WorkTimeSlotGrid extends StatelessWidget {
   const WorkTimeSlotGrid({
     super.key,
     required this.selectedSlotIds,
-    required this.onSlotToggled,
+    this.onSlotToggled,
     this.availabilityBySlot,
     this.onAvailabilityChanged,
+    this.readOnly = false,
     this.color = AppColors.employerPrimary,
   });
 
   final Set<String> selectedSlotIds;
-  final ValueChanged<String> onSlotToggled;
+  final ValueChanged<String>? onSlotToggled;
   final Map<String, WorkerSlotAvailability>? availabilityBySlot;
   final ValueChanged<({String slotId, WorkerSlotAvailability availability})>?
   onAvailabilityChanged;
+  final bool readOnly;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth < 360 ? 1 : 2;
+        final columns = constraints.maxWidth < 300 ? 1 : 2;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: WorkTimeSlot.values.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisExtent: onAvailabilityChanged == null ? 76 : 156,
+            mainAxisExtent: onAvailabilityChanged == null ? 80 : 156,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
           ),
@@ -43,12 +45,15 @@ class WorkTimeSlotGrid extends StatelessWidget {
 
             return InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: onAvailabilityChanged == null
-                  ? () => onSlotToggled(slot.id)
+              onTap: onAvailabilityChanged == null && !readOnly
+                  ? () => onSlotToggled?.call(slot.id)
                   : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: onAvailabilityChanged == null ? 8 : 12,
+                ),
                 decoration: BoxDecoration(
                   color: selected
                       ? color.withValues(alpha: 0.09)
@@ -103,6 +108,8 @@ class WorkTimeSlotGrid extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       slot.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),

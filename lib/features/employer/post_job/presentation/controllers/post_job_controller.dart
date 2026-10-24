@@ -253,7 +253,10 @@ class PostJobController extends Notifier<PostJobState> {
       skill: job.skill,
       selectedDate: job.date,
       selectedTime: job.time,
-      selectedSlotIds: job.scheduledSlotIds,
+      selectedSlotIds: effectiveWorkTimeSlotIds(
+        storedSlotIds: job.scheduledSlotIds,
+        startTime: job.time,
+      ),
       latitude: job.latitude,
       longitude: job.longitude,
       locationAddress: job.locationAddress,

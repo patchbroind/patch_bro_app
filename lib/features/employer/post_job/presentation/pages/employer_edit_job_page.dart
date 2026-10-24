@@ -34,7 +34,8 @@ class EmployerEditJobPage extends ConsumerStatefulWidget {
   final EmployerJobEntity? job;
 
   @override
-  ConsumerState<EmployerEditJobPage> createState() => _EmployerEditJobPageState();
+  ConsumerState<EmployerEditJobPage> createState() =>
+      _EmployerEditJobPageState();
 }
 
 class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
@@ -140,9 +141,9 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
   // LOCATIO====================
 
   Future<void> _selectLocation() async {
-    final location = await Navigator.of(
-      context,
-    ).push<ProfileLocation>(MaterialPageRoute(builder: (_) => const LocationPickerPage()));
+    final location = await Navigator.of(context).push<ProfileLocation>(
+      MaterialPageRoute(builder: (_) => const LocationPickerPage()),
+    );
 
     if (location != null) {
       ref.read(postJobControllerProvider.notifier).setLocation(location);
@@ -183,7 +184,9 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
 
       ref
           .read(postJobControllerProvider.notifier)
-          .updateRecordingDuration(currentState.recordingDuration + const Duration(seconds: 1));
+          .updateRecordingDuration(
+            currentState.recordingDuration + const Duration(seconds: 1),
+          );
     });
   }
 
@@ -227,7 +230,7 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
       }
 
       // Tell the previous page that the job was successfully updated.
-      context.pop(true);
+      context.pop(List<String>.of(state.selectedSlotIds));
 
       return;
     }
@@ -238,7 +241,11 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
 
     final skill = state.skill.trim();
 
-    await _showInviteWorkersDialog(jobId: jobId, category: category, skill: skill);
+    await _showInviteWorkersDialog(
+      jobId: jobId,
+      category: category,
+      skill: skill,
+    );
 
     if (!mounted) {
       return;
@@ -274,14 +281,21 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
     );
   }
 
-  void _openWorkers({required String jobId, required String category, required String skill}) {
+  void _openWorkers({
+    required String jobId,
+    required String category,
+    required String skill,
+  }) {
     final queryParameters = <String, String>{'jobId': jobId};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();
     }
 
-    context.pushNamed(RouteNames.employerInviteWorkers, queryParameters: queryParameters);
+    context.pushNamed(
+      RouteNames.employerInviteWorkers,
+      queryParameters: queryParameters,
+    );
   }
 
   @override
@@ -296,14 +310,16 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
     }
 
     final state = ref.watch(postJobControllerProvider);
-    ref.listen<String>(postJobControllerProvider.select((state) => state.category), (
-      previous,
-      next,
-    ) {
-      _categoryValueNotifier.value = next.isEmpty ? null : next;
-    });
+    ref.listen<String>(
+      postJobControllerProvider.select((state) => state.category),
+      (previous, next) {
+        _categoryValueNotifier.value = next.isEmpty ? null : next;
+      },
+    );
     final categories = ref.watch(
-      employerHomeControllerProvider.select((homeState) => homeState.categories),
+      employerHomeControllerProvider.select(
+        (homeState) => homeState.categories,
+      ),
     );
 
     final isSubmitting = state.status == PostJobStatus.submitting;
@@ -312,7 +328,9 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
 
     final buttonLabel = _isEditMode ? 'Save Changes' : 'Post Job';
 
-    final buttonIcon = _isEditMode ? Icons.save_outlined : Icons.add_circle_outline;
+    final buttonIcon = _isEditMode
+        ? Icons.save_outlined
+        : Icons.add_circle_outline;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -327,13 +345,20 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
           builder: (context, constraints) {
             final horizontalPadding = constraints.maxWidth >= 600 ? 32.0 : 16.0;
 
-            final contentWidth = constraints.maxWidth >= 900 ? 760.0 : double.infinity;
+            final contentWidth = constraints.maxWidth >= 900
+                ? 760.0
+                : double.infinity;
 
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: contentWidth),
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 32),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    8,
+                    horizontalPadding,
+                    32,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -351,7 +376,9 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                               categories: categories,
                               selectedCategory: state.category,
                               valueNotifier: _categoryValueNotifier,
-                              onChanged: ref.read(postJobControllerProvider.notifier).setCategory,
+                              onChanged: ref
+                                  .read(postJobControllerProvider.notifier)
+                                  .setCategory,
                             ),
 
                             const SizedBox(height: 14),
@@ -361,7 +388,9 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                               hintText: 'Required skill',
                               icon: Icons.handyman_outlined,
                               textInputAction: TextInputAction.next,
-                              onChanged: ref.read(postJobControllerProvider.notifier).setSkill,
+                              onChanged: ref
+                                  .read(postJobControllerProvider.notifier)
+                                  .setSkill,
                             ),
                           ],
                         ),
@@ -372,14 +401,17 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                       // SCHEDULE
                       PostJobSection(
                         title: 'Schedule',
-                        subtitle: 'Choose a date and one or more two-hour work slots.',
+                        subtitle:
+                            'Choose a date and one or more two-hour work slots.',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SelectionTile(
                               icon: Icons.calendar_today_outlined,
                               title: 'Date',
-                              value: DateTimeUtils.formatDate(state.selectedDate),
+                              value: DateTimeUtils.formatDate(
+                                state.selectedDate,
+                              ),
                               onTap: _selectDate,
                             ),
                             const SizedBox(height: 16),
@@ -394,9 +426,8 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                               '${state.selectedSlotIds.length} time slot${state.selectedSlotIds.length == 1 ? '' : 's'} selected'
                               '${state.selectedSlotIds.isNotEmpty ? ' · ${state.selectedSlotIds.length * 2} working hours' : ''}'
                               ' (lunch break is 12–1 PM)',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textSecondary),
                             ),
                           ],
                         ),
@@ -467,12 +498,19 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
 
                       PostJobSection(
                         title: 'Job Images',
-                        subtitle: 'Add up to 2 images to help workers understand the job.',
+                        subtitle:
+                            'Add up to 2 images to help workers understand the job.',
                         child: PostJobImagePicker(
-                          existingImages: state.existingImages.map((image) => image.url).toList(),
+                          existingImages: state.existingImages
+                              .map((image) => image.url)
+                              .toList(),
                           images: state.images,
-                          onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
-                          onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
+                          onAdd: ref
+                              .read(postJobControllerProvider.notifier)
+                              .pickImages,
+                          onRemove: ref
+                              .read(postJobControllerProvider.notifier)
+                              .removeImage,
                           onRemoveExisting: ref
                               .read(postJobControllerProvider.notifier)
                               .removeExistingImage,

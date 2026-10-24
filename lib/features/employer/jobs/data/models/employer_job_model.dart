@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/entities/employer_job_entity.dart';
 
 class EmployerJobModel {
@@ -109,6 +111,13 @@ class EmployerJobModel {
   // ===========================================================================
 
   static List<String> _parseStringList(dynamic value) {
+    if (value is String) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        return const [];
+      }
+    }
     if (value is! List) {
       return const [];
     }

@@ -103,6 +103,50 @@ void main() {
       expect(state.status, PostJobStatus.initial);
     });
 
+    test(
+      'edit mode restores selected slots or derives a legacy slot from time',
+      () {
+        final controller = container.read(postJobControllerProvider.notifier);
+        final job = EmployerJobEntity(
+          id: 'job-1',
+          category: 'Plumbing',
+          skill: 'Pipe repair',
+          date: DateTime(2030, 1, 2),
+          time: DateTime(2030, 1, 2, 8),
+          locationAddress: 'Saved address',
+          description: 'Repair a leaking pipe.',
+          status: EmployerJobStatus.active,
+          createdAt: DateTime(2029, 12, 1),
+          updatedAt: DateTime(2029, 12, 1),
+          scheduledSlotIds: const ['afternoon_2', 'morning_1'],
+        );
+
+        controller.initializeForEdit(job);
+        expect(container.read(postJobControllerProvider).selectedSlotIds, [
+          'morning_1',
+          'afternoon_2',
+        ]);
+
+        controller.initializeForEdit(
+          EmployerJobEntity(
+            id: 'legacy-job',
+            category: 'Plumbing',
+            skill: 'Pipe repair',
+            date: DateTime(2030, 1, 2),
+            time: DateTime(2030, 1, 2, 13),
+            locationAddress: 'Saved address',
+            description: 'Repair a leaking pipe.',
+            status: EmployerJobStatus.active,
+            createdAt: DateTime(2029, 12, 1),
+            updatedAt: DateTime(2029, 12, 1),
+          ),
+        );
+        expect(container.read(postJobControllerProvider).selectedSlotIds, [
+          'afternoon_1',
+        ]);
+      },
+    );
+
     test('worker selection is unique, limited to five, and can be changed', () {
       final controller = container.read(postJobControllerProvider.notifier);
 

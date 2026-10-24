@@ -33,3 +33,27 @@ String formatScheduleDate(DateTime date) {
   final day = date.day.toString().padLeft(2, '0');
   return '$year-$month-$day';
 }
+
+List<String> effectiveWorkTimeSlotIds({
+  required List<String> storedSlotIds,
+  required DateTime startTime,
+}) {
+  final validStoredIds = storedSlotIds
+      .where((id) => WorkTimeSlot.fromId(id) != null)
+      .toSet();
+  if (validStoredIds.isNotEmpty) {
+    return WorkTimeSlot.values
+        .where((slot) => validStoredIds.contains(slot.id))
+        .map((slot) => slot.id)
+        .toList(growable: false);
+  }
+
+  WorkTimeSlot? legacySlot;
+  for (final slot in WorkTimeSlot.values) {
+    if (slot.startHour == startTime.hour) {
+      legacySlot = slot;
+      break;
+    }
+  }
+  return legacySlot == null ? const [] : [legacySlot.id];
+}
