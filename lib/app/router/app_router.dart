@@ -10,7 +10,7 @@ import 'package:patch_bro/features/employer/favourite_workers/presentation/pages
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_page.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_edit_job_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_settings_and_support.dart';
@@ -451,7 +451,7 @@ class AppRouter {
               return const _PlaceholderPage(title: 'Invalid Job');
             }
 
-            return EmployerPostJobPage(job: job);
+            return EmployerEditJobPage(job: job);
           },
         ),
 
@@ -654,7 +654,7 @@ class AppRouter {
               path: '/employer/post-job',
               name: RouteNames.employerPostJob,
               builder: (context, state) {
-                return const EmployerPostJobPage();
+                return const EmployerEditJobPage();
               },
             ),
           ],
@@ -762,7 +762,7 @@ class _PlaceholderPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-
+ 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(

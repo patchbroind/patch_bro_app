@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +7,9 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/utils/date_time_utils.dart';
-import 'package:patch_bro/core/widgets/work_time_slot_grid.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/app_text_field.dart';
-import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
+import 'package:patch_bro/core/widgets/work_time_slot_grid.dart';
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
@@ -23,22 +21,23 @@ import 'package:patch_bro/features/profile/domain/entities/profile_location.dart
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
 
 import '../providers/post_job_providers.dart';
+import '../widgets/edit_job_category_dropdown.dart';
+import '../widgets/edit_job_sub_header.dart';
 import '../widgets/post_job_image_picker.dart';
 import '../widgets/post_job_invite_workers_dialog.dart';
 import '../widgets/post_job_location_field.dart';
 import '../widgets/post_job_voice_recorder.dart';
 
-class EmployerPostJobPage extends ConsumerStatefulWidget {
-  const EmployerPostJobPage({super.key, this.job});
+class EmployerEditJobPage extends ConsumerStatefulWidget {
+  const EmployerEditJobPage({super.key, this.job});
 
   final EmployerJobEntity? job;
 
   @override
-  ConsumerState<EmployerPostJobPage> createState() =>
-      _EmployerPostJobPageState();
+  ConsumerState<EmployerEditJobPage> createState() => _EmployerEditJobPageState();
 }
 
-class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
+class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
   late final TextEditingController _skillController;
   late final TextEditingController _descriptionController;
   late final ValueNotifier<String?> _categoryValueNotifier;
@@ -141,9 +140,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
   // LOCATIO====================
 
   Future<void> _selectLocation() async {
-    final location = await Navigator.of(context).push<ProfileLocation>(
-      MaterialPageRoute(builder: (_) => const LocationPickerPage()),
-    );
+    final location = await Navigator.of(
+      context,
+    ).push<ProfileLocation>(MaterialPageRoute(builder: (_) => const LocationPickerPage()));
 
     if (location != null) {
       ref.read(postJobControllerProvider.notifier).setLocation(location);
@@ -184,9 +183,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
       ref
           .read(postJobControllerProvider.notifier)
-          .updateRecordingDuration(
-            currentState.recordingDuration + const Duration(seconds: 1),
-          );
+          .updateRecordingDuration(currentState.recordingDuration + const Duration(seconds: 1));
     });
   }
 
@@ -222,9 +219,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     final state = ref.read(postJobControllerProvider);
 
-    // -------------------------------------------------------------------------
     // EDIT MODE
-    // -------------------------------------------------------------------------
 
     if (state.isEditMode) {
       if (!mounted) {
@@ -237,19 +232,13 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
       return;
     }
 
-    // -------------------------------------------------------------------------
     // CREATE MODE
-    // -------------------------------------------------------------------------
 
     final category = state.category.trim();
 
     final skill = state.skill.trim();
 
-    await _showInviteWorkersDialog(
-      jobId: jobId,
-      category: category,
-      skill: skill,
-    );
+    await _showInviteWorkersDialog(jobId: jobId, category: category, skill: skill);
 
     if (!mounted) {
       return;
@@ -285,25 +274,14 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     );
   }
 
-  void _openWorkers({
-    required String jobId,
-    required String category,
-    required String skill,
-  }) {
+  void _openWorkers({required String jobId, required String category, required String skill}) {
     final queryParameters = <String, String>{'jobId': jobId};
 
     if (category.trim().isNotEmpty) {
       queryParameters['category'] = category.trim();
     }
 
-    // if (skill.trim().isNotEmpty) {
-    //   queryParameters['skill'] = skill.trim();
-    // }
-
-    context.pushNamed(
-      RouteNames.employerInviteWorkers,
-      queryParameters: queryParameters,
-    );
+    context.pushNamed(RouteNames.employerInviteWorkers, queryParameters: queryParameters);
   }
 
   @override
@@ -318,16 +296,14 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
     }
 
     final state = ref.watch(postJobControllerProvider);
-    ref.listen<String>(
-      postJobControllerProvider.select((state) => state.category),
-      (previous, next) {
-        _categoryValueNotifier.value = next.isEmpty ? null : next;
-      },
-    );
+    ref.listen<String>(postJobControllerProvider.select((state) => state.category), (
+      previous,
+      next,
+    ) {
+      _categoryValueNotifier.value = next.isEmpty ? null : next;
+    });
     final categories = ref.watch(
-      employerHomeControllerProvider.select(
-        (homeState) => homeState.categories,
-      ),
+      employerHomeControllerProvider.select((homeState) => homeState.categories),
     );
 
     final isSubmitting = state.status == PostJobStatus.submitting;
@@ -336,9 +312,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
     final buttonLabel = _isEditMode ? 'Save Changes' : 'Post Job';
 
-    final buttonIcon = _isEditMode
-        ? Icons.save_outlined
-        : Icons.add_circle_outline;
+    final buttonIcon = _isEditMode ? Icons.save_outlined : Icons.add_circle_outline;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -353,24 +327,17 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
           builder: (context, constraints) {
             final horizontalPadding = constraints.maxWidth >= 600 ? 32.0 : 16.0;
 
-            final contentWidth = constraints.maxWidth >= 900
-                ? 760.0
-                : double.infinity;
+            final contentWidth = constraints.maxWidth >= 900 ? 760.0 : double.infinity;
 
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: contentWidth),
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    8,
-                    horizontalPadding,
-                    32,
-                  ),
+                  padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSubHeader(context),
+                      EditJobSubHeader(isEditMode: _isEditMode),
 
                       const SizedBox(height: 24),
 
@@ -380,12 +347,11 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                         subtitle: 'Tell workers what kind of work you need.',
                         child: Column(
                           children: [
-                            _buildCategoryDropdown(
+                            EditJobCategoryDropdown(
                               categories: categories,
                               selectedCategory: state.category,
-                              onChanged: (value) => ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .setCategory(value),
+                              valueNotifier: _categoryValueNotifier,
+                              onChanged: ref.read(postJobControllerProvider.notifier).setCategory,
                             ),
 
                             const SizedBox(height: 14),
@@ -395,9 +361,7 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                               hintText: 'Required skill',
                               icon: Icons.handyman_outlined,
                               textInputAction: TextInputAction.next,
-                              onChanged: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .setSkill,
+                              onChanged: ref.read(postJobControllerProvider.notifier).setSkill,
                             ),
                           ],
                         ),
@@ -408,17 +372,14 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                       // SCHEDULE
                       PostJobSection(
                         title: 'Schedule',
-                        subtitle:
-                            'Choose a date and one or more two-hour work slots.',
+                        subtitle: 'Choose a date and one or more two-hour work slots.',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SelectionTile(
                               icon: Icons.calendar_today_outlined,
                               title: 'Date',
-                              value: DateTimeUtils.formatDate(
-                                state.selectedDate,
-                              ),
+                              value: DateTimeUtils.formatDate(state.selectedDate),
                               onTap: _selectDate,
                             ),
                             const SizedBox(height: 16),
@@ -433,8 +394,9 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                               '${state.selectedSlotIds.length} time slot${state.selectedSlotIds.length == 1 ? '' : 's'} selected'
                               '${state.selectedSlotIds.isNotEmpty ? ' · ${state.selectedSlotIds.length * 2} working hours' : ''}'
                               ' (lunch break is 12–1 PM)',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.textSecondary),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
                             ),
                           ],
                         ),
@@ -476,7 +438,11 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
                             if (_isEditMode &&
                                 state.hasExistingAudio &&
                                 state.voiceRecording == null)
-                              _buildExistingVoice(context, state),
+                              JobPostExistingVoice(
+                                onPressed: () => ref
+                                    .read(postJobControllerProvider.notifier)
+                                    .removeExistingVoice(),
+                              ),
 
                             if (_isEditMode &&
                                 state.hasExistingAudio &&
@@ -501,19 +467,12 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
 
                       PostJobSection(
                         title: 'Job Images',
-                        subtitle:
-                            'Add up to 2 images to help workers understand the job.',
+                        subtitle: 'Add up to 2 images to help workers understand the job.',
                         child: PostJobImagePicker(
-                          existingImages: state.existingImages
-                              .map((image) => image.url)
-                              .toList(),
+                          existingImages: state.existingImages.map((image) => image.url).toList(),
                           images: state.images,
-                          onAdd: ref
-                              .read(postJobControllerProvider.notifier)
-                              .pickImages,
-                          onRemove: ref
-                              .read(postJobControllerProvider.notifier)
-                              .removeImage,
+                          onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
+                          onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
                           onRemoveExisting: ref
                               .read(postJobControllerProvider.notifier)
                               .removeExistingImage,
@@ -535,87 +494,6 @@ class _EmployerPostJobPageState extends ConsumerState<EmployerPostJobPage> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryDropdown({
-    required List<CategoryEntity> categories,
-    required String selectedCategory,
-    required ValueChanged<String> onChanged,
-  }) {
-    final activeCategories = categories
-        .where((category) => category.isActive)
-        .toList();
-
-    final activeNames = activeCategories
-        .map((category) => category.name)
-        .toSet();
-
-    final keepLegacyValue =
-        selectedCategory.trim().isNotEmpty &&
-        !activeNames.contains(selectedCategory);
-
-    final dropdownNames = <String>[
-      if (keepLegacyValue) selectedCategory,
-      ...activeCategories.map((category) => category.name),
-    ];
-    return DropdownButtonFormField2<String>(
-      valueListenable: _categoryValueNotifier,
-      isExpanded: true,
-      decoration: InputDecoration(
-        hintText: 'Enter job category',
-        prefixIcon: Icon(
-          Icons.category_outlined,
-          color: Theme.of(context).colorScheme.primary,
-          size: 28,
-        ),
-      ),
-      items: dropdownNames.toSet().map((name) {
-        return DropdownItem<String>(value: name, child: Text(name));
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          onChanged(value);
-        }
-      },
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Please select a category.';
-        }
-        return null;
-      },
-      dropdownStyleData: DropdownStyleData(
-        width: MediaQuery.sizeOf(context).width - 34,
-        offset: const Offset(-30, 0),
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Theme.of(context).colorScheme.surface,
-        ),
-      ),
-      menuItemStyleData: const MenuItemStyleData(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-      ),
-    );
-  }
-
-  Widget _buildExistingVoice(BuildContext context, PostJobState state) {
-    return JobPostExistingVoice(
-      onPressed: () {
-        ref.read(postJobControllerProvider.notifier).removeExistingVoice();
-      },
-    );
-  }
-
-  Widget _buildSubHeader(BuildContext context) {
-    return Text(
-      _isEditMode
-          ? 'Update the job details, images or voice description as needed.'
-          : 'Provide the job details so verified workers can understand what you need.',
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: AppColors.textSecondary,
-        height: 1.45,
       ),
     );
   }
