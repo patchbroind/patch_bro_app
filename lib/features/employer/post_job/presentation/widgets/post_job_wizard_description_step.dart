@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/widgets/app_text_field.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_voice_recorder.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_description_fields.dart';
 
 class PostJobWizardDescriptionStep extends StatelessWidget {
   const PostJobWizardDescriptionStep({
@@ -24,28 +23,17 @@ class PostJobWizardDescriptionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PostJobSection(
-        title: 'Job description',
-        subtitle: 'Add text, a voice description, or both.',
-        child: Column(
-          children: [
-            AppTextField(
-              controller: descriptionController,
-              hintText: 'Describe the job...',
-              icon: Icons.description_outlined,
-              maxLength: 1000,
-              keyboardType: TextInputType.multiline,
-              onChanged: onDescriptionChanged,
-            ),
-            const SizedBox(height: 12),
-            PostJobVoiceRecorder(
-              isRecording: state.isRecording,
-              duration: state.recordingDuration,
-              hasRecording: state.voiceRecording != null,
-              onStart: onStartRecording,
-              onStop: onStopRecording,
-              onRemove: onRemoveRecording,
-            ),
-          ],
-        ),
-      );
+    title: 'Job description',
+    subtitle: 'Add text, a voice description, or both.',
+    child: PostJobDescriptionFields(
+      descriptionController: descriptionController,
+      onDescriptionChanged: onDescriptionChanged,
+      isRecording: state.isRecording,
+      recordingDuration: state.recordingDuration,
+      hasRecording: state.voiceRecording != null,
+      onStartRecording: onStartRecording,
+      onStopRecording: onStopRecording,
+      onRemoveRecording: onRemoveRecording,
+    ),
+  );
 }

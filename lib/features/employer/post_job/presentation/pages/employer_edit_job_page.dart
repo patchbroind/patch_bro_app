@@ -6,27 +6,23 @@ import 'package:go_router/go_router.dart';
 import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
-import 'package:patch_bro/core/utils/date_time_utils.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
-import 'package:patch_bro/core/widgets/app_text_field.dart';
-import 'package:patch_bro/core/widgets/work_time_slot_grid.dart';
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_wizard.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/job_post_existing_voice.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_category_skill_fields.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_description_fields.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_schedule_fields.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
 
 import '../providers/post_job_providers.dart';
-import '../widgets/edit_job_category_dropdown.dart';
 import '../widgets/edit_job_sub_header.dart';
 import '../widgets/post_job_image_picker.dart';
 import '../widgets/post_job_invite_workers_dialog.dart';
 import '../widgets/post_job_location_field.dart';
-import '../widgets/post_job_voice_recorder.dart';
 
 class EmployerEditJobPage extends ConsumerStatefulWidget {
   const EmployerEditJobPage({super.key, this.job});
@@ -370,29 +366,19 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                       PostJobSection(
                         title: 'Job Details',
                         subtitle: 'Tell workers what kind of work you need.',
-                        child: Column(
-                          children: [
-                            EditJobCategoryDropdown(
-                              categories: categories,
-                              selectedCategory: state.category,
-                              valueNotifier: _categoryValueNotifier,
-                              onChanged: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .setCategory,
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            AppTextField(
-                              controller: _skillController,
-                              hintText: 'Required skill',
-                              icon: Icons.handyman_outlined,
-                              textInputAction: TextInputAction.next,
-                              onChanged: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .setSkill,
-                            ),
-                          ],
+                        child: PostJobCategorySkillFields(
+                          categories: categories,
+                          selectedCategory: state.category,
+                          categoryValueNotifier: _categoryValueNotifier,
+                          skillController: _skillController,
+                          onCategoryChanged: ref
+                              .read(postJobControllerProvider.notifier)
+                              .setCategory,
+                          onSkillChanged: ref
+                              .read(postJobControllerProvider.notifier)
+                              .setSkill,
+                          categoryHintText: 'Enter job category',
+                          validateCategory: true,
                         ),
                       ),
 
@@ -403,33 +389,13 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                         title: 'Schedule',
                         subtitle:
                             'Choose a date and one or more two-hour work slots.',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SelectionTile(
-                              icon: Icons.calendar_today_outlined,
-                              title: 'Date',
-                              value: DateTimeUtils.formatDate(
-                                state.selectedDate,
-                              ),
-                              onTap: _selectDate,
-                            ),
-                            const SizedBox(height: 16),
-                            WorkTimeSlotGrid(
-                              selectedSlotIds: state.selectedSlotIds.toSet(),
-                              onSlotToggled: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .toggleTimeSlot,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '${state.selectedSlotIds.length} time slot${state.selectedSlotIds.length == 1 ? '' : 's'} selected'
-                              '${state.selectedSlotIds.isNotEmpty ? ' · ${state.selectedSlotIds.length * 2} working hours' : ''}'
-                              ' (lunch break is 12–1 PM)',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
+                        child: PostJobScheduleFields(
+                          selectedDate: state.selectedDate,
+                          selectedSlotIds: state.selectedSlotIds.toSet(),
+                          onSelectDate: _selectDate,
+                          onSlotToggled: ref
+                              .read(postJobControllerProvider.notifier)
+                              .toggleTimeSlot,
                         ),
                       ),
 
@@ -451,46 +417,23 @@ class _EmployerEditJobPageState extends ConsumerState<EmployerEditJobPage> {
                       PostJobSection(
                         title: 'Description',
                         subtitle: 'Describe the work clearly for workers.',
-                        child: Column(
-                          children: [
-                            AppTextField(
-                              controller: _descriptionController,
-                              hintText: 'Describe the job...',
-                              icon: Icons.description_outlined,
-                              maxLength: 1000,
-                              keyboardType: TextInputType.multiline,
-                              onChanged: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .setDescription,
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            if (_isEditMode &&
-                                state.hasExistingAudio &&
-                                state.voiceRecording == null)
-                              JobPostExistingVoice(
-                                onPressed: () => ref
-                                    .read(postJobControllerProvider.notifier)
-                                    .removeExistingVoice(),
-                              ),
-
-                            if (_isEditMode &&
-                                state.hasExistingAudio &&
-                                state.voiceRecording == null)
-                              const SizedBox(height: 12),
-
-                            PostJobVoiceRecorder(
-                              isRecording: state.isRecording,
-                              duration: state.recordingDuration,
-                              hasRecording: state.voiceRecording != null,
-                              onStart: _startRecording,
-                              onStop: _stopRecording,
-                              onRemove: ref
-                                  .read(postJobControllerProvider.notifier)
-                                  .removeVoiceRecording,
-                            ),
-                          ],
+                        child: PostJobDescriptionFields(
+                          descriptionController: _descriptionController,
+                          onDescriptionChanged: ref
+                              .read(postJobControllerProvider.notifier)
+                              .setDescription,
+                          isRecording: state.isRecording,
+                          recordingDuration: state.recordingDuration,
+                          hasRecording: state.voiceRecording != null,
+                          onStartRecording: _startRecording,
+                          onStopRecording: _stopRecording,
+                          onRemoveRecording: ref
+                              .read(postJobControllerProvider.notifier)
+                              .removeVoiceRecording,
+                          hasExistingVoice: state.hasExistingAudio,
+                          onRemoveExistingVoice: ref
+                              .read(postJobControllerProvider.notifier)
+                              .removeExistingVoice,
                         ),
                       ),
 
