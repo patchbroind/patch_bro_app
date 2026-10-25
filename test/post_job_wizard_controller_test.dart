@@ -147,6 +147,36 @@ void main() {
       },
     );
 
+    test(
+      'edit mode fails if server does not confirm all selected slots',
+      () async {
+        postJobRepository.updatedSlotIds = ['morning_2'];
+        final controller = container.read(postJobControllerProvider.notifier);
+        controller.initializeForEdit(
+          EmployerJobEntity(
+            id: 'job-1',
+            category: 'Plumbing',
+            skill: 'Pipe repair',
+            date: DateTime(2030, 1, 2),
+            time: DateTime(2030, 1, 2, 10),
+            locationAddress: 'Saved address',
+            description: 'Repair a leaking pipe.',
+            status: EmployerJobStatus.active,
+            createdAt: DateTime(2029, 12, 1),
+            updatedAt: DateTime(2029, 12, 1),
+            scheduledSlotIds: const ['morning_2', 'afternoon_1'],
+            latitude: 10,
+            longitude: 76,
+          ),
+        );
+
+        expect(await controller.submitJob(), isNull);
+        final state = container.read(postJobControllerProvider);
+        expect(state.status, PostJobStatus.failure);
+        expect(state.errorMessage, contains('did not retain all selected'));
+      },
+    );
+
     test('worker selection is unique, limited to five, and can be changed', () {
       final controller = container.read(postJobControllerProvider.notifier);
 
@@ -473,6 +503,7 @@ class _FakePostJobRepository implements PostJobRepository {
 
   final List<String> calls;
   String? createdJobId = 'job-id';
+  List<String>? updatedSlotIds;
 
   @override
   Future<String?> createJob({
@@ -509,7 +540,25 @@ class _FakePostJobRepository implements PostJobRepository {
     required String? existingAudioPath,
     required bool removeExistingAudio,
     required File? newAudio,
-  }) => throw UnimplementedError();
+  }) async {
+    calls.add('update-job');
+    final now = DateTime.now();
+    return EmployerJobEntity(
+      id: jobId,
+      category: category,
+      skill: skill,
+      date: date,
+      time: time,
+      locationAddress: locationAddress,
+      description: description,
+      status: EmployerJobStatus.active,
+      createdAt: now,
+      updatedAt: now,
+      scheduledSlotIds: updatedSlotIds ?? slotIds,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
 }
 
 class _FakeEmployerInvitationsRepository

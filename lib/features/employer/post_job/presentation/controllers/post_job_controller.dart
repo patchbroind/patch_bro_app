@@ -612,6 +612,15 @@ class PostJobController extends Notifier<PostJobState> {
           newAudio: state.voiceRecording,
         );
 
+        if (!_sameSlotSelection(
+          state.selectedSlotIds,
+          updatedJob.scheduledSlotIds,
+        )) {
+          throw StateError(
+            'The saved job did not retain all selected time slots. Please try again.',
+          );
+        }
+
         state = state.copyWith(status: PostJobStatus.success, clearError: true);
 
         return updatedJob.id;
@@ -655,6 +664,11 @@ class PostJobController extends Notifier<PostJobState> {
 
       return null;
     }
+  }
+
+  bool _sameSlotSelection(List<String> selected, List<String> saved) {
+    return selected.length == saved.length &&
+        selected.toSet().containsAll(saved);
   }
 
   Future<PostJobSubmissionResult> submitAndInviteWorkers(

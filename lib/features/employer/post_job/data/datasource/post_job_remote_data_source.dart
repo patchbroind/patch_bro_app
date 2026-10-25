@@ -4,13 +4,15 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:patch_bro/core/network/api_client.dart';
 import 'package:patch_bro/core/network/api_endpoinds.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
 
 import '../../../jobs/data/models/employer_job_model.dart';
 
 class PostJobRemoteDataSource {
-  const PostJobRemoteDataSource(this._apiClient);
+  const PostJobRemoteDataSource(this._apiClient, this._getSupabaseClient);
 
   final ApiClient _apiClient;
+  final SupabaseClient Function() _getSupabaseClient;
 
   // ===========================================================================
   // CREATE JOB
@@ -256,7 +258,52 @@ class PostJobRemoteDataSource {
       throw Exception('The server did not return the updated job.');
     }
 
-    return EmployerJobModel.fromJson(Map<String, dynamic>.from(jobData));
+    final updatedJobData = Map<String, dynamic>.from(jobData);
+    updatedJobData['scheduled_slots'] = await _persistAndVerifySlots(
+      jobId,
+      slotIds,
+    );
+    return EmployerJobModel.fromJson(updatedJobData);
+  }
+
+  Future<List<String>> _persistAndVerifySlots(
+    String jobId,
+    List<String> slotIds,
+  ) async {
+    final response = await _getSupabaseClient().rpc(
+      'update_employer_job_scheduled_slots',
+      params: {'p_job_id': jobId, 'p_scheduled_slots': slotIds},
+    );
+    final savedSlots = _readSavedSlots(response);
+    if (!_sameSlotSelection(slotIds, savedSlots)) {
+      throw const PostgrestException(
+        message: 'The database did not save all selected time slots.',
+      );
+    }
+    return savedSlots;
+  }
+
+  List<String> _readSavedSlots(dynamic response) {
+    if (response is! List || response.length != 1 || response.single is! Map) {
+      throw const PostgrestException(
+        message: 'Invalid response when saving job time slots.',
+      );
+    }
+    final value = (response.single as Map)['scheduled_slots'];
+    if (value is! List) {
+      throw const PostgrestException(
+        message: 'The database returned invalid job time slots.',
+      );
+    }
+    return value
+        .map((slot) => slot?.toString().trim() ?? '')
+        .where((slot) => slot.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  bool _sameSlotSelection(List<String> selected, List<String> saved) {
+    return selected.length == saved.length &&
+        selected.toSet().containsAll(saved);
   }
 
   // ===========================================================================
