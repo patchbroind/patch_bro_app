@@ -20,10 +20,12 @@ class EmployerJobDetailsPage extends ConsumerStatefulWidget {
   final EmployerJobEntity job;
 
   @override
-  ConsumerState<EmployerJobDetailsPage> createState() => _EmployerJobDetailsPageState();
+  ConsumerState<EmployerJobDetailsPage> createState() =>
+      _EmployerJobDetailsPageState();
 }
 
-class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage> {
+class _EmployerJobDetailsPageState
+    extends ConsumerState<EmployerJobDetailsPage> {
   late EmployerJobEntity _job;
 
   @override
@@ -32,7 +34,13 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
     _job = widget.job;
   }
 
-  Future<void> _refreshJob() async {
+  Future<void> _refreshJob([List<String>? editedSlotIds]) async {
+    if (editedSlotIds != null) {
+      setState(() {
+        _job = _job.copyWith(scheduledSlotIds: editedSlotIds);
+      });
+    }
+
     try {
       await ref.read(employerJobsControllerProvider.notifier).refreshJobs();
 
@@ -53,25 +61,33 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
 
       if (updatedJob != null) {
         setState(() {
-          _job = updatedJob!;
+          _job = updatedJob!.copyWith(
+            scheduledSlotIds: editedSlotIds ?? updatedJob.scheduledSlotIds,
+          );
         });
       }
     } catch (_) {
-      // The edit itself was already successful.
-      // Keep the currently displayed job if refreshing fails.
+      // The edit itself was already successful. Keep the edited slot selection.
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = MediaQuery.sizeOf(context).width >= 700 ? 28.0 : 16.0;
+    final horizontalPadding = MediaQuery.sizeOf(context).width >= 700
+        ? 28.0
+        : 16.0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Job Details'), centerTitle: false),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 32),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            12,
+            horizontalPadding,
+            32,
+          ),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 850),
@@ -85,12 +101,14 @@ class _EmployerJobDetailsPageState extends ConsumerState<EmployerJobDetailsPage>
 
                   JobDetailsLocationCard(job: _job),
 
-                  if (_job.hasDescription) JobDetailDescriptionCard(description: _job.description),
+                  if (_job.hasDescription)
+                    JobDetailDescriptionCard(description: _job.description),
 
                   if (_job.hasVoiceDescription)
                     JobDetailVoiceDescriptionCard(audioUrl: _job.audioUrl!),
 
-                  if (_job.hasImage) JobDetailImagesCard(imageUrl: _job.imageUrl!),
+                  if (_job.hasImage)
+                    JobDetailImagesCard(imageUrl: _job.imageUrl!),
 
                   JobDetailInformationCard(job: _job),
 

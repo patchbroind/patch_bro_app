@@ -38,6 +38,7 @@ type JobRow = {
   skill: string;
   scheduled_date: string;
   scheduled_time: string;
+  scheduled_slots: string[];
   latitude: number;
   longitude: number;
   location_address: string;
@@ -322,6 +323,45 @@ function parseJsonStringArray(
       `Invalid ${key} format`,
     );
   }
+}
+
+function parseScheduledSlots(
+  formData: FormData,
+  scheduledTime: string,
+): string[] {
+  const raw = formData.get("scheduled_slots");
+  const slots = raw === null
+    ? []
+    : parseJsonStringArray(formData, "scheduled_slots");
+  const allowedSlots = new Set([
+    "morning_1",
+    "morning_2",
+    "afternoon_1",
+    "afternoon_2",
+  ]);
+
+  if (raw === null) {
+    const legacySlotByTime: Record<string, string> = {
+      "08:00": "morning_1",
+      "10:00": "morning_2",
+      "13:00": "afternoon_1",
+      "15:00": "afternoon_2",
+    };
+    const normalizedTime = scheduledTime.slice(0, 5);
+    const legacySlot = legacySlotByTime[normalizedTime];
+    return legacySlot === undefined ? [] : [legacySlot];
+  }
+
+  if (
+    slots.length === 0 ||
+    slots.length > 4 ||
+    new Set(slots).size !== slots.length ||
+    slots.some((slot) => !allowedSlots.has(slot))
+  ) {
+    throw apiError(400, "Invalid scheduled slots");
+  }
+
+  return slots;
 }
 
 function parseBoolean(
@@ -2387,6 +2427,7 @@ Deno.serve(
               skill,
               scheduled_date,
               scheduled_time,
+              scheduled_slots,
               latitude,
               longitude,
               location_address,
@@ -2539,6 +2580,8 @@ Deno.serve(
               job.scheduled_date,
             scheduled_time:
               job.scheduled_time,
+            scheduled_slots:
+              job.scheduled_slots,
             latitude:
               job.latitude,
             longitude:
@@ -2624,6 +2667,7 @@ Deno.serve(
               skill,
               scheduled_date,
               scheduled_time,
+              scheduled_slots,
               latitude,
               longitude,
               location_address,
@@ -2728,6 +2772,8 @@ Deno.serve(
               job.scheduled_date,
             scheduled_time:
               job.scheduled_time,
+            scheduled_slots:
+              job.scheduled_slots,
             latitude:
               job.latitude,
             longitude:
@@ -2915,6 +2961,11 @@ Deno.serve(
         );
       }
 
+      const scheduledSlots = parseScheduledSlots(
+        formData,
+        scheduledTime,
+      );
+
       if (!locationAddress) {
         throw apiError(
           400,
@@ -3047,6 +3098,8 @@ Deno.serve(
                 scheduledDate,
               scheduled_time:
                 scheduledTime,
+              scheduled_slots:
+                scheduledSlots,
               latitude,
               longitude,
               location_address:
@@ -3338,6 +3391,8 @@ Deno.serve(
                 scheduledDate,
               scheduled_time:
                 scheduledTime,
+              scheduled_slots:
+                scheduledSlots,
               latitude,
               longitude,
               location_address:
@@ -3357,6 +3412,7 @@ Deno.serve(
               skill,
               scheduled_date,
               scheduled_time,
+              scheduled_slots,
               latitude,
               longitude,
               location_address,
@@ -3672,6 +3728,8 @@ Deno.serve(
                 updatedJob.scheduled_date,
               scheduled_time:
                 updatedJob.scheduled_time,
+              scheduled_slots:
+                updatedJob.scheduled_slots,
               latitude:
                 updatedJob.latitude,
               longitude:

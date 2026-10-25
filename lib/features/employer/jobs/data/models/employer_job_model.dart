@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/entities/employer_job_entity.dart';
 
 class EmployerJobModel {
@@ -12,6 +14,7 @@ class EmployerJobModel {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.scheduledSlotIds = const [],
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -31,6 +34,7 @@ class EmployerJobModel {
   final EmployerJobStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<String> scheduledSlotIds;
 
   final double? latitude;
   final double? longitude;
@@ -54,7 +58,8 @@ class EmployerJobModel {
     final imagePaths = imageMedia.map((item) => item.storagePath).toList();
 
     final imageUrl =
-        _toNullableString(json['image_url']) ?? (imageUrls.isNotEmpty ? imageUrls.first : null);
+        _toNullableString(json['image_url']) ??
+        (imageUrls.isNotEmpty ? imageUrls.first : null);
 
     return EmployerJobModel(
       id: json['id']?.toString() ?? '',
@@ -67,6 +72,7 @@ class EmployerJobModel {
       status: _parseStatus(json['status']),
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
+      scheduledSlotIds: _parseStringList(json['scheduled_slots']),
       latitude: _toDouble(json['latitude']),
       longitude: _toDouble(json['longitude']),
       imageUrl: imageUrl,
@@ -89,6 +95,7 @@ class EmployerJobModel {
       status: status,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      scheduledSlotIds: List.unmodifiable(scheduledSlotIds),
       latitude: latitude,
       longitude: longitude,
       imageUrl: imageUrl,
@@ -104,6 +111,13 @@ class EmployerJobModel {
   // ===========================================================================
 
   static List<String> _parseStringList(dynamic value) {
+    if (value is String) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        return const [];
+      }
+    }
     if (value is! List) {
       return const [];
     }

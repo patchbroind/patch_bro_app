@@ -4,13 +4,15 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:patch_bro/core/network/api_client.dart';
 import 'package:patch_bro/core/network/api_endpoinds.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
 
 import '../../../jobs/data/models/employer_job_model.dart';
 
 class PostJobRemoteDataSource {
-  const PostJobRemoteDataSource(this._apiClient);
+  const PostJobRemoteDataSource(this._apiClient, this._getSupabaseClient);
 
   final ApiClient _apiClient;
+  final SupabaseClient Function() _getSupabaseClient;
 
   // ===========================================================================
   // CREATE JOB
@@ -21,6 +23,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -36,6 +39,7 @@ class PostJobRemoteDataSource {
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -54,7 +58,10 @@ class PostJobRemoteDataSource {
       }
 
       formData.files.add(
-        MapEntry('images', await MultipartFile.fromFile(image.path, filename: _fileName(image))),
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.path, filename: _fileName(image)),
+        ),
       );
     }
 
@@ -70,7 +77,10 @@ class PostJobRemoteDataSource {
       formData.files.add(
         MapEntry(
           'audio',
-          await MultipartFile.fromFile(voiceRecording.path, filename: _fileName(voiceRecording)),
+          await MultipartFile.fromFile(
+            voiceRecording.path,
+            filename: _fileName(voiceRecording),
+          ),
         ),
       );
     }
@@ -88,7 +98,9 @@ class PostJobRemoteDataSource {
     }
 
     if (responseData['success'] != true) {
-      throw Exception(responseData['message']?.toString() ?? 'Failed to create job.');
+      throw Exception(
+        responseData['message']?.toString() ?? 'Failed to create job.',
+      );
     }
 
     final data = responseData['data'];
@@ -116,6 +128,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -134,6 +147,7 @@ class PostJobRemoteDataSource {
       skill: skill,
       date: date,
       time: time,
+      slotIds: slotIds,
       latitude: latitude,
       longitude: longitude,
       locationAddress: locationAddress,
@@ -147,7 +161,9 @@ class PostJobRemoteDataSource {
     // Any existing image not included in this list will be deleted.
     // -------------------------------------------------------------------------
 
-    formData.fields.add(MapEntry('keep_image_paths', jsonEncode(keepImagePaths)));
+    formData.fields.add(
+      MapEntry('keep_image_paths', jsonEncode(keepImagePaths)),
+    );
 
     // -------------------------------------------------------------------------
     // Existing audio path
@@ -164,7 +180,9 @@ class PostJobRemoteDataSource {
     // Existing audio deletion
     // -------------------------------------------------------------------------
 
-    formData.fields.add(MapEntry('delete_audio', removeExistingAudio ? 'true' : 'false'));
+    formData.fields.add(
+      MapEntry('delete_audio', removeExistingAudio ? 'true' : 'false'),
+    );
 
     // -------------------------------------------------------------------------
     // New images
@@ -176,7 +194,10 @@ class PostJobRemoteDataSource {
       }
 
       formData.files.add(
-        MapEntry('images', await MultipartFile.fromFile(image.path, filename: _fileName(image))),
+        MapEntry(
+          'images',
+          await MultipartFile.fromFile(image.path, filename: _fileName(image)),
+        ),
       );
     }
 
@@ -195,7 +216,10 @@ class PostJobRemoteDataSource {
       formData.files.add(
         MapEntry(
           'audio',
-          await MultipartFile.fromFile(newAudio.path, filename: _fileName(newAudio)),
+          await MultipartFile.fromFile(
+            newAudio.path,
+            filename: _fileName(newAudio),
+          ),
         ),
       );
     }
@@ -217,7 +241,9 @@ class PostJobRemoteDataSource {
     }
 
     if (responseData['success'] != true) {
-      throw Exception(responseData['message']?.toString() ?? 'Failed to update job.');
+      throw Exception(
+        responseData['message']?.toString() ?? 'Failed to update job.',
+      );
     }
 
     final data = responseData['data'];
@@ -232,7 +258,52 @@ class PostJobRemoteDataSource {
       throw Exception('The server did not return the updated job.');
     }
 
-    return EmployerJobModel.fromJson(Map<String, dynamic>.from(jobData));
+    final updatedJobData = Map<String, dynamic>.from(jobData);
+    updatedJobData['scheduled_slots'] = await _persistAndVerifySlots(
+      jobId,
+      slotIds,
+    );
+    return EmployerJobModel.fromJson(updatedJobData);
+  }
+
+  Future<List<String>> _persistAndVerifySlots(
+    String jobId,
+    List<String> slotIds,
+  ) async {
+    final response = await _getSupabaseClient().rpc(
+      'update_employer_job_scheduled_slots',
+      params: {'p_job_id': jobId, 'p_scheduled_slots': slotIds},
+    );
+    final savedSlots = _readSavedSlots(response);
+    if (!_sameSlotSelection(slotIds, savedSlots)) {
+      throw const PostgrestException(
+        message: 'The database did not save all selected time slots.',
+      );
+    }
+    return savedSlots;
+  }
+
+  List<String> _readSavedSlots(dynamic response) {
+    if (response is! List || response.length != 1 || response.single is! Map) {
+      throw const PostgrestException(
+        message: 'Invalid response when saving job time slots.',
+      );
+    }
+    final value = (response.single as Map)['scheduled_slots'];
+    if (value is! List) {
+      throw const PostgrestException(
+        message: 'The database returned invalid job time slots.',
+      );
+    }
+    return value
+        .map((slot) => slot?.toString().trim() ?? '')
+        .where((slot) => slot.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  bool _sameSlotSelection(List<String> selected, List<String> saved) {
+    return selected.length == saved.length &&
+        selected.toSet().containsAll(saved);
   }
 
   // ===========================================================================
@@ -245,6 +316,7 @@ class PostJobRemoteDataSource {
     required String skill,
     required DateTime date,
     required DateTime time,
+    required List<String> slotIds,
     required double latitude,
     required double longitude,
     required String locationAddress,
@@ -257,6 +329,8 @@ class PostJobRemoteDataSource {
     formData.fields.add(MapEntry('scheduled_date', _formatDate(date)));
 
     formData.fields.add(MapEntry('scheduled_time', _formatTime(time)));
+
+    formData.fields.add(MapEntry('scheduled_slots', jsonEncode(slotIds)));
 
     formData.fields.add(MapEntry('latitude', latitude.toString()));
 

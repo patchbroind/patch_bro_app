@@ -20,22 +20,25 @@ class JobDetailActionButtons extends ConsumerStatefulWidget {
 
   final EmployerJobEntity job;
 
-  final VoidCallback? onJobEdited;
+  final ValueChanged<List<String>>? onJobEdited;
 
   final VoidCallback? onJobCancelled;
 
   @override
-  ConsumerState<JobDetailActionButtons> createState() => _JobDetailActionButtonsState();
+  ConsumerState<JobDetailActionButtons> createState() =>
+      _JobDetailActionButtonsState();
 }
 
-class _JobDetailActionButtonsState extends ConsumerState<JobDetailActionButtons> {
+class _JobDetailActionButtonsState
+    extends ConsumerState<JobDetailActionButtons> {
   bool _isCancelling = false;
 
   Future<void> _cancelJob() async {
     final confirmed = await AppDialog.confirm(
       context,
       title: 'Cancel Job?',
-      message: 'Are you sure you want to cancel this job? The assigned worker will be notified.',
+      message:
+          'Are you sure you want to cancel this job? The assigned worker will be notified.',
       confirmLabel: 'Cancel Job',
       cancelLabel: 'Keep Job',
       icon: Icons.cancel_outlined,
@@ -50,7 +53,9 @@ class _JobDetailActionButtonsState extends ConsumerState<JobDetailActionButtons>
     });
 
     try {
-      await ref.read(employerJobsControllerProvider.notifier).cancelJob(widget.job.id);
+      await ref
+          .read(employerJobsControllerProvider.notifier)
+          .cancelJob(widget.job.id);
 
       if (!mounted) {
         return;
@@ -102,13 +107,14 @@ class _JobDetailActionButtonsState extends ConsumerState<JobDetailActionButtons>
                 onPressed: _isCancelling
                     ? null
                     : () async {
-                        final result = await context.pushNamed<bool>(
-                          RouteNames.employerEditJob,
-                          extra: widget.job,
-                        );
+                        final selectedSlotIds = await context
+                            .pushNamed<List<String>>(
+                              RouteNames.employerEditJob,
+                              extra: widget.job,
+                            );
 
-                        if (result == true) {
-                          widget.onJobEdited?.call();
+                        if (selectedSlotIds != null) {
+                          widget.onJobEdited?.call(selectedSlotIds);
                         }
                       },
               ),
@@ -146,7 +152,10 @@ class _JobDetailActionButtonsState extends ConsumerState<JobDetailActionButtons>
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.error),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.error,
+                    ),
                   )
                 : const Icon(Icons.cancel_outlined),
             label: Text(_isCancelling ? 'Cancelling...' : 'Cancel Job'),
@@ -154,7 +163,9 @@ class _JobDetailActionButtonsState extends ConsumerState<JobDetailActionButtons>
               foregroundColor: AppColors.error,
               side: const BorderSide(color: AppColors.error),
               padding: const EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),

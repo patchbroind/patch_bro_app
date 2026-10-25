@@ -5,8 +5,7 @@ import 'package:patch_bro/features/worker/profile/domain/repository/worker_profi
 import '../providers/worker_profile_providers.dart';
 import 'worker_profile_state.dart';
 
-class WorkerProfileController
-    extends Notifier<WorkerProfileState> {
+class WorkerProfileController extends Notifier<WorkerProfileState> {
   WorkerProfileRepository get _repository {
     return ref.read(workerProfileRepositoryProvider);
   }
@@ -31,8 +30,7 @@ class WorkerProfileController
     );
 
     try {
-      final profile =
-          await _repository.getCurrentProfile();
+      final profile = await _repository.getCurrentProfile();
 
       state = state.copyWith(
         status: WorkerProfileStatus.success,
@@ -59,6 +57,7 @@ class WorkerProfileController
     required List<String> availabilityDays,
     required bool availableToday,
     required bool availableTomorrow,
+    required Map<String, Map<String, String>> availabilitySchedule,
   }) async {
     if (state.isSaving) {
       return false;
@@ -78,10 +77,10 @@ class WorkerProfileController
         availabilityDays: availabilityDays,
         availableToday: availableToday,
         availableTomorrow: availableTomorrow,
+        availabilitySchedule: availabilitySchedule,
       );
 
-      final profile =
-          await _repository.getCurrentProfile();
+      final profile = await _repository.getCurrentProfile();
 
       state = state.copyWith(
         status: WorkerProfileStatus.success,
@@ -96,6 +95,32 @@ class WorkerProfileController
         errorMessage: error.toString(),
       );
 
+      return false;
+    }
+  }
+
+  Future<bool> saveAvailabilitySchedule(
+    Map<String, Map<String, String>> schedule,
+  ) async {
+    if (state.isSaving) return false;
+    state = state.copyWith(
+      status: WorkerProfileStatus.saving,
+      clearError: true,
+    );
+    try {
+      await _repository.saveAvailabilitySchedule(schedule);
+      final profile = await _repository.getCurrentProfile();
+      state = state.copyWith(
+        status: WorkerProfileStatus.success,
+        profile: profile,
+        clearError: true,
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        status: WorkerProfileStatus.failure,
+        errorMessage: error.toString(),
+      );
       return false;
     }
   }

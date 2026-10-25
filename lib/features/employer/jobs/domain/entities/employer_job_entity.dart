@@ -15,6 +15,7 @@ class EmployerJobEntity {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.scheduledSlotIds = const [],
     this.latitude,
     this.longitude,
     this.imageUrl,
@@ -34,6 +35,7 @@ class EmployerJobEntity {
   final EmployerJobStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<String> scheduledSlotIds;
 
   final double? latitude;
   final double? longitude;
@@ -55,6 +57,47 @@ class EmployerJobEntity {
   /// Storage path of the existing audio file.
   final String? audioPath;
 
+  EmployerJobEntity copyWith({
+    String? category,
+    String? skill,
+    DateTime? date,
+    DateTime? time,
+    String? locationAddress,
+    String? description,
+    EmployerJobStatus? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<String>? scheduledSlotIds,
+    double? latitude,
+    double? longitude,
+    String? imageUrl,
+    List<String>? imageUrls,
+    List<String>? imagePaths,
+    String? audioUrl,
+    String? audioPath,
+  }) {
+    return EmployerJobEntity(
+      id: id,
+      category: category ?? this.category,
+      skill: skill ?? this.skill,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      locationAddress: locationAddress ?? this.locationAddress,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      scheduledSlotIds: scheduledSlotIds ?? this.scheduledSlotIds,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
+      imagePaths: imagePaths ?? this.imagePaths,
+      audioUrl: audioUrl ?? this.audioUrl,
+      audioPath: audioPath ?? this.audioPath,
+    );
+  }
+
   // ===========================================================================
   // COMPUTED PROPERTIES
   // ===========================================================================
@@ -63,9 +106,11 @@ class EmployerJobEntity {
 
   bool get hasDescription => description.trim().isNotEmpty;
 
-  bool get hasVoiceDescription => audioUrl != null && audioUrl!.trim().isNotEmpty;
+  bool get hasVoiceDescription =>
+      audioUrl != null && audioUrl!.trim().isNotEmpty;
 
-  bool get hasImage => imageUrls.isNotEmpty || (imageUrl != null && imageUrl!.trim().isNotEmpty);
+  bool get hasImage =>
+      imageUrls.isNotEmpty || (imageUrl != null && imageUrl!.trim().isNotEmpty);
 
   bool get hasLocation => latitude != null && longitude != null;
 

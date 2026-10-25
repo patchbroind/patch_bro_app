@@ -11,6 +11,7 @@ class PostJobWorkerCardStack extends StatefulWidget {
     required this.activeIndex,
     required this.selectedWorkerIds,
     required this.eligibleWorkerIds,
+    required this.allowIneligibleSelection,
     required this.onIndexChanged,
     required this.onToggleSelected,
     required this.onMoreDetails,
@@ -21,6 +22,7 @@ class PostJobWorkerCardStack extends StatefulWidget {
   final int activeIndex;
   final Set<String> selectedWorkerIds;
   final Set<String> eligibleWorkerIds;
+  final bool allowIneligibleSelection;
   final ValueChanged<int> onIndexChanged;
   final ValueChanged<String> onToggleSelected;
   final ValueChanged<EmployerWorkerEntity> onMoreDetails;
@@ -81,7 +83,9 @@ class _PostJobWorkerCardStackState extends State<PostJobWorkerCardStack> {
                         worker: nextWorker,
                         height: cardHeight,
                         selected: widget.selectedWorkerIds.contains(nextWorker.id),
-                        canSelect: widget.eligibleWorkerIds.contains(nextWorker.id),
+                        canSelect:
+                            widget.allowIneligibleSelection ||
+                            widget.eligibleWorkerIds.contains(nextWorker.id),
                       ),
                     ),
                   if (previousWorker != null)
@@ -94,7 +98,9 @@ class _PostJobWorkerCardStackState extends State<PostJobWorkerCardStack> {
                         worker: previousWorker,
                         height: cardHeight,
                         selected: widget.selectedWorkerIds.contains(previousWorker.id),
-                        canSelect: widget.eligibleWorkerIds.contains(previousWorker.id),
+                        canSelect:
+                            widget.allowIneligibleSelection ||
+                            widget.eligibleWorkerIds.contains(previousWorker.id),
                       ),
                     ),
                   Positioned(
@@ -123,7 +129,9 @@ class _PostJobWorkerCardStackState extends State<PostJobWorkerCardStack> {
                           key: ValueKey('active-${activeWorker.id}'),
                           worker: activeWorker,
                           isSelected: widget.selectedWorkerIds.contains(activeWorker.id),
-                          canSelect: widget.eligibleWorkerIds.contains(activeWorker.id),
+                          canSelect:
+                              widget.allowIneligibleSelection ||
+                              widget.eligibleWorkerIds.contains(activeWorker.id),
                           onToggleSelected: () => widget.onToggleSelected(activeWorker.id),
                           onMoreDetails: () => widget.onMoreDetails(activeWorker),
                         ),

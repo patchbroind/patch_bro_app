@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_dialog.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
 
@@ -163,8 +166,8 @@ class _EmployerHomePageState extends ConsumerState<EmployerHomePage> {
   // ================================================================
 
   void _onCategoryTap(String category) {
-    // ref.read(postJobControllerProvider.notifier).startCreateSession(category: category);
-    // context.goNamed(RouteNames.employerPostJob);
+    ref.read(postJobControllerProvider.notifier).startCreateSession(category: category);
+    context.goNamed(RouteNames.employerPostJob);
   }
 
   void _onProjectTap(String project) {

@@ -10,7 +10,7 @@ import 'package:patch_bro/features/employer/favourite_workers/presentation/pages
 import 'package:patch_bro/features/employer/home/presentation/pages/employer_home_page.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/pages/employer_jobs_page.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_post_job_page.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/pages/employer_edit_job_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_personal_information_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_profile_page.dart';
 import 'package:patch_bro/features/employer/profile/presentation/pages/employer_settings_and_support.dart';
@@ -26,6 +26,7 @@ import 'package:patch_bro/features/notifications/presentation/pages/worker_notif
 import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
+import 'package:patch_bro/features/worker/availability/presentation/pages/worker_availability_page.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -450,7 +451,7 @@ class AppRouter {
               return const _PlaceholderPage(title: 'Invalid Job');
             }
 
-            return EmployerPostJobPage(job: job);
+            return EmployerEditJobPage(job: job);
           },
         ),
 
@@ -551,7 +552,7 @@ class AppRouter {
               path: '/worker/availability',
               name: RouteNames.workerAvailability,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Worker Availability');
+                return const WorkerAvailabilityPage();
               },
             ),
           ],
@@ -653,7 +654,7 @@ class AppRouter {
               path: '/employer/post-job',
               name: RouteNames.employerPostJob,
               builder: (context, state) {
-                return const EmployerPostJobPage();
+                return const EmployerEditJobPage();
               },
             ),
           ],
@@ -761,7 +762,7 @@ class _PlaceholderPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-
+ 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,18 +7,18 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/location/location_service.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
-import 'package:patch_bro/core/utils/date_time_utils.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
-import 'package:patch_bro/core/widgets/app_text_field.dart';
 import 'package:patch_bro/features/employer/home/domain/entities/category_entity.dart';
 import 'package:patch_bro/features/employer/home/presentation/providers/employer_home_provider.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/providers/employer_jobs_providers.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_job_post_selection_tile.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_image_picker.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_voice_recorder.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_category_step.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_description_step.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_header.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_images_step.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_location_step.dart';
+import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_wizard_schedule_step.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_selection_step.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/features/profile/presentation/pages/location_picker_page.dart';
@@ -81,20 +80,6 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
       initialDate: initialDate,
     );
     if (selected != null) controller.setDate(selected);
-  }
-
-  Future<void> _selectTime() async {
-    final controller = ref.read(postJobControllerProvider.notifier);
-    final current = ref.read(postJobControllerProvider).selectedTime;
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: current == null
-          ? TimeOfDay.now()
-          : TimeOfDay(hour: current.hour, minute: current.minute),
-    );
-    if (selected == null) return;
-    final now = DateTime.now();
-    controller.setTime(DateTime(now.year, now.month, now.day, selected.hour, selected.minute));
   }
 
   Future<void> _chooseLocation() async {
@@ -202,15 +187,20 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
     );
     final isSubmitting = state.status == PostJobStatus.submitting;
 
-    return WillPopScope(
-      onWillPop: _handleSystemBack,
+    return PopScope(
+      canPop: state.currentStep == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        _handleSystemBack();
+      },
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('Post a Job')),
         body: SafeArea(
           child: Column(
             children: [
-              _WizardHeader(step: state.currentStep),
+              PostJobWizardHeader(step: state.currentStep),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
@@ -255,255 +245,50 @@ class _EmployerPostJobWizardState extends ConsumerState<EmployerPostJobWizard> {
   }
 
   Widget _buildStep(PostJobState state, List<CategoryEntity> categories) {
+    final controller = ref.read(postJobControllerProvider.notifier);
     return switch (state.currentStep) {
-      0 => _categoryStep(state, categories),
-      1 => _scheduleStep(state),
-      2 => _locationStep(state),
-      3 => _descriptionStep(state),
-      4 => _imagesStep(state),
+      0 => PostJobWizardCategoryStep(
+        categories: categories,
+        selectedCategory: state.category,
+        categoryValueNotifier: _categoryValueNotifier,
+        skillController: _skillController,
+        onCategoryChanged: controller.setCategory,
+        onSkillChanged: controller.setSkill,
+      ),
+      1 => PostJobWizardScheduleStep(
+        state: state,
+        onSelectDate: _selectDate,
+        onSlotToggled: controller.toggleTimeSlot,
+      ),
+      2 => _buildLocationStep(state),
+      3 => PostJobWizardDescriptionStep(
+        state: state,
+        descriptionController: _descriptionController,
+        onDescriptionChanged: controller.setDescription,
+        onStartRecording: _startRecording,
+        onStopRecording: _stopRecording,
+        onRemoveRecording: controller.removeVoiceRecording,
+      ),
+      4 => PostJobWizardImagesStep(
+        state: state,
+        onAdd: controller.pickImages,
+        onRemove: controller.removeImage,
+      ),
       _ => PostJobWorkerSelectionStep(),
     };
   }
 
-  Widget _categoryStep(PostJobState state, List<CategoryEntity> categories) {
-    final names = categories.where((item) => item.isActive).map((item) => item.name).toList();
-    final selected = names.contains(state.category) ? state.category : null;
-    if (_categoryValueNotifier.value != selected) {
-      _categoryValueNotifier.value = selected;
-    }
-    return PostJobSection(
-      title: 'Category and required skill',
-      subtitle: 'Choose the work type and the primary skill you need.',
-      child: Column(
-        children: [
-          DropdownButtonFormField2<String>(
-            valueListenable: _categoryValueNotifier,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              hintText: 'Select job category',
-              prefixIcon: Icon(Icons.category_outlined),
-            ),
-            items: names
-                .map((name) => DropdownItem<String>(value: name, child: Text(name)))
-                .toList(),
-            onChanged: (value) {
-              if (value != null) ref.read(postJobControllerProvider.notifier).setCategory(value);
-            },
-          ),
-          const SizedBox(height: 14),
-          AppTextField(
-            controller: _skillController,
-            hintText: 'Required skill',
-            icon: Icons.handyman_outlined,
-            textInputAction: TextInputAction.next,
-            onChanged: ref.read(postJobControllerProvider.notifier).setSkill,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Skills are stored as one required-skill value by the current job API.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _scheduleStep(PostJobState state) => PostJobSection(
-    title: 'Schedule',
-    subtitle: 'Choose when the work needs to be done.',
-    child: Row(
-      children: [
-        Expanded(
-          child: SelectionTile(
-            icon: Icons.calendar_today_outlined,
-            title: 'Date',
-            value: DateTimeUtils.formatDate(state.selectedDate),
-            onTap: _selectDate,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SelectionTile(
-            icon: Icons.access_time_outlined,
-            title: 'Time',
-            value: DateTimeUtils.formatTime(state.selectedTime),
-            onTap: _selectTime,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _locationStep(PostJobState state) {
+  Widget _buildLocationStep(PostJobState state) {
     final savedLocation = ref.watch(employerHomeProvider).value?.location;
-    final hasSelectedLocation = state.locationAddress?.trim().isNotEmpty == true;
-    final isSavedSelected =
-        savedLocation != null &&
-        state.latitude == savedLocation.latitude &&
-        state.longitude == savedLocation.longitude;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        PostJobSection(
-          title: 'Your saved location',
-          subtitle: savedLocation == null
-              ? 'No saved profile location is available.'
-              : 'Use your profile location or select another place.',
-          child: savedLocation == null
-              ? const Text('Choose a different location or use your current location.')
-              : _LocationOption(
-                  icon: Icons.home_outlined,
-                  title: savedLocation.address,
-                  subtitle: isSavedSelected ? 'Selected for this job' : 'Use this saved location',
-                  selected: isSavedSelected,
-                  onTap: () =>
-                      ref.read(postJobControllerProvider.notifier).setLocation(savedLocation),
-                ),
-        ),
-        const SizedBox(height: 18),
-        PostJobSection(
-          title: 'Job location',
-          subtitle: hasSelectedLocation
-              ? 'Selected location is shown below.'
-              : 'Select where the worker should arrive.',
-          child: Column(
-            children: [
-              if (hasSelectedLocation) ...[
-                _LocationOption(
-                  icon: Icons.location_on_outlined,
-                  title: state.locationAddress!,
-                  subtitle: 'Currently selected',
-                  selected: true,
-                  onTap: _chooseLocation,
-                ),
-                const SizedBox(height: 12),
-              ],
-              OutlinedButton.icon(
-                onPressed: _chooseLocation,
-                icon: const Icon(Icons.map_outlined),
-                label: const Text('Choose a different location'),
-              ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: _useCurrentLocation,
-                icon: const Icon(Icons.my_location),
-                label: const Text('Use current location'),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return PostJobWizardLocationStep(
+      savedLocation: savedLocation,
+      selectedAddress: state.locationAddress,
+      latitude: state.latitude,
+      longitude: state.longitude,
+      onChooseLocation: _chooseLocation,
+      onUseCurrentLocation: _useCurrentLocation,
+      onSelectLocation: (location) =>
+          ref.read(postJobControllerProvider.notifier).setLocation(location),
     );
   }
-
-  Widget _descriptionStep(PostJobState state) => PostJobSection(
-    title: 'Job description',
-    subtitle: 'Add text, a voice description, or both.',
-    child: Column(
-      children: [
-        AppTextField(
-          controller: _descriptionController,
-          hintText: 'Describe the job...',
-          icon: Icons.description_outlined,
-          maxLength: 1000,
-          keyboardType: TextInputType.multiline,
-          onChanged: ref.read(postJobControllerProvider.notifier).setDescription,
-        ),
-        const SizedBox(height: 12),
-        PostJobVoiceRecorder(
-          isRecording: state.isRecording,
-          duration: state.recordingDuration,
-          hasRecording: state.voiceRecording != null,
-          onStart: _startRecording,
-          onStop: _stopRecording,
-          onRemove: ref.read(postJobControllerProvider.notifier).removeVoiceRecording,
-        ),
-      ],
-    ),
-  );
-
-  Widget _imagesStep(PostJobState state) => PostJobSection(
-    title: 'Add job images',
-    subtitle: 'Images are optional. You can add up to two.',
-    child: PostJobImagePicker(
-      images: state.images,
-      onAdd: ref.read(postJobControllerProvider.notifier).pickImages,
-      onRemove: ref.read(postJobControllerProvider.notifier).removeImage,
-    ),
-  );
-}
-
-class _WizardHeader extends StatelessWidget {
-  const _WizardHeader({required this.step});
-
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = (step + 1) / 6;
-    final labels = ['Category', 'Schedule', 'Location', 'Description', 'Images', 'Workers'];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Step ${step + 1} of 6 · ${labels[step]}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(value: progress, minHeight: 7),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LocationOption extends StatelessWidget {
-  const _LocationOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: selected ? AppColors.employerPrimary : AppColors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.employerPrimary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          if (selected) const Icon(Icons.check_circle, color: AppColors.employerPrimary),
-        ],
-      ),
-    ),
-  );
 }

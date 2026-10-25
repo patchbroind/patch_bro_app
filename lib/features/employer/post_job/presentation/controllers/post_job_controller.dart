@@ -7,6 +7,7 @@ import 'package:patch_bro/features/employer/invitations/presentation/providers/e
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';
 import 'package:patch_bro/features/employer/workers/domain/entity/employer_worker_entity.dart';
 import 'package:record/record.dart';
+import 'package:patch_bro/core/scheduling/work_time_slot.dart';
 
 import '../../../../profile/domain/entities/profile_location.dart';
 import '../../domain/repositories/post_job_repository.dart';
@@ -14,7 +15,10 @@ import '../providers/post_job_providers.dart';
 import 'post_job_state.dart';
 
 class PostJobSubmissionResult {
-  const PostJobSubmissionResult({required this.jobId, required this.failedWorkers});
+  const PostJobSubmissionResult({
+    required this.jobId,
+    required this.failedWorkers,
+  });
 
   final String? jobId;
   final List<EmployerWorkerEntity> failedWorkers;
@@ -45,11 +49,19 @@ class PostJobController extends Notifier<PostJobState> {
   // ---------------------------------------------------------------------------
 
   void setCategory(String value) {
-    state = state.copyWith(category: value, status: PostJobStatus.initial, clearError: true);
+    state = state.copyWith(
+      category: value,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   void setSkill(String value) {
-    state = state.copyWith(skill: value, status: PostJobStatus.initial, clearError: true);
+    state = state.copyWith(
+      skill: value,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   bool toggleSelectedWorker(String workerId) {
@@ -86,15 +98,60 @@ class PostJobController extends Notifier<PostJobState> {
   }
 
   void setDate(DateTime date) {
-    state = state.copyWith(selectedDate: date, status: PostJobStatus.initial, clearError: true);
+    final firstSlot = state.selectedSlotIds.isEmpty
+        ? null
+        : WorkTimeSlot.fromId(state.selectedSlotIds.first);
+    state = state.copyWith(
+      selectedDate: date,
+      selectedTime: firstSlot == null
+          ? state.selectedTime
+          : DateTime(date.year, date.month, date.day, firstSlot.startHour),
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   void setTime(DateTime time) {
-    state = state.copyWith(selectedTime: time, status: PostJobStatus.initial, clearError: true);
+    state = state.copyWith(
+      selectedTime: time,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
+  }
+
+  void toggleTimeSlot(String slotId) {
+    if (WorkTimeSlot.fromId(slotId) == null) return;
+    final selected = [...state.selectedSlotIds];
+    if (selected.contains(slotId)) {
+      selected.remove(slotId);
+    } else {
+      selected.add(slotId);
+    }
+    selected.sort(
+      (a, b) => WorkTimeSlot.values
+          .indexWhere((slot) => slot.id == a)
+          .compareTo(WorkTimeSlot.values.indexWhere((slot) => slot.id == b)),
+    );
+    final firstSlot = selected.isEmpty
+        ? null
+        : WorkTimeSlot.fromId(selected.first);
+    final date = state.selectedDate;
+    state = state.copyWith(
+      selectedSlotIds: selected,
+      selectedTime: firstSlot == null || date == null
+          ? state.selectedTime
+          : DateTime(date.year, date.month, date.day, firstSlot.startHour),
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   void setDescription(String value) {
-    state = state.copyWith(description: value, status: PostJobStatus.initial, clearError: true);
+    state = state.copyWith(
+      description: value,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   void setLocation(ProfileLocation location) {
@@ -137,7 +194,10 @@ class PostJobController extends Notifier<PostJobState> {
     final validationError = validateStep(state.currentStep);
 
     if (validationError != null) {
-      state = state.copyWith(status: PostJobStatus.failure, errorMessage: validationError);
+      state = state.copyWith(
+        status: PostJobStatus.failure,
+        errorMessage: validationError,
+      );
       return false;
     }
 
@@ -170,7 +230,9 @@ class PostJobController extends Notifier<PostJobState> {
         existingImages.add(
           PostJobExistingImage(
             url: imageUrl,
-            storagePath: job.imagePaths.length > index ? job.imagePaths[index] : '',
+            storagePath: job.imagePaths.length > index
+                ? job.imagePaths[index]
+                : '',
             sortOrder: index,
           ),
         );
@@ -191,6 +253,10 @@ class PostJobController extends Notifier<PostJobState> {
       skill: job.skill,
       selectedDate: job.date,
       selectedTime: job.time,
+      selectedSlotIds: effectiveWorkTimeSlotIds(
+        storedSlotIds: job.scheduledSlotIds,
+        startTime: job.time,
+      ),
       latitude: job.latitude,
       longitude: job.longitude,
       locationAddress: job.locationAddress,
@@ -219,13 +285,19 @@ class PostJobController extends Notifier<PostJobState> {
       return;
     }
 
-    final pickedImages = await _imagePicker.pickMultiImage(imageQuality: 85, limit: remaining);
+    final pickedImages = await _imagePicker.pickMultiImage(
+      imageQuality: 85,
+      limit: remaining,
+    );
 
     if (pickedImages.isEmpty) {
       return;
     }
 
-    final selected = pickedImages.take(remaining).map((image) => File(image.path)).toList();
+    final selected = pickedImages
+        .take(remaining)
+        .map((image) => File(image.path))
+        .toList();
 
     state = state.copyWith(
       images: [...state.images, ...selected],
@@ -244,7 +316,11 @@ class PostJobController extends Notifier<PostJobState> {
 
     updatedImages.removeAt(index);
 
-    state = state.copyWith(images: updatedImages, status: PostJobStatus.initial, clearError: true);
+    state = state.copyWith(
+      images: updatedImages,
+      status: PostJobStatus.initial,
+      clearError: true,
+    );
   }
 
   /// Removes an existing server-side image.
@@ -266,7 +342,8 @@ class PostJobController extends Notifier<PostJobState> {
 
     final updatedDeletedPaths = [...state.deletedImagePaths];
 
-    if (image.storagePath.trim().isNotEmpty && !updatedDeletedPaths.contains(image.storagePath)) {
+    if (image.storagePath.trim().isNotEmpty &&
+        !updatedDeletedPaths.contains(image.storagePath)) {
       updatedDeletedPaths.add(image.storagePath);
     }
 
@@ -297,7 +374,8 @@ class PostJobController extends Notifier<PostJobState> {
       if (!hasPermission) {
         state = state.copyWith(
           status: PostJobStatus.failure,
-          errorMessage: 'Microphone permission is required to record a voice description.',
+          errorMessage:
+              'Microphone permission is required to record a voice description.',
         );
         return;
       }
@@ -306,7 +384,11 @@ class PostJobController extends Notifier<PostJobState> {
           '${Directory.systemTemp.path}/patch_bro_job_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       await _audioRecorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 128000,
+          sampleRate: 44100,
+        ),
         path: recordingPath,
       );
 
@@ -412,12 +494,13 @@ class PostJobController extends Notifier<PostJobState> {
         if (state.selectedDate == null) {
           return 'Please select the job date.';
         }
-        if (state.selectedTime == null) {
-          return 'Please select the job time.';
+        if (state.selectedSlotIds.isEmpty) {
+          return 'Please select at least one time slot.';
         }
         return null;
       case 2:
-        if (state.locationAddress == null || state.locationAddress!.trim().isEmpty) {
+        if (state.locationAddress == null ||
+            state.locationAddress!.trim().isEmpty) {
           return 'Please select the job location.';
         }
         if (state.latitude == null || state.longitude == null) {
@@ -484,7 +567,10 @@ class PostJobController extends Notifier<PostJobState> {
     final validationError = _validate();
 
     if (validationError != null) {
-      state = state.copyWith(status: PostJobStatus.failure, errorMessage: validationError);
+      state = state.copyWith(
+        status: PostJobStatus.failure,
+        errorMessage: validationError,
+      );
 
       return null;
     }
@@ -504,6 +590,7 @@ class PostJobController extends Notifier<PostJobState> {
           skill: state.skill.trim(),
           date: state.selectedDate!,
           time: state.selectedTime!,
+          slotIds: state.selectedSlotIds,
           latitude: state.latitude!,
           longitude: state.longitude!,
           locationAddress: state.locationAddress!,
@@ -525,6 +612,15 @@ class PostJobController extends Notifier<PostJobState> {
           newAudio: state.voiceRecording,
         );
 
+        if (!_sameSlotSelection(
+          state.selectedSlotIds,
+          updatedJob.scheduledSlotIds,
+        )) {
+          throw StateError(
+            'The saved job did not retain all selected time slots. Please try again.',
+          );
+        }
+
         state = state.copyWith(status: PostJobStatus.success, clearError: true);
 
         return updatedJob.id;
@@ -535,6 +631,7 @@ class PostJobController extends Notifier<PostJobState> {
         skill: state.skill.trim(),
         date: state.selectedDate!,
         time: state.selectedTime!,
+        slotIds: state.selectedSlotIds,
         latitude: state.latitude!,
         longitude: state.longitude!,
         locationAddress: state.locationAddress!,
@@ -546,22 +643,37 @@ class PostJobController extends Notifier<PostJobState> {
       if (jobId == null || jobId.trim().isEmpty) {
         state = state.copyWith(
           status: PostJobStatus.failure,
-          errorMessage: 'The job could not be created because the server returned no job ID.',
+          errorMessage:
+              'The job could not be created because the server returned no job ID.',
         );
         return null;
       }
 
-      state = state.copyWith(status: PostJobStatus.success, createdJobId: jobId, clearError: true);
+      state = state.copyWith(
+        status: PostJobStatus.success,
+        createdJobId: jobId,
+        clearError: true,
+      );
 
       return jobId;
     } catch (e) {
-      state = state.copyWith(status: PostJobStatus.failure, errorMessage: e.toString());
+      state = state.copyWith(
+        status: PostJobStatus.failure,
+        errorMessage: e.toString(),
+      );
 
       return null;
     }
   }
 
-  Future<PostJobSubmissionResult> submitAndInviteWorkers(List<EmployerWorkerEntity> workers) async {
+  bool _sameSlotSelection(List<String> selected, List<String> saved) {
+    return selected.length == saved.length &&
+        selected.toSet().containsAll(saved);
+  }
+
+  Future<PostJobSubmissionResult> submitAndInviteWorkers(
+    List<EmployerWorkerEntity> workers,
+  ) async {
     final workerIds = workers.map((worker) => worker.id).toSet();
     if (workers.isEmpty ||
         workers.length > 5 ||
@@ -604,7 +716,9 @@ class PostJobController extends Notifier<PostJobState> {
     _invitationBatchInProgress = true;
     final failures = <EmployerWorkerEntity>[];
     try {
-      final controller = ref.read(employerInvitationsControllerProvider(jobId).notifier);
+      final controller = ref.read(
+        employerInvitationsControllerProvider(jobId).notifier,
+      );
       for (final worker in workers) {
         try {
           await controller.inviteWorker(worker.id);
