@@ -856,6 +856,11 @@ Deno.serve(
           "/worker/profile",
         );
 
+      const workerJobsRoute =
+        url.pathname.endsWith(
+          "/worker/jobs",
+        );
+
       const employerProfileRoute =
         url.pathname.endsWith(
           "/employer/profile",
@@ -899,6 +904,7 @@ Deno.serve(
         !employerHomeRoute &&
         !categoriesRoute &&
         !workerProfileRoute &&
+        !workerJobsRoute &&
         !employerProfileRoute &&
         !employerAddressesRoute &&
         !employerWorkersRoute &&
@@ -2083,6 +2089,138 @@ Deno.serve(
           message:
             "Worker profile loaded successfully",
           data: workerProfile,
+        });
+      }
+
+      // ============================================================
+      // GET WORKER JOBS
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        workerJobsRoute
+      ) {
+        const {
+          data: jobs,
+          error: jobsError,
+        } = await supabaseAdmin
+          .from("jobs")
+          .select(`
+            id,
+            employer_id,
+            category,
+            skill,
+            scheduled_date,
+            scheduled_time,
+            scheduled_slots,
+            latitude,
+            longitude,
+            location_address,
+            description,
+            status,
+            created_at,
+            updated_at,
+            accepted_worker_id
+          `)
+          .eq("accepted_worker_id", userId)
+          .order("scheduled_date", { ascending: true })
+          .order("scheduled_time", { ascending: true });
+
+        if (jobsError) {
+          console.error(
+            "Worker jobs fetch failed:",
+            jobsError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Failed to fetch worker jobs",
+            },
+            500,
+          );
+        }
+
+        const jobRows = Array.isArray(jobs) ? (jobs as JobRow[]) : [];
+        const jobIds = jobRows.map((job) => job.id);
+
+        let media: JobMediaRow[] = [];
+
+        if (jobIds.length > 0) {
+          const { data: mediaData, error: mediaError } = await supabaseAdmin
+            .from("job_media")
+            .select(`
+              job_id,
+              media_type,
+              storage_path,
+              mime_type,
+              file_size,
+              sort_order
+            `)
+            .in("job_id", jobIds)
+            .order("sort_order", { ascending: true });
+
+          if (mediaError) {
+            console.error(
+              "Worker job media fetch failed:",
+              mediaError,
+            );
+
+            return jsonCorsResponse(
+              {
+                success: false,
+                message: "Failed to fetch job media",
+              },
+              500,
+            );
+          }
+
+          media = (mediaData ?? []) as JobMediaRow[];
+        }
+
+        const mediaByJobId = new Map<string, JobMediaRow[]>();
+        for (const item of media) {
+          const current = mediaByJobId.get(item.job_id) ?? [];
+          current.push(item);
+          mediaByJobId.set(item.job_id, current);
+        }
+
+        const responseJobs = [];
+
+        for (const job of jobRows) {
+          const jobMedia = mediaByJobId.get(job.id) ?? [];
+          const signedMedia = await getSignedMedia(supabaseAdmin, jobMedia);
+
+          responseJobs.push({
+            id: job.id,
+            category: job.category,
+            skill: job.skill,
+            scheduled_date: job.scheduled_date,
+            scheduled_time: job.scheduled_time,
+            scheduled_slots: job.scheduled_slots,
+            latitude: job.latitude,
+            longitude: job.longitude,
+            location_address: job.location_address,
+            description: job.description ?? "",
+            status: job.status,
+            created_at: job.created_at,
+            updated_at: job.updated_at,
+            image_url: signedMedia.images[0]?.url ?? null,
+            image_urls: signedMedia.images.map((item) => item.url),
+            image_media: signedMedia.images.map((item) => ({
+              url: item.url,
+              storage_path: item.storage_path,
+              sort_order: item.sort_order,
+            })),
+            audio_url: signedMedia.audio?.url ?? null,
+            audio_storage_path: signedMedia.audio?.storage_path ?? null,
+          });
+        }
+
+        return jsonCorsResponse({
+          success: true,
+          message: "Worker jobs fetched successfully",
+          data: responseJobs,
         });
       }
 

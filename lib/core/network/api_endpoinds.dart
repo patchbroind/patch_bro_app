@@ -36,6 +36,8 @@ abstract final class ApiEndpoints {
 
   static const workerProfile = '/worker/profile';
 
+  static const workerJobs = '/worker/jobs';
+
   // ================================================================
   // JOBS
   // ================================================================

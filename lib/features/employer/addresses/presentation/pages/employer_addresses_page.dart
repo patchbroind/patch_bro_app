@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_dialog.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 
@@ -15,7 +16,8 @@ class EmployerAddressesPage extends ConsumerStatefulWidget {
   const EmployerAddressesPage({super.key});
 
   @override
-  ConsumerState<EmployerAddressesPage> createState() => _EmployerAddressesPageState();
+  ConsumerState<EmployerAddressesPage> createState() =>
+      _EmployerAddressesPageState();
 }
 
 class _EmployerAddressesPageState extends ConsumerState<EmployerAddressesPage> {
@@ -31,10 +33,15 @@ class _EmployerAddressesPageState extends ConsumerState<EmployerAddressesPage> {
 
   Future<void> _refresh() async {
     try {
-      await ref.read(employerAddressesControllerProvider.notifier).refreshAddresses();
+      await ref
+          .read(employerAddressesControllerProvider.notifier)
+          .refreshAddresses();
     } catch (_) {
       if (mounted) {
-        AppSnackbar.error(context, 'Unable to refresh addresses. Please try again.');
+        AppSnackbar.error(
+          context,
+          'Unable to refresh addresses. Please try again.',
+        );
       }
     }
   }
@@ -44,7 +51,10 @@ class _EmployerAddressesPageState extends ConsumerState<EmployerAddressesPage> {
   }
 
   void _addAddress() {
-    AppSnackbar.info(context, 'Additional saved addresses are not available yet.');
+    AppSnackbar.info(
+      context,
+      'Additional saved addresses are not available yet.',
+    );
   }
 
   Future<void> _showAddressActions(EmployerAddressEntity address) async {
@@ -69,13 +79,16 @@ class _EmployerAddressesPageState extends ConsumerState<EmployerAddressesPage> {
 
   Widget _buildBody(EmployerAddressesState state) {
     if (state.isLoading && !state.hasAddresses) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.employerPrimary),
+      );
     }
 
     if (state.isFailure && !state.hasAddresses) {
       return AppErrorView(
         title: 'Unable to load Addresses',
-        message: state.errorMessage ?? 'Please check your connection and try again.',
+        message:
+            state.errorMessage ?? 'Please check your connection and try again.',
         icon: Icons.cloud_off_outlined,
         onRetry: _retry,
       );
@@ -112,16 +125,33 @@ class _AddressesContent extends StatelessWidget {
 
         return ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 28),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            12,
+            horizontalPadding,
+            28,
+          ),
           itemCount: addresses.isEmpty ? 2 : addresses.length + 1,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             if (index == 0) {
-              return AppPrimaryButton(label: 'Add New Address', onPressed: onAddAddress);
+              return AppPrimaryButton(
+                label: 'Add New Address',
+                onPressed: onAddAddress,
+              );
             }
 
             if (index == 1 && addresses.isEmpty) {
-              return const _EmptyAddresses();
+              return const AppEmptyState(
+                title: 'No addresses yet',
+                message:
+                    'Add an address to make posting and managing jobs easier.',
+                icon: Icons.location_off_outlined,
+                iconColor: AppColors.imagePlaceholderIcon,
+                iconSize: 44,
+                padding: EdgeInsets.symmetric(vertical: 72),
+                messageColor: null,
+              );
             }
 
             final address = addresses[index - 1];
@@ -133,36 +163,6 @@ class _AddressesContent extends StatelessWidget {
           },
         );
       },
-    );
-  }
-}
-
-class _EmptyAddresses extends StatelessWidget {
-  const _EmptyAddresses();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 72),
-      child: Column(
-        children: [
-          const Icon(Icons.location_off_outlined, size: 44, color: AppColors.imagePlaceholderIcon),
-          const SizedBox(height: 14),
-          Text(
-            'No addresses yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Add an address to make posting and managing jobs easier.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
-      ),
     );
   }
 }

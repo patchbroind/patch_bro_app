@@ -24,9 +24,11 @@ import 'package:patch_bro/features/navigation/presentation/widgets/app_bottom_na
 import 'package:patch_bro/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:patch_bro/features/notifications/presentation/pages/worker_notifications_page.dart';
 import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
-import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
-import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
 import 'package:patch_bro/features/worker/availability/presentation/pages/worker_availability_page.dart';
+import 'package:patch_bro/features/worker/home/presentation/pages/worker_home_page.dart';
+import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/pages/worker_jobs_page.dart';
+import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
 
 import '../../features/auth/domain/entities/auth_user.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -500,11 +502,12 @@ class AppRouter {
           child: WorkerInvitationRealtimeListener(
             child: MainNavigationPage(
               navigationShell: navigationShell,
+              workerNavigationStyle: true,
               destinations: const [
                 AppBottomNavDestination(icon: Icons.home_outlined, label: 'Home'),
-                AppBottomNavDestination(icon: Icons.search, label: 'Explore'),
+                AppBottomNavDestination(icon: Icons.search, label: 'Location'),
                 AppBottomNavDestination(icon: Icons.access_time_outlined, label: 'Availability'),
-                AppBottomNavDestination(icon: Icons.book, label: 'Booking'),
+                AppBottomNavDestination(icon: Icons.book, label: 'Performance'),
                 AppBottomNavDestination(icon: Icons.person_outline, label: 'Profile'),
               ],
             ),
@@ -522,7 +525,7 @@ class AppRouter {
               path: '/worker/home',
               name: RouteNames.workerHome,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Worker Home');
+                return const WorkerHomePage();
               },
             ),
           ],
@@ -537,7 +540,7 @@ class AppRouter {
               path: '/worker/jobs',
               name: RouteNames.workerJobs,
               builder: (context, state) {
-                return const _PlaceholderPage(title: 'Worker Jobs');
+                return const WorkerJobsPage();
               },
             ),
           ],
