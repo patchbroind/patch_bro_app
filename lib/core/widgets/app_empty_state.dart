@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:patch_bro/core/theme/app_colors.dart';
-
 /// A consistent no-content message that can be used in full-page and compact
 /// section contexts.
 class AppEmptyState extends StatelessWidget {
@@ -13,9 +11,9 @@ class AppEmptyState extends StatelessWidget {
     this.layout = AppEmptyStateLayout.centered,
     this.padding = EdgeInsets.zero,
     this.iconSize,
-    this.iconColor = AppColors.textDisabled,
-    this.titleColor = AppColors.textPrimary,
-    this.messageColor = AppColors.textSecondary,
+    this.iconColor,
+    this.titleColor,
+    this.messageColor,
     this.iconToContentSpacing = 14,
     this.titleToMessageSpacing = 6,
   }) : assert(layout == AppEmptyStateLayout.inline || title != null);
@@ -36,21 +34,27 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     if (layout == AppEmptyStateLayout.inline) {
       return Padding(
         padding: padding,
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon!, size: iconSize, color: iconColor),
+              Icon(
+                icon!,
+                size: iconSize,
+                color: iconColor ?? Theme.of(context).disabledColor,
+              ),
               SizedBox(width: iconToContentSpacing),
             ],
             Expanded(
               child: Text(
                 message,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: messageColor),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: messageColor ?? colors.onSurfaceVariant,
+                ),
               ),
             ),
           ],
@@ -64,14 +68,18 @@ class AppEmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon!, size: iconSize, color: iconColor),
+            Icon(
+              icon!,
+              size: iconSize,
+              color: iconColor ?? Theme.of(context).disabledColor,
+            ),
             SizedBox(height: iconToContentSpacing),
           ],
           Text(
             title!,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: titleColor,
+              color: titleColor ?? colors.onSurface,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -79,9 +87,9 @@ class AppEmptyState extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: messageColor),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: messageColor ?? colors.onSurfaceVariant,
+            ),
           ),
         ],
       ),

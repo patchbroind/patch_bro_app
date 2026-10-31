@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
 
 class ProfileAvatarWidget extends StatelessWidget {
-  const ProfileAvatarWidget({super.key, required this.size, required this.name, required this.imageUrl});
+  const ProfileAvatarWidget({
+    super.key,
+    required this.size,
+    required this.name,
+    required this.imageUrl,
+    this.fallbackColor,
+  });
 
   final double size;
   final String name;
   final String? imageUrl;
+  final Color? fallbackColor;
 
   @override
   Widget build(BuildContext context) {
     final firstLetter = name.trim().isEmpty
         ? 'U'
         : name.trim()[0].toUpperCase();
+    final avatarColor = fallbackColor ?? Theme.of(context).colorScheme.primary;
 
     return Container(
       width: size,
@@ -24,16 +31,10 @@ class ProfileAvatarWidget extends StatelessWidget {
               imageUrl!,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return _FallbackAvatar(
-                  letter: firstLetter,
-                  color: AppColors.employerPrimary,
-                );
+                return _FallbackAvatar(letter: firstLetter, color: avatarColor);
               },
             )
-          : _FallbackAvatar(
-              letter: firstLetter,
-              color: AppColors.employerPrimary,
-            ),
+          : _FallbackAvatar(letter: firstLetter, color: avatarColor),
     );
   }
 }

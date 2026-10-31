@@ -10,37 +10,27 @@ class WorkerInvitationsState {
 
   final bool isLoading;
 
-  final List<JobInvitationEntity>
-      invitations;
+  final List<JobInvitationEntity> invitations;
 
-  final String?
-      respondingInvitationId;
+  final String? respondingInvitationId;
 
   final String? errorMessage;
 
   WorkerInvitationsState copyWith({
     bool? isLoading,
-    List<JobInvitationEntity>?
-        invitations,
+    List<JobInvitationEntity>? invitations,
     String? respondingInvitationId,
     String? errorMessage,
     bool clearError = false,
     bool clearResponding = false,
   }) {
     return WorkerInvitationsState(
-      isLoading:
-          isLoading ?? this.isLoading,
-      invitations:
-          invitations ?? this.invitations,
-      respondingInvitationId:
-          clearResponding
-              ? null
-              : respondingInvitationId ??
-                  this.respondingInvitationId,
-      errorMessage: clearError
+      isLoading: isLoading ?? this.isLoading,
+      invitations: invitations ?? this.invitations,
+      respondingInvitationId: clearResponding
           ? null
-          : errorMessage ??
-              this.errorMessage,
+          : respondingInvitationId ?? this.respondingInvitationId,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }

@@ -7,13 +7,17 @@ import '../../domain/repository/worker_home_repository.dart';
 import '../controllers/worker_home_controller.dart';
 import '../controllers/worker_home_state.dart';
 
-final workerHomeRemoteDataSourceProvider = Provider<WorkerHomeRemoteDataSource>((ref) {
-  return WorkerHomeRemoteDataSource(ref.read(apiClientProvider));
-});
+final workerHomeRemoteDataSourceProvider = Provider<WorkerHomeRemoteDataSource>(
+  (ref) {
+    return WorkerHomeRemoteDataSource(ref.read(apiClientProvider));
+  },
+);
 
 final workerHomeRepositoryProvider = Provider<WorkerHomeRepository>((ref) {
   return WorkerHomeRepositoryImpl(ref.read(workerHomeRemoteDataSourceProvider));
 });
 
 final workerHomeControllerProvider =
-    NotifierProvider<WorkerHomeController, WorkerHomeState>(WorkerHomeController.new);
+    NotifierProvider<WorkerHomeController, WorkerHomeState>(
+      WorkerHomeController.new,
+    );

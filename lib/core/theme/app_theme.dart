@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
-
 import '../../app/config/app_config.dart';
-import 'employer_theme.dart';
-import 'worker_theme.dart';
+import 'employer/employer_theme.dart';
+import 'worker/worker_theme.dart';
 
 abstract final class AppTheme {
   AppTheme._();
@@ -11,6 +9,14 @@ abstract final class AppTheme {
   static ThemeData light({
     required Color primary,
     required Color secondary,
+    required Color background,
+    required Color surface,
+    required Color textPrimary,
+    required Color textSecondary,
+    required Color textMuted,
+    required Color border,
+    required Color divider,
+    required Color error,
   }) {
     OutlineInputBorder inputBorder(Color color, {double width = 1}) {
       return OutlineInputBorder(
@@ -22,45 +28,73 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: background,
+      disabledColor: textMuted,
       colorScheme: ColorScheme.light(
         primary: primary,
-        onPrimary: AppColors.white,
+        onPrimary: Colors.white,
         secondary: secondary,
-        onSecondary: AppColors.white,
-        surface: AppColors.white,
-        onSurface: AppColors.textPrimary,
-        error: AppColors.error,
-        onError: AppColors.white,
+        onSecondary: Colors.white,
+        surface: surface,
+        onSurface: textPrimary,
+        onSurfaceVariant: textSecondary,
+        error: error,
+        onError: Colors.white,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.textPrimary,
+      appBarTheme: AppBarTheme(
+        backgroundColor: surface,
+        foregroundColor: textPrimary,
         elevation: 0,
         centerTitle: false,
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        displayMedium: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        displaySmall: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        headlineLarge: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        headlineMedium: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        headlineSmall: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-        titleLarge: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-        titleMedium: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-        titleSmall: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-        bodyLarge: TextStyle(color: AppColors.textPrimary),
-        bodyMedium: TextStyle(color: AppColors.textSecondary),
-        bodySmall: TextStyle(color: AppColors.textSecondary),
-        labelLarge: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600),
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        displayMedium: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        displaySmall: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        headlineLarge: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        headlineMedium: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        headlineSmall: TextStyle(
+          color: textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+        titleLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        titleMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        titleSmall: TextStyle(
+          color: textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        bodyLarge: TextStyle(color: textPrimary),
+        bodyMedium: TextStyle(color: textSecondary),
+        bodySmall: TextStyle(color: textSecondary),
+        labelLarge: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: AppColors.white,
+          foregroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -68,28 +102,33 @@ abstract final class AppTheme {
           foregroundColor: primary,
           side: BorderSide(color: primary),
           minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: inputBorder(AppColors.border),
-        enabledBorder: inputBorder(AppColors.border),
+        fillColor: surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: inputBorder(border),
+        enabledBorder: inputBorder(border),
         focusedBorder: inputBorder(primary, width: 2),
-        errorBorder: inputBorder(AppColors.error),
-        focusedErrorBorder: inputBorder(AppColors.error, width: 2),
+        errorBorder: inputBorder(error),
+        focusedErrorBorder: inputBorder(error, width: 2),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.white,
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: border),
         ),
       ),
-      dividerTheme: const DividerThemeData(color: AppColors.divider, thickness: 1),
+      dividerTheme: DividerThemeData(color: divider, thickness: 1),
     );
   }
 

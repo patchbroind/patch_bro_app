@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
 
@@ -10,16 +10,12 @@ import '../controllers/worker_notifications_state.dart';
 import '../providers/notifications_providers.dart';
 import '../widgets/worker_notification_tile.dart';
 
-class WorkerNotificationsPage
-    extends ConsumerStatefulWidget {
-  const WorkerNotificationsPage({
-    super.key,
-  });
+class WorkerNotificationsPage extends ConsumerStatefulWidget {
+  const WorkerNotificationsPage({super.key});
 
   @override
-  ConsumerState<WorkerNotificationsPage>
-      createState() =>
-          _WorkerNotificationsPageState();
+  ConsumerState<WorkerNotificationsPage> createState() =>
+      _WorkerNotificationsPageState();
 }
 
 class _WorkerNotificationsPageState
@@ -28,63 +24,37 @@ class _WorkerNotificationsPageState
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        if (mounted) {
-          ref
-              .read(
-                workerNotificationsControllerProvider
-                    .notifier,
-              )
-              .initialize();
-        }
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(workerNotificationsControllerProvider.notifier).initialize();
+      }
+    });
   }
 
   Future<void> _refresh() async {
-    await ref
-        .read(
-          workerNotificationsControllerProvider
-              .notifier,
-        )
-        .load();
+    await ref.read(workerNotificationsControllerProvider.notifier).load();
   }
 
   Future<void> _markAllAsRead() async {
     try {
       await ref
-          .read(
-            workerNotificationsControllerProvider
-                .notifier,
-          )
+          .read(workerNotificationsControllerProvider.notifier)
           .markAllAsRead();
     } catch (_) {
       if (mounted) {
-        AppSnackbar.error(
-          context,
-          'Unable to mark notifications as read.',
-        );
+        AppSnackbar.error(context, 'Unable to mark notifications as read.');
       }
     }
   }
 
-  Future<void> _onNotificationTap(
-    WorkerNotificationEntity notification,
-  ) async {
+  Future<void> _onNotificationTap(WorkerNotificationEntity notification) async {
     try {
       await ref
-          .read(
-            workerNotificationsControllerProvider
-                .notifier,
-          )
+          .read(workerNotificationsControllerProvider.notifier)
           .markAsRead(notification.id);
     } catch (_) {
       if (mounted) {
-        AppSnackbar.error(
-          context,
-          'Unable to update notification.',
-        );
+        AppSnackbar.error(context, 'Unable to update notification.');
       }
     }
 
@@ -106,9 +76,7 @@ class _WorkerNotificationsPageState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(
-      workerNotificationsControllerProvider,
-    );
+    final state = ref.watch(workerNotificationsControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -116,17 +84,12 @@ class _WorkerNotificationsPageState
         actions: [
           if (state.unreadCount > 0)
             TextButton(
-              onPressed: state.isMarkingAllRead
-                  ? null
-                  : _markAllAsRead,
+              onPressed: state.isMarkingAllRead ? null : _markAllAsRead,
               child: state.isMarkingAllRead
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Read all'),
             ),
@@ -136,65 +99,45 @@ class _WorkerNotificationsPageState
     );
   }
 
-  Widget _buildBody(
-    WorkerNotificationsState state,
-  ) {
-    if (state.isLoading &&
-        !state.hasNotifications) {
+  Widget _buildBody(WorkerNotificationsState state) {
+    if (state.isLoading && !state.hasNotifications) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.workerPrimary,
-        ),
+        child: CircularProgressIndicator(color: WorkerColors.primary),
       );
     }
 
-    if (state.isFailure &&
-        !state.hasNotifications) {
+    if (state.isFailure && !state.hasNotifications) {
       return AppErrorView(
         title: 'Unable to load notifications',
-        message: state.errorMessage ??
-            'Please check your connection and try again.',
+        message:
+            state.errorMessage ?? 'Please check your connection and try again.',
         icon: Icons.notifications_off_outlined,
         onRetry: () {
-          ref
-              .read(
-                workerNotificationsControllerProvider
-                    .notifier,
-              )
-              .load();
+          ref.read(workerNotificationsControllerProvider.notifier).load();
         },
       );
     }
 
     if (!state.hasNotifications) {
       return RefreshIndicator(
-        color: AppColors.workerPrimary,
+        color: WorkerColors.primary,
         onRefresh: _refresh,
         child: ListView(
-          physics:
-              const AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            SizedBox(
-              height:
-                  MediaQuery.of(context).size.height *
-                      0.30,
-            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.30),
             Icon(
               Icons.notifications_none_rounded,
               size: 64,
-              color: AppColors.textSecondary
-                  .withValues(alpha: 0.6),
+              color: WorkerColors.textSecondary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 16),
             Center(
               child: Text(
                 'No notifications yet',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(height: 6),
@@ -203,13 +146,9 @@ class _WorkerNotificationsPageState
                 'New job invitations and updates\n'
                 'will appear here.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                      color:
-                          AppColors.textSecondary,
-                    ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: WorkerColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -218,22 +157,18 @@ class _WorkerNotificationsPageState
     }
 
     return RefreshIndicator(
-      color: AppColors.workerPrimary,
+      color: WorkerColors.primary,
       onRefresh: _refresh,
       child: ListView.separated(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: state.notifications.length,
-        separatorBuilder: (_, _) =>
-            const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          final notification =
-              state.notifications[index];
+          final notification = state.notifications[index];
 
           return WorkerNotificationTile(
             notification: notification,
-            onTap: () =>
-                _onNotificationTap(notification),
+            onTap: () => _onNotificationTap(notification),
           );
         },
       ),

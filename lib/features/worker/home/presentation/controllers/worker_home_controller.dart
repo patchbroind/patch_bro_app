@@ -24,10 +24,7 @@ class WorkerHomeController extends Notifier<WorkerHomeState> {
         clearError: true,
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
     }
   }
 }

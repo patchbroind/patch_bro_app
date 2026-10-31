@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:patch_bro/app/router/route_names.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/promotional_ad_banner.dart';
@@ -42,7 +42,9 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
 
   Future<void> _loadBasicProfile() async {
     try {
-      final profile = await ref.read(profileRepositoryProvider).getCurrentProfile();
+      final profile = await ref
+          .read(profileRepositoryProvider)
+          .getCurrentProfile();
       if (!mounted) return;
       setState(() {
         _displayName = (profile?['name'] as String?)?.trim().isNotEmpty == true
@@ -72,14 +74,18 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
 
     final latestInvitation = _latestInvitation(invitationState.invitations);
     final upcomingJobs = _upcomingJobs(homeState.jobs);
-    final completedCount = homeState.jobs.where((job) => job.status.toLowerCase() == 'completed').length;
+    final completedCount = homeState.jobs
+        .where((job) => job.status.toLowerCase() == 'completed')
+        .length;
     const eliteTarget = 10;
-    final progress = completedCount >= eliteTarget ? 1.0 : (completedCount / eliteTarget).clamp(0.0, 1.0);
+    final progress = completedCount >= eliteTarget
+        ? 1.0
+        : (completedCount / eliteTarget).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F2),
+      backgroundColor: WorkerColors.homeBackground,
       body: RefreshIndicator(
-        color: AppColors.employerPrimary,
+        color: WorkerColors.homePrimary,
         onRefresh: _refresh,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -97,10 +103,14 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               errorMessage: invitationState.errorMessage,
               respondingInvitationId: invitationState.respondingInvitationId,
               onAccept: (id) async {
-                await ref.read(workerInvitationsControllerProvider.notifier).accept(id);
+                await ref
+                    .read(workerInvitationsControllerProvider.notifier)
+                    .accept(id);
               },
               onDecline: (id) async {
-                await ref.read(workerInvitationsControllerProvider.notifier).reject(id);
+                await ref
+                    .read(workerInvitationsControllerProvider.notifier)
+                    .reject(id);
               },
             ),
             const SizedBox(height: 16),
@@ -124,9 +134,13 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
     );
   }
 
-  JobInvitationEntity? _latestInvitation(List<JobInvitationEntity> invitations) {
+  JobInvitationEntity? _latestInvitation(
+    List<JobInvitationEntity> invitations,
+  ) {
     final eligible = invitations
-        .where((item) => item.isPending && item.expiresAt.isAfter(DateTime.now()))
+        .where(
+          (item) => item.isPending && item.expiresAt.isAfter(DateTime.now()),
+        )
         .toList(growable: false);
     if (eligible.isEmpty) return null;
     eligible.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -136,12 +150,16 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
   List<dynamic> _upcomingJobs(List<dynamic> jobs) {
     final normalized = List<dynamic>.from(jobs);
     normalized.sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
-    return normalized.where((job) {
-      final status = (job.status as String).toLowerCase();
-      if (status == 'completed' || status == 'cancelled' || status == 'expired') {
-        return false;
-      }
-      return true;
-    }).toList(growable: false);
+    return normalized
+        .where((job) {
+          final status = (job.status as String).toLowerCase();
+          if (status == 'completed' ||
+              status == 'cancelled' ||
+              status == 'expired') {
+            return false;
+          }
+          return true;
+        })
+        .toList(growable: false);
   }
 }

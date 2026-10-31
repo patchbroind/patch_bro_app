@@ -49,7 +49,10 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
   }
 
   Future<void> accept(String invitationId) async {
-    state = state.copyWith(respondingInvitationId: invitationId, clearError: true);
+    state = state.copyWith(
+      respondingInvitationId: invitationId,
+      clearError: true,
+    );
 
     try {
       await _repository.acceptInvitation(invitationId);
@@ -58,14 +61,20 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
 
       state = state.copyWith(clearResponding: true);
     } catch (error) {
-      state = state.copyWith(clearResponding: true, errorMessage: error.toString());
+      state = state.copyWith(
+        clearResponding: true,
+        errorMessage: error.toString(),
+      );
 
       rethrow;
     }
   }
 
   Future<void> reject(String invitationId) async {
-    state = state.copyWith(respondingInvitationId: invitationId, clearError: true);
+    state = state.copyWith(
+      respondingInvitationId: invitationId,
+      clearError: true,
+    );
 
     try {
       await _repository.rejectInvitation(invitationId);
@@ -74,7 +83,10 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
 
       state = state.copyWith(clearResponding: true);
     } catch (error) {
-      state = state.copyWith(clearResponding: true, errorMessage: error.toString());
+      state = state.copyWith(
+        clearResponding: true,
+        errorMessage: error.toString(),
+      );
 
       rethrow;
     }

@@ -1,14 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:patch_bro/features/worker/profile/domain/entities/worker_profile_entity.dart';
 
-
-enum WorkerProfileStatus {
-  initial,
-  loading,
-  saving,
-  success,
-  failure,
-}
+enum WorkerProfileStatus { initial, loading, saving, success, failure }
 
 @immutable
 class WorkerProfileState {
@@ -22,17 +15,13 @@ class WorkerProfileState {
   final WorkerProfileEntity? profile;
   final String? errorMessage;
 
-  bool get isLoading =>
-      status == WorkerProfileStatus.loading;
+  bool get isLoading => status == WorkerProfileStatus.loading;
 
-  bool get isSaving =>
-      status == WorkerProfileStatus.saving;
+  bool get isSaving => status == WorkerProfileStatus.saving;
 
-  bool get isFailure =>
-      status == WorkerProfileStatus.failure;
+  bool get isFailure => status == WorkerProfileStatus.failure;
 
-  bool get hasProfile =>
-      profile != null;
+  bool get hasProfile => profile != null;
 
   WorkerProfileState copyWith({
     WorkerProfileStatus? status,
@@ -43,12 +32,8 @@ class WorkerProfileState {
   }) {
     return WorkerProfileState(
       status: status ?? this.status,
-      profile: clearProfile
-          ? null
-          : profile ?? this.profile,
-      errorMessage: clearError
-          ? null
-          : errorMessage ?? this.errorMessage,
+      profile: clearProfile ? null : profile ?? this.profile,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }

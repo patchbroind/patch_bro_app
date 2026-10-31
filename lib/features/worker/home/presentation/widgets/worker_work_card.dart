@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_network_image.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/meta_line.dart';
 
@@ -16,8 +16,8 @@ class WorkerWorkCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFFF7FAF7),
-        border: Border.all(color: AppColors.border),
+        color: WorkerColors.surfaceSecondary,
+        border: Border.all(color: WorkerColors.border),
       ),
       child: Row(
         children: [
@@ -28,8 +28,11 @@ class WorkerWorkCard extends StatelessWidget {
               width: 74,
               height: 74,
               fit: BoxFit.cover,
-              backgroundColor: AppColors.imagePlaceholder,
-              fallback: const Icon(Icons.work_outline_rounded, color: AppColors.textSecondary),
+              backgroundColor: WorkerColors.imagePlaceholder,
+              fallback: const Icon(
+                Icons.work_outline_rounded,
+                color: WorkerColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -41,14 +44,27 @@ class WorkerWorkCard extends StatelessWidget {
                   job.title as String,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 6),
-                MetaLine(icon: Icons.location_on_outlined, text: job.locationAddress as String),
+                MetaLine(
+                  icon: Icons.location_on_outlined,
+                  text: job.locationAddress as String,
+                ),
                 const SizedBox(height: 4),
-                MetaLine(icon: Icons.calendar_month_outlined, text: DateFormat('EEE, d MMM').format(job.scheduledDate as DateTime)),
+                MetaLine(
+                  icon: Icons.calendar_month_outlined,
+                  text: DateFormat(
+                    'EEE, d MMM',
+                  ).format(job.scheduledDate as DateTime),
+                ),
                 const SizedBox(height: 4),
-                MetaLine(icon: Icons.access_time_rounded, text: job.scheduledTime as String),
+                MetaLine(
+                  icon: Icons.access_time_rounded,
+                  text: job.scheduledTime as String,
+                ),
               ],
             ),
           ),
@@ -59,16 +75,23 @@ class WorkerWorkCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF7EF),
+                  color: WorkerColors.homePrimaryLight,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   dateLabel,
-                  style: const TextStyle(color: AppColors.employerPrimary, fontSize: 11, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: WorkerColors.homePrimary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: WorkerColors.textSecondary,
+              ),
             ],
           ),
         ],

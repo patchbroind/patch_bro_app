@@ -7,13 +7,20 @@ import 'package:patch_bro/features/worker/profile/domain/repository/worker_profi
 import '../controllers/worker_profile_controller.dart';
 import '../controllers/worker_profile_state.dart';
 
-final workerProfileRemoteDataSourceProvider = Provider<WorkerProfileRemoteDataSource>((ref) {
-  return WorkerProfileRemoteDataSource(ref.read(apiClientProvider));
-});
+final workerProfileRemoteDataSourceProvider =
+    Provider<WorkerProfileRemoteDataSource>((ref) {
+      return WorkerProfileRemoteDataSource(ref.read(apiClientProvider));
+    });
 
-final workerProfileRepositoryProvider = Provider<WorkerProfileRepository>((ref) {
-  return WorkerProfileRepositoryImpl(ref.read(workerProfileRemoteDataSourceProvider));
+final workerProfileRepositoryProvider = Provider<WorkerProfileRepository>((
+  ref,
+) {
+  return WorkerProfileRepositoryImpl(
+    ref.read(workerProfileRemoteDataSourceProvider),
+  );
 });
 
 final workerProfileControllerProvider =
-    NotifierProvider<WorkerProfileController, WorkerProfileState>(WorkerProfileController.new);
+    NotifierProvider<WorkerProfileController, WorkerProfileState>(
+      WorkerProfileController.new,
+    );

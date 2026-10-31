@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_work_card.dart';
 
@@ -22,11 +22,11 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: WorkerColors.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: WorkerColors.cardShadow,
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -42,12 +42,12 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF7EF),
+                    color: WorkerColors.homePrimaryLight,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.calendar_month_rounded,
-                    color: AppColors.employerPrimary,
+                    color: WorkerColors.homePrimary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -63,7 +63,7 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
                   onPressed: onViewAll,
                   child: const Text(
                     'View All',
-                    style: TextStyle(color: AppColors.employerPrimary),
+                    style: TextStyle(color: WorkerColors.homePrimary),
                   ),
                 ),
               ],
@@ -72,7 +72,7 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(18),
                 child: CircularProgressIndicator(
-                  color: AppColors.employerPrimary,
+                  color: WorkerColors.homePrimary,
                 ),
               )
             else if (errorMessage != null)

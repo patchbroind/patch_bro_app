@@ -18,7 +18,9 @@ class WorkerHomeRemoteDataSource {
     final rawJobs = responseData['data'] as List;
     return rawJobs
         .whereType<Map>()
-        .map((item) => WorkerHomeJobModel.fromMap(Map<String, dynamic>.from(item)))
+        .map(
+          (item) => WorkerHomeJobModel.fromMap(Map<String, dynamic>.from(item)),
+        )
         .toList(growable: false);
   }
 }

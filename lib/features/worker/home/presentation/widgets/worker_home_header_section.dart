@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/profile_avatar_widget.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_icon_badge.dart';
 
 class WorkerHomeHeaderSection extends StatelessWidget {
-  const WorkerHomeHeaderSection({super.key, 
+  const WorkerHomeHeaderSection({
+    super.key,
     required this.name,
     this.avatarUrl,
     required this.unreadCount,
@@ -19,7 +20,7 @@ class WorkerHomeHeaderSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
       decoration: const BoxDecoration(
-        color: Color(0xFFE9F5EA),
+        color: WorkerColors.homeHeaderBackground,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -34,7 +35,7 @@ class WorkerHomeHeaderSection extends StatelessWidget {
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: WorkerColors.surface.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
             ),
@@ -46,7 +47,7 @@ class WorkerHomeHeaderSection extends StatelessWidget {
               width: 160,
               height: 160,
               decoration: BoxDecoration(
-                color: AppColors.employerPrimary.withValues(alpha: 0.07),
+                color: WorkerColors.homePrimary.withValues(alpha: 0.07),
                 shape: BoxShape.circle,
               ),
             ),
@@ -58,7 +59,12 @@ class WorkerHomeHeaderSection extends StatelessWidget {
               children: [
                 Stack(
                   children: [
-                    ProfileAvatarWidget(size: 62, name: name, imageUrl: avatarUrl),
+                    ProfileAvatarWidget(
+                      size: 62,
+                      name: name,
+                      imageUrl: avatarUrl,
+                      fallbackColor: WorkerColors.homePrimary,
+                    ),
                     Positioned(
                       right: 2,
                       bottom: 2,
@@ -66,9 +72,11 @@ class WorkerHomeHeaderSection extends StatelessWidget {
                         width: 14,
                         height: 14,
                         decoration: const BoxDecoration(
-                          color: AppColors.success,
+                          color: WorkerColors.success,
                           shape: BoxShape.circle,
-                          border: Border.fromBorderSide(BorderSide(color: AppColors.white, width: 3)),
+                          border: Border.fromBorderSide(
+                            BorderSide(color: WorkerColors.surface, width: 3),
+                          ),
                         ),
                       ),
                     ),
@@ -81,8 +89,9 @@ class WorkerHomeHeaderSection extends StatelessWidget {
                     children: [
                       Text(
                         'Hello,',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppColors.textSecondary,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: WorkerColors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                       ),
@@ -91,9 +100,10 @@ class WorkerHomeHeaderSection extends StatelessWidget {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              color: WorkerColors.textPrimary,
                               fontSize: 26,
                             ),
                       ),
@@ -101,8 +111,8 @@ class WorkerHomeHeaderSection extends StatelessWidget {
                       Text(
                         'Have a great day! 👋',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                          color: WorkerColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -112,13 +122,13 @@ class WorkerHomeHeaderSection extends StatelessWidget {
                     WorkerIconBadge(
                       icon: Icons.mail_outline_rounded,
                       badgeCount: 0,
-                      color: AppColors.white,
+                      color: WorkerColors.surface,
                     ),
                     const SizedBox(width: 10),
                     WorkerIconBadge(
                       icon: Icons.notifications_none_rounded,
                       badgeCount: unreadCount,
-                      color: AppColors.white,
+                      color: WorkerColors.surface,
                     ),
                   ],
                 ),

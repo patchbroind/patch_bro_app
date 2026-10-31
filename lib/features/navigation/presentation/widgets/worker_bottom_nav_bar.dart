@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
 class WorkerBottomNavBar extends StatelessWidget {
   const WorkerBottomNavBar({
@@ -11,7 +11,13 @@ class WorkerBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
 
-  static const _labels = ['Home', 'Location', 'Availability', 'Performance', 'Profile'];
+  static const _labels = [
+    'Home',
+    'Location',
+    'Availability',
+    'Performance',
+    'Profile',
+  ];
   static const _icons = [
     Icons.home_rounded,
     Icons.location_on_outlined,
@@ -28,11 +34,13 @@ class WorkerBottomNavBar extends StatelessWidget {
         height: 88,
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.8))),
+          color: WorkerColors.surface,
+          border: Border(
+            top: BorderSide(color: WorkerColors.border.withValues(alpha: 0.8)),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: WorkerColors.navigationShadow,
               blurRadius: 18,
               offset: const Offset(0, -3),
             ),
@@ -53,19 +61,24 @@ class WorkerBottomNavBar extends StatelessWidget {
                       Icon(
                         _icons[index],
                         size: 24,
-                        color: selected ? AppColors.employerPrimary : AppColors.textSecondary,
+                        color: selected
+                            ? WorkerColors.homePrimary
+                            : WorkerColors.textSecondary,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         _labels[index],
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: selected ? AppColors.employerPrimary : AppColors.textSecondary,
+                              color: selected
+                                  ? WorkerColors.homePrimary
+                                  : WorkerColors.textSecondary,
                             ) ??
                             const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: WorkerColors.textSecondary,
                             ),
                       ),
                       if (selected)
@@ -74,7 +87,7 @@ class WorkerBottomNavBar extends StatelessWidget {
                           height: 6,
                           margin: const EdgeInsets.only(top: 4),
                           decoration: const BoxDecoration(
-                            color: AppColors.employerPrimary,
+                            color: WorkerColors.homePrimary,
                             shape: BoxShape.circle,
                           ),
                         ),

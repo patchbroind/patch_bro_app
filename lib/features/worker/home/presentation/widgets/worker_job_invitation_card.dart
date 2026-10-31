@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_network_image.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/meta_line.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 class WorkerJobInvitationCard extends StatelessWidget {
-  const WorkerJobInvitationCard({super.key, 
+  const WorkerJobInvitationCard({
+    super.key,
     required this.invitation,
     required this.respondingInvitationId,
     required this.onAccept,
@@ -24,9 +25,9 @@ class WorkerJobInvitationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FAF7),
+        color: WorkerColors.surfaceSecondary,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: WorkerColors.border),
       ),
       child: Column(
         children: [
@@ -39,8 +40,11 @@ class WorkerJobInvitationCard extends StatelessWidget {
                   width: 74,
                   height: 74,
                   fit: BoxFit.cover,
-                  backgroundColor: AppColors.imagePlaceholder,
-                  fallback: const Icon(Icons.work_outline_rounded, color: AppColors.textSecondary),
+                  backgroundColor: WorkerColors.imagePlaceholder,
+                  fallback: const Icon(
+                    Icons.work_outline_rounded,
+                    color: WorkerColors.textSecondary,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -53,21 +57,34 @@ class WorkerJobInvitationCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            invitation.jobCategory.isNotEmpty ? invitation.jobCategory : invitation.jobSkill,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            invitation.jobCategory.isNotEmpty
+                                ? invitation.jobCategory
+                                : invitation.jobSkill,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
+                                  color: WorkerColors.textPrimary,
                                 ),
                           ),
                         ),
                         if (invitation.isPending)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEAFBF1),
+                              color: WorkerColors.homeNewBadgeBackground,
                               borderRadius: BorderRadius.circular(999),
                             ),
-                            child: const Text('New', style: TextStyle(fontSize: 10, color: AppColors.success, fontWeight: FontWeight.w700)),
+                            child: const Text(
+                              'New',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: WorkerColors.success,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -75,38 +92,54 @@ class WorkerJobInvitationCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F6EF),
+                            color: WorkerColors.homeCategoryBackground,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             invitation.jobCategory,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppColors.employerPrimary,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: WorkerColors.homePrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
                         ),
                       ),
                     const SizedBox(height: 8),
-                    MetaLine(icon: Icons.location_on_outlined, text: invitation.locationAddress.isNotEmpty ? invitation.locationAddress : 'Location unavailable'),
+                    MetaLine(
+                      icon: Icons.location_on_outlined,
+                      text: invitation.locationAddress.isNotEmpty
+                          ? invitation.locationAddress
+                          : 'Location unavailable',
+                    ),
                     const SizedBox(height: 4),
                     MetaLine(
                       icon: Icons.calendar_month_outlined,
                       text: invitation.scheduledDate == null
                           ? 'Date unavailable'
-                          : DateFormat('EEE, d MMM').format(invitation.scheduledDate!),
+                          : DateFormat(
+                              'EEE, d MMM',
+                            ).format(invitation.scheduledDate!),
                     ),
                     const SizedBox(height: 4),
                     MetaLine(
                       icon: Icons.access_time_rounded,
-                      text: invitation.scheduledTime.isNotEmpty ? invitation.scheduledTime : 'Time unavailable',
+                      text: invitation.scheduledTime.isNotEmpty
+                          ? invitation.scheduledTime
+                          : 'Time unavailable',
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: WorkerColors.textSecondary,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -114,12 +147,16 @@ class WorkerJobInvitationCard extends StatelessWidget {
             children: [
               Expanded(
                 child: TextButton.icon(
-                  onPressed: respondingInvitationId == invitation.id ? null : () => onDecline(invitation.id),
+                  onPressed: respondingInvitationId == invitation.id
+                      ? null
+                      : () => onDecline(invitation.id),
                   style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFFEECEC),
-                    foregroundColor: AppColors.error,
+                    backgroundColor: WorkerColors.homeDeclineBackground,
+                    foregroundColor: WorkerColors.error,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   icon: const Icon(Icons.close_rounded, size: 18),
                   label: const Text('Decline'),
@@ -128,11 +165,15 @@ class WorkerJobInvitationCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: respondingInvitationId == invitation.id ? null : () => onAccept(invitation.id),
+                  onPressed: respondingInvitationId == invitation.id
+                      ? null
+                      : () => onAccept(invitation.id),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.employerPrimary,
+                    backgroundColor: WorkerColors.homePrimary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   icon: const Icon(Icons.check_rounded),
                   label: const Text('Accept Invitation'),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_job_invitation_card.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
@@ -29,11 +29,11 @@ class WorkerLatestInvitationSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: WorkerColors.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: WorkerColors.cardShadow,
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -50,12 +50,12 @@ class WorkerLatestInvitationSection extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.employerPrimary.withValues(alpha: 0.12),
+                    color: WorkerColors.homePrimary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.bolt_rounded,
-                    color: AppColors.employerPrimary,
+                    color: WorkerColors.homePrimary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -72,7 +72,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
                       Text(
                         'You have a new job invitation',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: WorkerColors.textSecondary,
                         ),
                       ),
                     ],
@@ -83,7 +83,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
                       ? ''
                       : _relativeTime(invitation!.createdAt),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: WorkerColors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -95,7 +95,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.all(12),
                   child: CircularProgressIndicator(
-                    color: AppColors.employerPrimary,
+                    color: WorkerColors.homePrimary,
                   ),
                 ),
               )

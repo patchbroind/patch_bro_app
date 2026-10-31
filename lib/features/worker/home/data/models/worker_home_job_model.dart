@@ -23,7 +23,8 @@ class WorkerHomeJobModel {
 
   factory WorkerHomeJobModel.fromMap(Map<String, dynamic> map) {
     final dateValue = map['scheduled_date'];
-    final date = DateTime.tryParse(dateValue?.toString() ?? '') ?? DateTime.now();
+    final date =
+        DateTime.tryParse(dateValue?.toString() ?? '') ?? DateTime.now();
 
     return WorkerHomeJobModel(
       id: map['id']?.toString() ?? '',
@@ -33,7 +34,13 @@ class WorkerHomeJobModel {
       scheduledDate: date,
       scheduledTime: map['scheduled_time']?.toString() ?? '',
       status: map['status']?.toString() ?? '',
-      imageUrl: _nullableString(map['image_url']) ?? _nullableString(map['image_urls'] is List ? (map['image_urls'] as List).firstOrNull : null),
+      imageUrl:
+          _nullableString(map['image_url']) ??
+          _nullableString(
+            map['image_urls'] is List
+                ? (map['image_urls'] as List).firstOrNull
+                : null,
+          ),
     );
   }
 

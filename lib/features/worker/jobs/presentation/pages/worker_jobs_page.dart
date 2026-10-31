@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
 class WorkerJobsPage extends ConsumerWidget {
   const WorkerJobsPage({super.key});
@@ -10,7 +10,7 @@ class WorkerJobsPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Jobs'),
-        backgroundColor: AppColors.white,
+        backgroundColor: WorkerColors.surface,
       ),
       body: SafeArea(
         child: ListView(
@@ -18,7 +18,11 @@ class WorkerJobsPage extends ConsumerWidget {
           children: const [
             SizedBox(height: 12),
             Center(
-              child: Icon(Icons.work_history_outlined, size: 56, color: AppColors.employerPrimary),
+              child: Icon(
+                Icons.work_history_outlined,
+                size: 56,
+                color: WorkerColors.homePrimary,
+              ),
             ),
             SizedBox(height: 16),
             Center(
@@ -32,7 +36,7 @@ class WorkerJobsPage extends ConsumerWidget {
               child: Text(
                 'Your upcoming jobs will appear here.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: WorkerColors.textSecondary),
               ),
             ),
           ],
