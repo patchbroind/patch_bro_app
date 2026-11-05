@@ -44,4 +44,10 @@ abstract final class WorkerColors {
   static const eliteBackgroundStart = Color(0xFF0F3D2E);
   static const eliteBackgroundEnd = Color(0xFF133E2F);
   static const eliteGold = Color(0xFFE5C974);
+  static const eliteCardGradient = [
+    Color(0xFF008C60),
+    Color(0xFF004C3C),
+    Color(0xFF003C35),
+    Color(0xFF007B49),
+  ];
 }

@@ -42,9 +42,7 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
 
   Future<void> _loadBasicProfile() async {
     try {
-      final profile = await ref
-          .read(profileRepositoryProvider)
-          .getCurrentProfile();
+      final profile = await ref.read(profileRepositoryProvider).getCurrentProfile();
       if (!mounted) return;
       setState(() {
         _displayName = (profile?['name'] as String?)?.trim().isNotEmpty == true
@@ -102,15 +100,13 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               isLoading: invitationState.isLoading,
               errorMessage: invitationState.errorMessage,
               respondingInvitationId: invitationState.respondingInvitationId,
+
+              respondingAction: invitationState.respondingAction,
               onAccept: (id) async {
-                await ref
-                    .read(workerInvitationsControllerProvider.notifier)
-                    .accept(id);
+                await ref.read(workerInvitationsControllerProvider.notifier).accept(id);
               },
               onDecline: (id) async {
-                await ref
-                    .read(workerInvitationsControllerProvider.notifier)
-                    .reject(id);
+                await ref.read(workerInvitationsControllerProvider.notifier).reject(id);
               },
             ),
             const SizedBox(height: 16),
@@ -134,13 +130,9 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
     );
   }
 
-  JobInvitationEntity? _latestInvitation(
-    List<JobInvitationEntity> invitations,
-  ) {
+  JobInvitationEntity? _latestInvitation(List<JobInvitationEntity> invitations) {
     final eligible = invitations
-        .where(
-          (item) => item.isPending && item.expiresAt.isAfter(DateTime.now()),
-        )
+        .where((item) => item.isPending && item.expiresAt.isAfter(DateTime.now()))
         .toList(growable: false);
     if (eligible.isEmpty) return null;
     eligible.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -153,9 +145,7 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
     return normalized
         .where((job) {
           final status = (job.status as String).toLowerCase();
-          if (status == 'completed' ||
-              status == 'cancelled' ||
-              status == 'expired') {
+          if (status == 'completed' || status == 'cancelled' || status == 'expired') {
             return false;
           }
           return true;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/controllers/worker_invitations_state.dart';
 
 import '../../domain/repository/worker_invitations_repository.dart';
@@ -49,46 +50,50 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
   }
 
   Future<void> accept(String invitationId) async {
+  if (state.isRespondingToInvitation) return;
+
+  state = state.copyWith(
+    respondingInvitationId: invitationId,
+    respondingAction: InvitationResponseAction.accept,
+    clearError: true,
+  );
+
+  try {
+    await _repository.acceptInvitation(invitationId);
+
+    await load();
+  } catch (error) {
     state = state.copyWith(
-      respondingInvitationId: invitationId,
-      clearError: true,
+      errorMessage: error.toString(),
     );
 
-    try {
-      await _repository.acceptInvitation(invitationId);
-
-      await load();
-
-      state = state.copyWith(clearResponding: true);
-    } catch (error) {
-      state = state.copyWith(
-        clearResponding: true,
-        errorMessage: error.toString(),
-      );
-
-      rethrow;
-    }
+    rethrow;
+  } finally {
+    state = state.copyWith(clearResponding: true);
   }
+}
 
-  Future<void> reject(String invitationId) async {
+Future<void> reject(String invitationId) async {
+  if (state.isRespondingToInvitation) return;
+
+  state = state.copyWith(
+    respondingInvitationId: invitationId,
+    respondingAction: InvitationResponseAction.decline,
+    clearError: true,
+  );
+
+  try {
+    await _repository.rejectInvitation(invitationId);
+
+    await load();
+  } catch (error) {
     state = state.copyWith(
-      respondingInvitationId: invitationId,
-      clearError: true,
+      errorMessage: error.toString(),
     );
 
-    try {
-      await _repository.rejectInvitation(invitationId);
-
-      await load();
-
-      state = state.copyWith(clearResponding: true);
-    } catch (error) {
-      state = state.copyWith(
-        clearResponding: true,
-        errorMessage: error.toString(),
-      );
-
-      rethrow;
-    }
+    rethrow;
+  } finally {
+    state = state.copyWith(clearResponding: true);
   }
+}
 }

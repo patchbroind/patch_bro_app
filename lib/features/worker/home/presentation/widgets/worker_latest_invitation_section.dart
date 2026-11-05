@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
-import 'package:patch_bro/core/widgets/app_empty_state.dart';
+import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
+import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section.dart';
+import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section_state.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_job_invitation_card.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
@@ -13,6 +15,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
     required this.respondingInvitationId,
     required this.onAccept,
     required this.onDecline,
+    required this.respondingAction,
   });
 
   final JobInvitationEntity? invitation;
@@ -21,117 +24,49 @@ class WorkerLatestInvitationSection extends StatelessWidget {
   final String? respondingInvitationId;
   final Future<void> Function(String) onAccept;
   final Future<void> Function(String) onDecline;
+  final InvitationResponseAction? respondingAction;
 
   @override
   Widget build(BuildContext context) {
     final cardPadding = const EdgeInsets.fromLTRB(16, 14, 16, 12);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: WorkerColors.cardShadow,
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: WorkerColors.homePrimary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.bolt_rounded,
-                    color: WorkerColors.homePrimary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Latest Invitation',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'You have a new job invitation',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: WorkerColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  invitation == null
-                      ? ''
-                      : _relativeTime(invitation!.createdAt),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: WorkerColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            if (isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: CircularProgressIndicator(
-                    color: WorkerColors.homePrimary,
-                  ),
-                ),
-              )
-            else if (errorMessage != null)
-              AppEmptyState(
-                layout: AppEmptyStateLayout.inline,
-                message: errorMessage!,
-                icon: Icons.info_outline_rounded,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                iconToContentSpacing: 10,
-              )
-            else if (invitation == null)
-              const AppEmptyState(
-                layout: AppEmptyStateLayout.inline,
-                message: 'No active invitations right now.',
-                icon: Icons.event_busy_rounded,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                iconToContentSpacing: 10,
-              )
-            else
-              WorkerJobInvitationCard(
+    return WorkerHomeSection(
+      title: 'Latest Invitation',
+      // subtitle: 'You have a new job invitation',
+      icon: Icons.bolt_rounded,
+      iconBackgroundColor: WorkerColors.homePrimary.withValues(alpha: 0.12),
+      iconColor: WorkerColors.homePrimary,
+      padding: cardPadding,
+      // trailing: Text(
+      //   invitation == null ? '' : _relativeTime(invitation!.createdAt),
+      //   style: Theme.of(context).textTheme.labelSmall?.copyWith(
+      //     color: WorkerColors.textSecondary,
+      //     fontWeight: FontWeight.w600,
+      //   ),
+      // ),
+      child: WorkerHomeSectionState(
+        isLoading: isLoading,
+        errorMessage: errorMessage,
+        isEmpty: !isLoading && errorMessage == null && invitation == null,
+        emptyMessage: 'No active invitations right now.',
+        emptyIcon: Icons.event_busy_rounded,
+        child: invitation == null
+            ? const SizedBox.shrink()
+            : WorkerJobInvitationCard(
                 invitation: invitation!,
                 respondingInvitationId: respondingInvitationId,
+                respondingAction: respondingAction,
                 onAccept: onAccept,
                 onDecline: onDecline,
               ),
-          ],
-        ),
       ),
     );
   }
 
-  String _relativeTime(DateTime dateTime) {
-    final delta = DateTime.now().difference(dateTime);
-    if (delta.inMinutes < 60) return '${delta.inMinutes}m ago';
-    if (delta.inHours < 24) return '${delta.inHours}h ago';
-    return '${delta.inDays}d ago';
-  }
+  // String _relativeTime(DateTime dateTime) {
+  //   final delta = DateTime.now().difference(dateTime);
+  //   if (delta.inMinutes < 60) return '${delta.inMinutes}m ago';
+  //   if (delta.inHours < 24) return '${delta.inHours}h ago';
+  //   return '${delta.inDays}d ago';
+  // }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
-import 'package:patch_bro/core/widgets/app_empty_state.dart';
+import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section.dart';
+import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section_state.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_work_card.dart';
 
 class WorkerUpcomingWorksSection extends StatelessWidget {
@@ -19,90 +20,26 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: WorkerColors.cardShadow,
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: WorkerColors.homePrimaryLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.calendar_month_rounded,
-                    color: WorkerColors.homePrimary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Upcoming Works',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: onViewAll,
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(color: WorkerColors.homePrimary),
-                  ),
-                ),
-              ],
-            ),
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.all(18),
-                child: CircularProgressIndicator(
-                  color: WorkerColors.homePrimary,
-                ),
-              )
-            else if (errorMessage != null)
-              const AppEmptyState(
-                layout: AppEmptyStateLayout.inline,
-                message: 'Unable to load upcoming works.',
-                icon: Icons.error_outline_rounded,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                iconToContentSpacing: 10,
-              )
-            else if (jobs.isEmpty)
-              const AppEmptyState(
-                layout: AppEmptyStateLayout.inline,
-                message: 'No upcoming work assigned yet.',
-                icon: Icons.event_busy_rounded,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                iconToContentSpacing: 10,
-              )
-            else
-              ...jobs
-                  .take(3)
-                  .map(
-                    (job) => Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: WorkerWorkCard(job: job),
-                    ),
-                  ),
-          ],
-        ),
-      ),
-    );
+    return WorkerHomeSection(
+  title: 'Upcoming Works',
+  icon: Icons.calendar_month_rounded,
+  iconBackgroundColor: WorkerColors.homePrimaryLight,
+  iconColor: WorkerColors.homePrimary,
+  child: WorkerHomeSectionState(
+    isLoading: isLoading,
+    errorMessage: errorMessage,
+    isEmpty: !isLoading && errorMessage == null && jobs.isEmpty,
+    emptyMessage: 'No upcoming work assigned yet.',
+    emptyIcon: Icons.event_busy_rounded,
+    child: Column(
+      children: jobs.take(3).map((job) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: WorkerWorkCard(job: job),
+        );
+      }).toList(),
+    ),
+  ),
+);
   }
 }

@@ -27,16 +27,21 @@ class WorkerEliteProgressBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            WorkerColors.eliteBackgroundStart,
-            WorkerColors.eliteBackgroundEnd,
-          ],
-        ),
-      ),
+            borderRadius: BorderRadius.circular(22),
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: WorkerColors.eliteCardGradient,
+              stops: [0.0, 0.42, 0.72, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF006B48).withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -97,8 +102,8 @@ class WorkerEliteProgressBanner extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           SizedBox(
-            width: 86,
-            height: 86,
+            width: 85,
+            // height: 100,
             child: Image.asset(
               'assets/images/worker/elite_progress_img.png',
               fit: BoxFit.contain,
