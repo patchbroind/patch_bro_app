@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
-import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section_state.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_job_invitation_card.dart';
+import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 class WorkerLatestInvitationSection extends StatelessWidget {
@@ -37,13 +39,10 @@ class WorkerLatestInvitationSection extends StatelessWidget {
       iconBackgroundColor: WorkerColors.homePrimary.withValues(alpha: 0.12),
       iconColor: WorkerColors.homePrimary,
       padding: cardPadding,
-      // trailing: Text(
-      //   invitation == null ? '' : _relativeTime(invitation!.createdAt),
-      //   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-      //     color: WorkerColors.textSecondary,
-      //     fontWeight: FontWeight.w600,
-      //   ),
-      // ),
+      onViewAll: () {
+        context.pushNamed(RouteNames.workerInvitations);
+      },
+
       child: WorkerHomeSectionState(
         isLoading: isLoading,
         errorMessage: errorMessage,
@@ -62,11 +61,4 @@ class WorkerLatestInvitationSection extends StatelessWidget {
       ),
     );
   }
-
-  // String _relativeTime(DateTime dateTime) {
-  //   final delta = DateTime.now().difference(dateTime);
-  //   if (delta.inMinutes < 60) return '${delta.inMinutes}m ago';
-  //   if (delta.inHours < 24) return '${delta.inHours}h ago';
-  //   return '${delta.inDays}d ago';
-  // }
 }

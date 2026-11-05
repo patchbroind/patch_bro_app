@@ -14,6 +14,8 @@ abstract final class WorkerColors {
   static const primaryLight = Color(0xFFFFEDD5);
   static const secondary = Color(0xFFEA580C);
 
+  static const white = Color(0xFFFFFFFF);
+
   static const background = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
   static const surfaceSecondary = Color(0xFFF7FAF7);

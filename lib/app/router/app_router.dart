@@ -26,6 +26,7 @@ import 'package:patch_bro/features/notifications/presentation/pages/worker_notif
 import 'package:patch_bro/features/notifications/presentation/widgets/worker_notification_realtime_listener.dart';
 import 'package:patch_bro/features/worker/availability/presentation/pages/worker_availability_page.dart';
 import 'package:patch_bro/features/worker/home/presentation/pages/worker_home_page.dart';
+import 'package:patch_bro/features/worker/invitations/presentation/pages/worker_invitations_page.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_realtime_listener.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/pages/worker_jobs_page.dart';
 import 'package:patch_bro/features/worker/profile/presentation/pages/worker_profile_page.dart';
@@ -593,6 +594,21 @@ class AppRouter {
             ),
           ],
         ),
+
+        // ==========================================================
+        // WORKER INVITATIONS
+        // ==========================================================
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/worker/invitations',
+              name: RouteNames.workerInvitations,
+              builder: (context, state) {
+                return const WorkerInvitationsPage();
+              },
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -765,7 +781,7 @@ class _PlaceholderPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).colorScheme.primary;
- 
+
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
