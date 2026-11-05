@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
 import 'package:patch_bro/features/worker/profile/presentation/widgets/worker_profile_section_widget.dart';
 
@@ -22,10 +22,7 @@ class WorkerProfileAvailability extends StatelessWidget {
   final bool availableToday;
   final bool availableTomorrow;
 
-  final void Function(
-    String day,
-    bool selected,
-  ) onDayChanged;
+  final void Function(String day, bool selected) onDayChanged;
 
   final ValueChanged<bool> onAvailableTodayChanged;
 
@@ -35,28 +32,25 @@ class WorkerProfileAvailability extends StatelessWidget {
   Widget build(BuildContext context) {
     return WorkerProfileSection(
       title: 'Availability',
-      subtitle:
-          'Choose the days you normally accept jobs.',
+      subtitle: 'Choose the days you normally accept jobs.',
       child: Column(
         children: [
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: days.map((day) {
-              final selected =
-                  selectedDays.contains(day);
+              final selected = selectedDays.contains(day);
 
               return FilterChip(
-                label: Text(day, style: TextStyle(color:AppColors.black)),
+                label: Text(
+                  day,
+                  style: const TextStyle(color: WorkerColors.textPrimary),
+                ),
                 selected: selected,
-                selectedColor:
-                    AppColors.workerLight,
-                checkmarkColor:
-                    AppColors.workerPrimary,
+                selectedColor: WorkerColors.primaryLight,
+                checkmarkColor: WorkerColors.primary,
                 side: BorderSide(
-                  color: selected
-                      ? AppColors.workerPrimary
-                      : AppColors.border,
+                  color: selected ? WorkerColors.primary : WorkerColors.border,
                 ),
                 onSelected: (value) {
                   onDayChanged(day, value);
@@ -69,16 +63,14 @@ class WorkerProfileAvailability extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             title: const Text('Available today'),
             value: availableToday,
-            activeThumbColor:
-                AppColors.workerPrimary,
+            activeThumbColor: WorkerColors.primary,
             onChanged: onAvailableTodayChanged,
           ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: const Text('Available tomorrow'),
             value: availableTomorrow,
-            activeThumbColor:
-                AppColors.workerPrimary,
+            activeThumbColor: WorkerColors.primary,
             onChanged: onAvailableTomorrowChanged,
           ),
         ],

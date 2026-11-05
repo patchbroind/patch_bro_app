@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_job_invitation_dialog_action_buttons.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_job_invitation_dialog_info_row.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
@@ -21,7 +21,7 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
     final canRespond = invitation.isActive && !isResponding;
 
     return AlertDialog(
-      backgroundColor: AppColors.white,
+      backgroundColor: WorkerColors.surface,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       title: Row(
@@ -29,8 +29,11 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
           Container(
             width: 46,
             height: 46,
-            decoration: BoxDecoration(color: AppColors.workerLight, shape: BoxShape.circle),
-            child: const Icon(Icons.work_outline, color: AppColors.workerPrimary),
+            decoration: BoxDecoration(
+              color: WorkerColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.work_outline, color: WorkerColors.primary),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -50,11 +53,14 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: WorkerColors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            Text(invitation.jobCategory, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              invitation.jobCategory,
+              style: const TextStyle(color: WorkerColors.textSecondary),
+            ),
 
             const SizedBox(height: 18),
 
@@ -84,11 +90,17 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
 
             if (invitation.description.trim().isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text('Description', style: TextStyle(fontWeight: FontWeight.w700)),
+              const Text(
+                'Description',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 6),
               Text(
                 invitation.description,
-                style: const TextStyle(height: 1.45, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  height: 1.45,
+                  color: WorkerColors.textSecondary,
+                ),
               ),
             ],
 
@@ -99,12 +111,15 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.08),
+                  color: WorkerColors.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   'This invitation expires in ${_remainingText(invitation.expiresAt)}',
-                  style: const TextStyle(color: AppColors.info, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: WorkerColors.info,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               )
             else
@@ -112,12 +127,15 @@ class WorkerJobInvitationDialog extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.08),
+                  color: WorkerColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'This invitation has expired.',
-                  style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: WorkerColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
           ],

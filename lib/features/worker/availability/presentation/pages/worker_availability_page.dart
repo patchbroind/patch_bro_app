@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:patch_bro/core/scheduling/work_time_slot.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
 import 'package:patch_bro/core/widgets/work_time_slot_grid.dart';
@@ -110,14 +110,12 @@ class _WorkerAvailabilityPageState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Availability Schedule'),
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: WorkerColors.textPrimary,
       ),
       body: SafeArea(
         child: state.isLoading && state.profile == null
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.workerPrimary,
-                ),
+                child: CircularProgressIndicator(color: WorkerColors.primary),
               )
             : state.isFailure && state.profile == null
             ? Center(
@@ -153,7 +151,7 @@ class _WorkerAvailabilityPageState
                   Text(
                     'Choose whether each two-hour slot is available, booked, or unavailable.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: WorkerColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -173,13 +171,13 @@ class _WorkerAvailabilityPageState
                     availabilityBySlot: availabilityBySlot,
                     onAvailabilityChanged: (change) =>
                         _setAvailability(change.slotId, change.availability),
-                    color: AppColors.workerPrimary,
+                    color: WorkerColors.primary,
                   ),
                   const SizedBox(height: 24),
                   AppPrimaryButton(
                     label: 'Save Schedule',
                     isLoading: state.isSaving,
-                    backgroundColor: AppColors.workerPrimary,
+                    backgroundColor: WorkerColors.primary,
                     onPressed: state.isSaving ? null : _save,
                   ),
                 ],

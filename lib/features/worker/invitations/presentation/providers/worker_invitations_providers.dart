@@ -8,30 +8,20 @@ import '../../domain/repository/worker_invitations_repository.dart';
 import '../controllers/worker_invitations_controller.dart';
 
 final workerInvitationsRemoteDataSourceProvider =
-    Provider<
-        WorkerInvitationsRemoteDataSource>(
-  (ref) {
-    return WorkerInvitationsRemoteDataSource(
-      ref.read(supabaseClientProvider),
-    );
-  },
-);
+    Provider<WorkerInvitationsRemoteDataSource>((ref) {
+      return WorkerInvitationsRemoteDataSource(
+        ref.read(supabaseClientProvider),
+      );
+    });
 
 final workerInvitationsRepositoryProvider =
-    Provider<WorkerInvitationsRepository>(
-  (ref) {
-    return WorkerInvitationsRepositoryImpl(
-      ref.read(
-        workerInvitationsRemoteDataSourceProvider,
-      ),
-    );
-  },
-);
+    Provider<WorkerInvitationsRepository>((ref) {
+      return WorkerInvitationsRepositoryImpl(
+        ref.read(workerInvitationsRemoteDataSourceProvider),
+      );
+    });
 
 final workerInvitationsControllerProvider =
-    NotifierProvider<
-      WorkerInvitationsController,
-      WorkerInvitationsState
-    >(
+    NotifierProvider<WorkerInvitationsController, WorkerInvitationsState>(
       WorkerInvitationsController.new,
     );

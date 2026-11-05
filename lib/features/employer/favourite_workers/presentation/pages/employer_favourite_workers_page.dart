@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
 
 import '../../domain/entities/favourite_worker_entity.dart';
@@ -15,10 +16,12 @@ class EmployerFavouriteWorkersPage extends ConsumerStatefulWidget {
   const EmployerFavouriteWorkersPage({super.key});
 
   @override
-  ConsumerState<EmployerFavouriteWorkersPage> createState() => _EmployerFavouriteWorkersPageState();
+  ConsumerState<EmployerFavouriteWorkersPage> createState() =>
+      _EmployerFavouriteWorkersPageState();
 }
 
-class _EmployerFavouriteWorkersPageState extends ConsumerState<EmployerFavouriteWorkersPage> {
+class _EmployerFavouriteWorkersPageState
+    extends ConsumerState<EmployerFavouriteWorkersPage> {
   @override
   void initState() {
     super.initState();
@@ -28,24 +31,33 @@ class _EmployerFavouriteWorkersPageState extends ConsumerState<EmployerFavourite
         return;
       }
 
-      ref.read(employerFavouriteWorkersControllerProvider.notifier).loadFavouriteWorkers();
+      ref
+          .read(employerFavouriteWorkersControllerProvider.notifier)
+          .loadFavouriteWorkers();
     });
   }
 
   Future<void> _refresh() async {
     try {
-      await ref.read(employerFavouriteWorkersControllerProvider.notifier).refreshFavouriteWorkers();
+      await ref
+          .read(employerFavouriteWorkersControllerProvider.notifier)
+          .refreshFavouriteWorkers();
     } catch (_) {
       if (!mounted) {
         return;
       }
 
-      AppSnackbar.error(context, 'Unable to refresh favourite workers. Please try again.');
+      AppSnackbar.error(
+        context,
+        'Unable to refresh favourite workers. Please try again.',
+      );
     }
   }
 
   void _retry() {
-    ref.read(employerFavouriteWorkersControllerProvider.notifier).loadFavouriteWorkers();
+    ref
+        .read(employerFavouriteWorkersControllerProvider.notifier)
+        .loadFavouriteWorkers();
   }
 
   void _openWorkerProfile(FavouriteWorkerEntity worker) {
@@ -62,7 +74,10 @@ class _EmployerFavouriteWorkersPageState extends ConsumerState<EmployerFavourite
         return;
       }
 
-      AppSnackbar.error(context, 'Unable to update favourite worker. Please try again.');
+      AppSnackbar.error(
+        context,
+        'Unable to update favourite worker. Please try again.',
+      );
     }
   }
 
@@ -71,20 +86,30 @@ class _EmployerFavouriteWorkersPageState extends ConsumerState<EmployerFavourite
     final state = ref.watch(employerFavouriteWorkersControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favourite Workers'),centerTitle: true,leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: () => context.pop()),),
+      appBar: AppBar(
+        title: const Text('Favourite Workers'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: _buildBody(state),
     );
   }
 
   Widget _buildBody(EmployerFavouriteWorkersState state) {
     if (state.isLoading && !state.hasWorkers) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.employerPrimary),
+      );
     }
 
     if (state.isFailure && !state.hasWorkers) {
       return AppErrorView(
         title: 'Unable to load Favourite Workers',
-        message: state.errorMessage ?? 'Please check your connection and try again.',
+        message:
+            state.errorMessage ?? 'Please check your connection and try again.',
         icon: Icons.cloud_off_outlined,
         onRetry: _retry,
       );
@@ -125,14 +150,34 @@ class _FavouriteWorkersContent extends StatelessWidget {
         if (workers.isEmpty) {
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 28),
-            children: const [_EmptyFavouriteWorkers()],
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              8,
+              horizontalPadding,
+              28,
+            ),
+            children: const [
+              AppEmptyState(
+                title: 'No favourite workers yet',
+                message: 'Favourite Workers you save will appear here.',
+                icon: Icons.favorite_border_rounded,
+                iconColor: AppColors.imagePlaceholderIcon,
+                iconSize: 44,
+                padding: EdgeInsets.symmetric(vertical: 80),
+                messageColor: null,
+              ),
+            ],
           );
         }
 
         return ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 28),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            8,
+            horizontalPadding,
+            28,
+          ),
           itemCount: workers.length,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
@@ -148,41 +193,6 @@ class _FavouriteWorkersContent extends StatelessWidget {
           },
         );
       },
-    );
-  }
-}
-
-class _EmptyFavouriteWorkers extends StatelessWidget {
-  const _EmptyFavouriteWorkers();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 80),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.favorite_border_rounded,
-            size: 44,
-            color: AppColors.imagePlaceholderIcon,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'No favourite workers yet',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Favourite Workers you save will appear here.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
-      ),
     );
   }
 }

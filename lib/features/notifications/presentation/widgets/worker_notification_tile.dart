@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
 import '../../domain/entities/worker_notification_entity.dart';
 
@@ -16,13 +16,11 @@ class WorkerNotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor =
-        Theme.of(context).colorScheme.primary;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
-    final backgroundColor =
-        notification.isRead
-            ? Theme.of(context).cardColor
-            : primaryColor.withValues(alpha: 0.06);
+    final backgroundColor = notification.isRead
+        ? Theme.of(context).cardColor
+        : primaryColor.withValues(alpha: 0.06);
 
     final iconData = _icon;
 
@@ -31,49 +29,35 @@ class WorkerNotificationTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(
-                    alpha: 0.10,
-                  ),
+                  color: primaryColor.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  iconData,
-                  color: primaryColor,
-                ),
+                child: Icon(iconData, color: primaryColor),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             notification.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(
-                                  fontWeight:
-                                      notification.isRead
-                                          ? FontWeight.w600
-                                          : FontWeight.w800,
+                                  fontWeight: notification.isRead
+                                      ? FontWeight.w600
+                                      : FontWeight.w800,
                                 ),
                           ),
                         ),
@@ -81,13 +65,8 @@ class WorkerNotificationTile extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            margin:
-                                const EdgeInsets.only(
-                              top: 5,
-                              left: 8,
-                            ),
-                            decoration:
-                                BoxDecoration(
+                            margin: const EdgeInsets.only(top: 5, left: 8),
+                            decoration: BoxDecoration(
                               color: primaryColor,
                               shape: BoxShape.circle,
                             ),
@@ -97,26 +76,16 @@ class WorkerNotificationTile extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       notification.message,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(
-                            color:
-                                AppColors.textSecondary,
-                          ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: WorkerColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      _formatDate(
-                        notification.createdAt,
+                      _formatDate(notification.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: WorkerColors.textSecondary,
                       ),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(
-                            color:
-                                AppColors.textSecondary,
-                          ),
                     ),
                   ],
                 ),

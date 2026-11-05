@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
-class WorkerJobInvitationDialogInfoRow
-    extends StatelessWidget {
-  const WorkerJobInvitationDialogInfoRow({super.key, 
+class WorkerJobInvitationDialogInfoRow extends StatelessWidget {
+  const WorkerJobInvitationDialogInfoRow({
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
@@ -14,49 +14,28 @@ class WorkerJobInvitationDialogInfoRow
   final String value;
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.only(
-        bottom: 10,
-      ),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 19,
-            color:
-                AppColors.textSecondary,
-          ),
-          const SizedBox(
-            width: 8,
-          ),
+          Icon(icon, size: 19, color: WorkerColors.textSecondary),
+          const SizedBox(width: 8),
           SizedBox(
             width: 70,
             child: Text(
               label,
-              style:
-                  const TextStyle(
-                color:
-                    AppColors.textSecondary,
+              style: const TextStyle(
+                color: WorkerColors.textSecondary,
                 fontSize: 12,
               ),
             ),
           ),
           Expanded(
             child: Text(
-              value.isEmpty
-                  ? 'Not specified'
-                  : value,
-              style:
-                  const TextStyle(
-                fontWeight:
-                    FontWeight.w600,
-              ),
+              value.isEmpty ? 'Not specified' : value,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],

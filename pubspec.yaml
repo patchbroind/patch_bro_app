@@ -31,6 +31,7 @@ dependencies:
   audioplayers: ^6.8.1
   dropdown_button2: ^3.1.0
   internet_connection_checker_plus: ^2.7.2
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/employer/
+    - assets/images/worker/
 
 
   # fonts:

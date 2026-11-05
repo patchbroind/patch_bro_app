@@ -7,9 +7,9 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/scheduling/work_time_slot.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
+import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/providers/post_job_providers.dart';
-import 'package:patch_bro/features/employer/post_job/presentation/widgets/employer_worker_search_message.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_selected_workers_count.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_load_error.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_worker_search_bar.dart';
@@ -24,10 +24,12 @@ class PostJobWorkerSelectionStep extends ConsumerStatefulWidget {
   const PostJobWorkerSelectionStep({super.key});
 
   @override
-  ConsumerState<PostJobWorkerSelectionStep> createState() => _PostJobWorkerSelectionStepState();
+  ConsumerState<PostJobWorkerSelectionStep> createState() =>
+      _PostJobWorkerSelectionStepState();
 }
 
-class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelectionStep> {
+class _PostJobWorkerSelectionStepState
+    extends ConsumerState<PostJobWorkerSelectionStep> {
   late final TextEditingController _searchController;
   String _searchQuery = '';
 
@@ -40,7 +42,9 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
       if (!mounted) return;
       final workerState = ref.read(employerWorkersControllerProvider);
       if (workerState.status == EmployerWorkersStatus.initial) {
-        unawaited(ref.read(employerWorkersControllerProvider.notifier).loadWorkers());
+        unawaited(
+          ref.read(employerWorkersControllerProvider.notifier).loadWorkers(),
+        );
       } else {
         _reconcileSelection();
       }
@@ -64,12 +68,17 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
     ref.listen<PostJobState>(postJobControllerProvider, (previous, next) {
       if (previous?.category != next.category ||
           previous?.selectedDate != next.selectedDate ||
-          previous?.selectedSlotIds.join(',') != next.selectedSlotIds.join(',')) {
+          previous?.selectedSlotIds.join(',') !=
+              next.selectedSlotIds.join(',')) {
         _scheduleReconciliation();
       }
     });
-    ref.listen<EmployerWorkersState>(employerWorkersControllerProvider, (previous, next) {
-      if (previous?.status != next.status && next.status == EmployerWorkersStatus.success) {
+    ref.listen<EmployerWorkersState>(employerWorkersControllerProvider, (
+      previous,
+      next,
+    ) {
+      if (previous?.status != next.status &&
+          next.status == EmployerWorkersStatus.success) {
         _scheduleReconciliation();
       }
     });
@@ -82,14 +91,21 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
       date: jobState.selectedDate,
       slotIds: jobState.selectedSlotIds,
     );
-    final eligibleWorkerIds = eligibleWorkers.map((worker) => worker.id).toSet();
+    final eligibleWorkerIds = eligibleWorkers
+        .map((worker) => worker.id)
+        .toSet();
     final displayedWorkers = eligibleWorkers
         .where((worker) => worker.name.toLowerCase().contains(_searchQuery))
         .toList(growable: false);
     final activeIndex = displayedWorkers.isEmpty
         ? 0
-        : jobState.activeWorkerCardIndex.clamp(0, displayedWorkers.length - 1).toInt();
-    final cardStackHeight = (MediaQuery.sizeOf(context).height * 0.54).clamp(350.0, 490.0);
+        : jobState.activeWorkerCardIndex
+              .clamp(0, displayedWorkers.length - 1)
+              .toInt();
+    final cardStackHeight = (MediaQuery.sizeOf(context).height * 0.54).clamp(
+      350.0,
+      490.0,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,13 +135,20 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
         const SizedBox(height: 8),
         Text(
           'Selected workers will receive an invitation after you post the job.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 16),
-        if (workerState.isLoading || workerState.status == EmployerWorkersStatus.initial)
+        if (workerState.isLoading ||
+            workerState.status == EmployerWorkersStatus.initial)
           SizedBox(
             height: cardStackHeight,
-            child: const Center(child: CircularProgressIndicator(color: AppColors.employerPrimary)),
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.employerPrimary,
+              ),
+            ),
           )
         else if (workerState.isFailure)
           PostJobWorkerLoadError(
@@ -133,7 +156,10 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
             onRetry: _retryLoadingWorkers,
           )
         else ...[
-          PostJobWorkerSearchbar(searchController: _searchController, searchQuery: _searchQuery),
+          PostJobWorkerSearchbar(
+            searchController: _searchController,
+            searchQuery: _searchQuery,
+          ),
           const SizedBox(height: 6),
           PostJobWorkerSelectionTimeSlot(jobState: jobState),
           const SizedBox(height: 8),
@@ -154,10 +180,15 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
               eligibleWorkerIds: eligibleWorkerIds,
               allowIneligibleSelection: false,
               height: cardStackHeight.toDouble(),
-              onIndexChanged: ref.read(postJobControllerProvider.notifier).setActiveWorkerCardIndex,
+              onIndexChanged: ref
+                  .read(postJobControllerProvider.notifier)
+                  .setActiveWorkerCardIndex,
               onToggleSelected: _toggleWorker,
               onMoreDetails: (worker) {
-                context.pushNamed(RouteNames.employerWorkerProfile, extra: worker.id);
+                context.pushNamed(
+                  RouteNames.employerWorkerProfile,
+                  extra: worker.id,
+                );
               },
             ),
         ],
@@ -179,9 +210,12 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
 
     return workers
         .where((worker) {
-          final matchesCategory = worker.profession.trim().toLowerCase() == normalizedCategory;
-          final availability = worker.availabilitySchedule[dateSchedule] ?? const {};
-          return matchesCategory && slotIds.every((slotId) => availability[slotId] == 'available');
+          final matchesCategory =
+              worker.profession.trim().toLowerCase() == normalizedCategory;
+          final availability =
+              worker.availabilitySchedule[dateSchedule] ?? const {};
+          return matchesCategory &&
+              slotIds.every((slotId) => availability[slotId] == 'available');
         })
         .toList(growable: false);
   }
@@ -198,7 +232,9 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
       slotIds: jobState.selectedSlotIds,
     );
     final eligibleIds = eligibleWorkers.map((worker) => worker.id).toSet();
-    ref.read(postJobControllerProvider.notifier).reconcileSelectedWorkers(eligibleIds);
+    ref
+        .read(postJobControllerProvider.notifier)
+        .reconcileSelectedWorkers(eligibleIds);
 
     if (eligibleWorkers.isNotEmpty) {
       if (jobState.activeWorkerCardIndex >= eligibleWorkers.length) {
@@ -218,7 +254,9 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
   }
 
   void _toggleWorker(String workerId) {
-    final changed = ref.read(postJobControllerProvider.notifier).toggleSelectedWorker(workerId);
+    final changed = ref
+        .read(postJobControllerProvider.notifier)
+        .toggleSelectedWorker(workerId);
     if (!changed && mounted) {
       AppSnackbar.error(context, 'You can select up to 5 workers.');
     }
@@ -226,7 +264,9 @@ class _PostJobWorkerSelectionStepState extends ConsumerState<PostJobWorkerSelect
 
   Future<void> _retryLoadingWorkers() async {
     try {
-      await ref.read(employerWorkersControllerProvider.notifier).refreshWorkers();
+      await ref
+          .read(employerWorkersControllerProvider.notifier)
+          .refreshWorkers();
     } catch (error) {
       if (mounted) AppSnackbar.error(context, error.toString());
     }
@@ -237,17 +277,23 @@ class _NoWorkersFoundForSearch extends StatelessWidget {
   const _NoWorkersFoundForSearch();
 
   @override
-  Widget build(BuildContext context) =>
-      const EmptyWorkerSearchMessage(title: 'No workers found', message: 'Try a different name.');
+  Widget build(BuildContext context) => const AppEmptyState(
+    title: 'No workers found',
+    message: 'Try a different name.',
+    messageColor: null,
+    titleToMessageSpacing: 4,
+  );
 }
 
 class _NoWorkersAvailable extends StatelessWidget {
   const _NoWorkersAvailable();
 
   @override
-  Widget build(BuildContext context) => const EmptyWorkerSearchMessage(
+  Widget build(BuildContext context) => const AppEmptyState(
     title: 'No available workers',
     message:
         'Try another date or time slot. Workers must match the category and be available for every selected slot.',
+    messageColor: null,
+    titleToMessageSpacing: 4,
   );
 }

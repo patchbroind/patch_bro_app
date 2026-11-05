@@ -5,10 +5,7 @@ import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/features/worker/profile/presentation/widgets/worker_profile_section_widget.dart';
 
 class WorkerProfileAbout extends StatelessWidget {
-  const WorkerProfileAbout({
-    super.key,
-    required this.controller,
-  });
+  const WorkerProfileAbout({super.key, required this.controller});
 
   final TextEditingController controller;
 
@@ -16,8 +13,7 @@ class WorkerProfileAbout extends StatelessWidget {
   Widget build(BuildContext context) {
     return WorkerProfileSection(
       title: 'About you',
-      subtitle:
-          'Briefly describe your experience and services.',
+      subtitle: 'Briefly describe your experience and services.',
       child: TextFormField(
         controller: controller,
         minLines: 4,
@@ -25,12 +21,9 @@ class WorkerProfileAbout extends StatelessWidget {
         maxLength: 500,
         validator: Validators.required,
         decoration: InputDecoration(
-          hintText:
-              'Tell employers about your work experience...',
+          hintText: 'Tell employers about your work experience...',
           alignLabelWithHint: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
     );

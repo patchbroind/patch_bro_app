@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'employer/employer_colors.dart';
+import 'worker/worker_colors.dart';
+
 abstract final class AppColors {
   AppColors._();
 
@@ -40,35 +43,16 @@ abstract final class AppColors {
   static const googleBlue = Color(0xFF4285F4);
   static const socialBorder = Color(0xFFE0E0E0);
 
-  // ============================================================
-  // Employer Colors
-  // ============================================================
+  // Compatibility aliases for older feature code. The canonical definitions
+  // live in the flavor-owned classes above; new Worker/Employer UI must use
+  // those classes directly.
+  static const employerPrimary = EmployerColors.primary;
+  static const employerDark = EmployerColors.primaryDark;
+  static const employerSecondary = EmployerColors.secondary;
+  static const employerLight = EmployerColors.primaryLight;
 
-  /// Main emerald green used throughout the Employer app.
-  static const employerPrimary = Color(0xFF176B57);
-
-  /// Very dark green used for gradients, buttons and backgrounds.
-  static const employerDark = Color(0xFF001B17);
-
-  /// Lighter green for secondary elements.
-  static const employerSecondary = Color(0xFF2A8A72);
-
-  /// Soft green for backgrounds/highlights.
-  static const employerLight = Color(0xFFDDF3EC);
-
-  // ============================================================
-  // Worker Colors
-  // ============================================================
-
-  /// Main orange used throughout the Worker app.
-  static const workerPrimary = Color(0xFFF97316);
-
-  /// Deep navy used as the Worker dark brand color.
-  static const workerDark = Color(0xFF0F172A);
-
-  /// Secondary orange.
-  static const workerSecondary = Color(0xFFEA580C);
-
-  /// Soft orange for backgrounds/highlights.
-  static const workerLight = Color(0xFFFFEDD5);
+  static const workerPrimary = WorkerColors.primary;
+  static const workerDark = WorkerColors.primaryDark;
+  static const workerSecondary = WorkerColors.secondary;
+  static const workerLight = WorkerColors.primaryLight;
 }

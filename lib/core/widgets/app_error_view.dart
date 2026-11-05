@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
 
 class AppErrorView extends StatelessWidget {
   const AppErrorView({
@@ -9,7 +8,7 @@ class AppErrorView extends StatelessWidget {
     this.message = 'Please try again.',
     this.retryLabel = 'Try Again',
     this.icon = Icons.error_outline_rounded,
-    this.iconColor = AppColors.imagePlaceholderIcon,
+    this.iconColor,
   });
 
   final VoidCallback onRetry;
@@ -19,11 +18,12 @@ class AppErrorView extends StatelessWidget {
   final String retryLabel;
 
   final IconData icon;
-  final Color iconColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Center(
       child: Padding(
@@ -31,18 +31,14 @@ class AppErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 48,
-              color: iconColor,
-            ),
+            Icon(icon, size: 48, color: iconColor ?? theme.disabledColor),
             const SizedBox(height: 14),
             Text(
               title,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: colors.onSurface,
               ),
             ),
             const SizedBox(height: 6),
@@ -50,14 +46,11 @@ class AppErrorView extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: colors.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 18),
-            FilledButton(
-              onPressed: onRetry,
-              child: Text(retryLabel),
-            ),
+            FilledButton(onPressed: onRetry, child: Text(retryLabel)),
           ],
         ),
       ),

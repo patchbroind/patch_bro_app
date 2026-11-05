@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:patch_bro/core/widgets/app_empty_state.dart';
 import 'package:patch_bro/features/employer/workers/presentation/controllers/employer_workers_state.dart';
 import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_worker_card.dart';
-import 'package:patch_bro/features/employer/workers/presentation/widgets/employer_workers_empty_state.dart';
 
 class EmployerWorkerList extends StatelessWidget {
   const EmployerWorkerList({
@@ -35,7 +35,13 @@ class EmployerWorkerList extends StatelessWidget {
     final workers = state.visibleWorkers;
 
     if (workers.isEmpty) {
-      return const EmployerWorkersEmptyState();
+      return const AppEmptyState(
+        title: 'No workers found',
+        message: 'Try changing your search or filters.',
+        icon: Icons.people_outline_rounded,
+        iconSize: 54,
+        padding: EdgeInsets.symmetric(vertical: 90),
+      );
     }
 
     return Column(
@@ -47,7 +53,9 @@ class EmployerWorkerList extends StatelessWidget {
               worker: worker,
               onTap: () => onWorkerTap(worker.id),
               onToggleFavourite: () => onFavouriteTap(worker.id),
-              onInvite: onInviteTap == null ? null : () => onInviteTap!(worker.id),
+              onInvite: onInviteTap == null
+                  ? null
+                  : () => onInviteTap!(worker.id),
               showInviteButton: showInviteButton,
               isInviting: invitingWorkerId == worker.id,
               isInvited: invitedWorkerIds.contains(worker.id),

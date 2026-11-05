@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:patch_bro/app/router/route_names.dart';
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/utils/app_snackbar.dart';
 import 'package:patch_bro/core/validators/validators.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
@@ -229,7 +229,7 @@ class _WorkerProfilePageState extends ConsumerState<WorkerProfilePage> {
     if (state.isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.workerPrimary),
+          child: CircularProgressIndicator(color: WorkerColors.primary),
         ),
       );
     }
@@ -239,13 +239,13 @@ class _WorkerProfilePageState extends ConsumerState<WorkerProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: WorkerColors.background,
       appBar: AppBar(
         title: Text(
           widget.isSetup ? 'Set Up Worker Profile' : 'Worker Profile',
         ),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: WorkerColors.background,
+        foregroundColor: WorkerColors.textPrimary,
         elevation: 0,
       ),
       body: SafeArea(
@@ -298,7 +298,7 @@ class _WorkerProfilePageState extends ConsumerState<WorkerProfilePage> {
               AppPrimaryButton(
                 label: widget.isSetup ? 'Complete Profile' : 'Save Changes',
                 isLoading: state.isSaving,
-                backgroundColor: AppColors.workerPrimary,
+                backgroundColor: WorkerColors.primary,
                 onPressed: state.isSaving ? null : _save,
               ),
             ],

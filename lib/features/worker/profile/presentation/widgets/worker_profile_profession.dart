@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:patch_bro/core/theme/app_colors.dart';
+import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
 import 'package:patch_bro/features/worker/profile/presentation/widgets/worker_profile_section_widget.dart';
 
@@ -25,16 +25,13 @@ class WorkerProfileProfession extends StatelessWidget {
         decoration: InputDecoration(
           prefixIcon: const Icon(
             Icons.construction_outlined,
-            color: AppColors.workerPrimary,
+            color: WorkerColors.primary,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         ),
         items: professions
             .map(
-              (profession) =>
-                  DropdownMenuItem<String>(
+              (profession) => DropdownMenuItem<String>(
                 value: profession,
                 child: Text(profession),
               ),
