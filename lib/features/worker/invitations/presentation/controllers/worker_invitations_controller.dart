@@ -7,7 +7,8 @@ import 'package:patch_bro/features/worker/invitations/presentation/controllers/w
 import '../../domain/repository/worker_invitations_repository.dart';
 import '../providers/worker_invitations_providers.dart';
 
-class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
+class WorkerInvitationsController
+    extends Notifier<WorkerInvitationsState> {
   late final WorkerInvitationsRepository _repository;
 
   StreamSubscription<void>? _subscription;
@@ -34,7 +35,10 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
   }
 
   Future<void> load() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+    );
 
     try {
       final invitations = await _repository.getInvitations();
@@ -45,55 +49,57 @@ class WorkerInvitationsController extends Notifier<WorkerInvitationsState> {
         clearError: true,
       );
     } catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: error.toString(),
+      );
     }
   }
 
-  Future<void> accept(String invitationId) async {
-  if (state.isRespondingToInvitation) return;
+  Future<void> accept(String invitationId) {
+    return _respond(
+      invitationId,
+      InvitationResponseAction.accept,
+    );
+  }
 
-  state = state.copyWith(
-    respondingInvitationId: invitationId,
-    respondingAction: InvitationResponseAction.accept,
-    clearError: true,
-  );
+  Future<void> reject(String invitationId) {
+    return _respond(
+      invitationId,
+      InvitationResponseAction.decline,
+    );
+  }
 
-  try {
-    await _repository.acceptInvitation(invitationId);
+  Future<void> _respond(
+    String invitationId,
+    InvitationResponseAction action,
+  ) async {
+    if (state.isRespondingToInvitation) return;
 
-    await load();
-  } catch (error) {
     state = state.copyWith(
-      errorMessage: error.toString(),
+      respondingInvitationId: invitationId,
+      respondingAction: action,
+      clearError: true,
     );
 
-    rethrow;
-  } finally {
-    state = state.copyWith(clearResponding: true);
+    try {
+      if (action == InvitationResponseAction.accept) {
+        await _repository.acceptInvitation(invitationId);
+      } else {
+        await _repository.rejectInvitation(invitationId);
+      }
+
+      await load();
+    } catch (error) {
+      state = state.copyWith(
+        errorMessage: error.toString(),
+      );
+
+      rethrow;
+    } finally {
+      state = state.copyWith(
+        clearResponding: true,
+      );
+    }
   }
-}
-
-Future<void> reject(String invitationId) async {
-  if (state.isRespondingToInvitation) return;
-
-  state = state.copyWith(
-    respondingInvitationId: invitationId,
-    respondingAction: InvitationResponseAction.decline,
-    clearError: true,
-  );
-
-  try {
-    await _repository.rejectInvitation(invitationId);
-
-    await load();
-  } catch (error) {
-    state = state.copyWith(
-      errorMessage: error.toString(),
-    );
-
-    rethrow;
-  } finally {
-    state = state.copyWith(clearResponding: true);
-  }
-}
 }
