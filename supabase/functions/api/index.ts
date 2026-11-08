@@ -861,6 +861,11 @@ Deno.serve(
           "/worker/jobs",
         );
 
+      const workerInvitationMediaMatch =
+        url.pathname.match(
+          /\/worker\/invitations\/([^/]+)\/media$/,
+        );
+
       const employerProfileRoute =
         url.pathname.endsWith(
           "/employer/profile",
@@ -905,6 +910,7 @@ Deno.serve(
         !categoriesRoute &&
         !workerProfileRoute &&
         !workerJobsRoute &&
+        !workerInvitationMediaMatch &&
         !employerProfileRoute &&
         !employerAddressesRoute &&
         !employerWorkersRoute &&
@@ -2223,6 +2229,129 @@ Deno.serve(
           data: responseJobs,
         });
       }
+
+      
+      // ============================================================
+      // GET WORKER INVITATION MEDIA
+      // ============================================================
+
+      if (
+        req.method === "GET" &&
+        workerInvitationMediaMatch
+      ) {
+        const invitationId =
+          workerInvitationMediaMatch[1];
+
+        // ----------------------------------------------------------
+        // Verify that this invitation belongs to the logged-in worker.
+        // ----------------------------------------------------------
+
+        const {
+          data: invitation,
+          error: invitationError,
+        } = await supabaseAdmin
+          .from("job_invitations")
+          .select("id, job_id")
+          .eq("id", invitationId)
+          .eq("worker_id", userId)
+          .maybeSingle();
+
+        if (invitationError) {
+          console.error(
+            "Worker invitation lookup failed:",
+            invitationError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Failed to verify invitation",
+            },
+            500,
+          );
+        }
+
+        if (!invitation) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invitation not found",
+            },
+            404,
+          );
+        }
+
+        // ----------------------------------------------------------
+        // Fetch media records for the invited job.
+        // ----------------------------------------------------------
+
+        const {
+          data: mediaData,
+          error: mediaError,
+        } = await supabaseAdmin
+          .from("job_media")
+          .select(`
+            job_id,
+            media_type,
+            storage_path,
+            mime_type,
+            file_size,
+            sort_order
+          `)
+          .eq("job_id", invitation.job_id)
+          .order("sort_order", {
+            ascending: true,
+          });
+
+        if (mediaError) {
+          console.error(
+            "Worker invitation media lookup failed:",
+            mediaError,
+          );
+
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Failed to fetch invitation media",
+            },
+            500,
+          );
+        }
+
+        // ----------------------------------------------------------
+        // Generate signed URLs using the existing helper.
+        // URLs remain valid for one hour.
+        // ----------------------------------------------------------
+
+        const mediaRows =
+          (mediaData ?? []) as JobMediaRow[];
+
+        const signedMedia =
+          await getSignedMedia(
+            supabaseAdmin,
+            mediaRows,
+          );
+
+        // ----------------------------------------------------------
+        // Return only signed URLs.
+        // Never expose private storage paths to Flutter.
+        // ----------------------------------------------------------
+
+        return jsonCorsResponse({
+          success: true,
+          message:
+            "Worker invitation media fetched successfully",
+          data: {
+            invitation_id: invitation.id,
+            image_urls: signedMedia.images.map(
+              (item) => item.url,
+            ),
+            audio_url:
+              signedMedia.audio?.url ?? null,
+          },
+        });
+      }
+
 
       // ============================================================
       // SAVE WORKER PROFILE
