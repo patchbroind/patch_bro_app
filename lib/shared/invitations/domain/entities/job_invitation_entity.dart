@@ -27,8 +27,11 @@ class JobInvitationEntity {
     this.jobSkill = '',
     this.scheduledDate,
     this.scheduledTime = '',
+    this.scheduledSlotIds = const [],
     this.locationAddress = '',
     this.description = '',
+    this.imageUrls = const [],
+    this.audioUrl,
   });
 
   final String id;
@@ -37,7 +40,6 @@ class JobInvitationEntity {
   final String workerId;
 
   final JobInvitationStatus status;
-
   final DateTime createdAt;
   final DateTime expiresAt;
   final DateTime? respondedAt;
@@ -54,24 +56,29 @@ class JobInvitationEntity {
   final DateTime? scheduledDate;
   final String scheduledTime;
 
+  /// IDs such as morning_1, morning_2, afternoon_1, afternoon_2.
+  final List<String> scheduledSlotIds;
+
   final String locationAddress;
   final String description;
 
-  bool get isPending =>
-      status == JobInvitationStatus.pending;
+  /// Signed URLs supplied by the backend.
+  final List<String> imageUrls;
+  final String? audioUrl;
 
-  bool get isActive =>
-      isPending && expiresAt.isAfter(DateTime.now());
+  bool get isPending => status == JobInvitationStatus.pending;
+
+  bool get isActive => isPending && expiresAt.isAfter(DateTime.now());
+
+  bool get canRespond => isActive;
+
+  bool get hasImages => imageUrls.isNotEmpty;
+
+  bool get hasVoiceNote => audioUrl?.trim().isNotEmpty == true;
 
   Duration get remaining {
-    final difference =
-        expiresAt.difference(DateTime.now());
-
-    if (difference.isNegative) {
-      return Duration.zero;
-    }
-
-    return difference;
+    final difference = expiresAt.difference(DateTime.now());
+    return difference.isNegative ? Duration.zero : difference;
   }
 
   String get statusLabel {

@@ -108,6 +108,9 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               onDecline: (id) async {
                 await ref.read(workerInvitationsControllerProvider.notifier).reject(id);
               },
+              onOpenDetails: (invitation) {
+                context.pushNamed(RouteNames.workerInvitationDetails, extra: invitation);
+              },
             ),
             const SizedBox(height: 16),
             WorkerUpcomingWorksSection(

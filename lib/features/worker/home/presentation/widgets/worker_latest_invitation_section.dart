@@ -18,6 +18,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
     required this.onAccept,
     required this.onDecline,
     required this.respondingAction,
+    required this.onOpenDetails,
   });
 
   final JobInvitationEntity? invitation;
@@ -27,6 +28,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
   final Future<void> Function(String) onAccept;
   final Future<void> Function(String) onDecline;
   final InvitationResponseAction? respondingAction;
+  final ValueChanged<JobInvitationEntity> onOpenDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +59,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
                 respondingAction: respondingAction,
                 onAccept: onAccept,
                 onDecline: onDecline,
+                onTap: () => onOpenDetails(invitation!),
               ),
       ),
     );
