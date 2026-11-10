@@ -1,13 +1,17 @@
 import 'dart:async';
 
+import 'package:patch_bro/core/network/api_client.dart';
+import 'package:patch_bro/core/network/api_endpoinds.dart';
+import 'package:patch_bro/features/worker/invitations/domain/entities/worker_invitation_media.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:patch_bro/shared/invitations/data/model/job_invitation_model.dart';
 
 class WorkerInvitationsRemoteDataSource {
-  WorkerInvitationsRemoteDataSource(this._supabase);
+  WorkerInvitationsRemoteDataSource(this._supabase, this._apiClient);
 
   final SupabaseClient _supabase;
+  final ApiClient _apiClient;
 
   Future<List<JobInvitationModel>> getInvitations() async {
     final user = _supabase.auth.currentUser;
@@ -80,5 +84,30 @@ class WorkerInvitationsRemoteDataSource {
     };
 
     return controller.stream;
+  }
+
+
+  Future<WorkerInvitationMedia> getInvitationMedia(
+    String invitationId,
+  ) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.workerInvitationMedia(invitationId),
+    );
+
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      throw Exception('Invalid invitation media response.');
+    }
+
+    final data = responseData['data'];
+
+    if (data is! Map) {
+      throw Exception('Invitation media not found.');
+    }
+
+    return WorkerInvitationMedia.fromMap(
+      Map<String, dynamic>.from(data),
+    );
   }
 }

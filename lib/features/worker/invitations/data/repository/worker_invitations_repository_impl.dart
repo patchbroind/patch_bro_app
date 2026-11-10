@@ -1,3 +1,4 @@
+import 'package:patch_bro/features/worker/invitations/domain/entities/worker_invitation_media.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 import '../../domain/repository/worker_invitations_repository.dart';
@@ -28,5 +29,12 @@ class WorkerInvitationsRepositoryImpl implements WorkerInvitationsRepository {
   @override
   Stream<void> watchInvitations() {
     return _remoteDataSource.watchInvitations();
+  }
+
+    @override
+  Future<WorkerInvitationMedia> getInvitationMedia(
+    String invitationId,
+  ) {
+    return _remoteDataSource.getInvitationMedia(invitationId);
   }
 }

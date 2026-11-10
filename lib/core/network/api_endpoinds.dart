@@ -38,6 +38,10 @@ abstract final class ApiEndpoints {
 
   static const workerJobs = '/worker/jobs';
 
+  static String workerInvitationMedia(String invitationId) {
+  return '/worker/invitations/${Uri.encodeComponent(invitationId)}/media';
+}
+
   // ================================================================
   // JOBS
   // ================================================================
