@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_network_image.dart';
@@ -18,7 +19,9 @@ class InvitationEmployerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = employerName.trim().isEmpty ? 'Employer' : employerName;
+    final name = employerName.trim().isEmpty
+        ? 'Employer'
+        : employerName;
 
     return InvitationDetailCard(
       icon: Icons.person_outline_rounded,
@@ -38,14 +41,21 @@ class InvitationEmployerCard extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: WorkerColors.textPrimary,
                       ),
@@ -53,20 +63,45 @@ class InvitationEmployerCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 const Text(
                   'Employer',
-                  style: TextStyle(color: WorkerColors.textSecondary),
+                  style: TextStyle(
+                    color: WorkerColors.textSecondary,
+                  ),
                 ),
               ],
             ),
           ),
-          OutlinedButton.icon(
-            onPressed: onViewEmployer,
-            icon: const Icon(Icons.arrow_forward_rounded, size: 17),
-            label: const Text('View Employer'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: WorkerColors.homePrimary,
-              side: const BorderSide(color: WorkerColors.homePrimary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+
+          const SizedBox(width: 8),
+
+          // Explicit finite width prevents the inherited button theme
+          // from applying an infinite minimum width inside the Row.
+          SizedBox(
+            width: 140,
+            child: OutlinedButton.icon(
+              onPressed: onViewEmployer,
+              icon: const Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+              ),
+              label: const Text(
+                'View Employer',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: WorkerColors.homePrimary,
+                side: const BorderSide(
+                  color: WorkerColors.homePrimary,
+                ),
+                minimumSize: const Size(0, 48),
+                maximumSize: const Size(140, 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),

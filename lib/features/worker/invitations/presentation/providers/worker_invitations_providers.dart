@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:patch_bro/core/network/network_providers.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/controllers/worker_invitations_state.dart';
 
@@ -11,6 +12,7 @@ final workerInvitationsRemoteDataSourceProvider =
     Provider<WorkerInvitationsRemoteDataSource>((ref) {
       return WorkerInvitationsRemoteDataSource(
         ref.read(supabaseClientProvider),
+        ref.read(apiClientProvider),
       );
     });
 
