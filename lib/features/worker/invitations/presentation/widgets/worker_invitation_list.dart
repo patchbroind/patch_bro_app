@@ -46,7 +46,7 @@ class WorkerInvitationList extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: invitations.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 15),
+      separatorBuilder: (_, _) => const SizedBox(height: 15),
       itemBuilder: (context, index) {
         final invitation = invitations[index];
 

@@ -26,7 +26,7 @@ class InvitationMediaGallery extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: imageUrls.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
           itemBuilder: (context, index) {
             return GestureDetector(
               onTap: () => onImageTap?.call(index),
