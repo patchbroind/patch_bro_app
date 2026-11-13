@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "578918117408",
+    "project_id": "patchbro-2320d",
+    "storage_bucket": "patchbro-2320d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578918117408:android:1a5d210b988befafeb0c45",
+        "android_client_info": {
+          "package_name": "com.patchbro.employer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeUaALBuWgXhGF2ogWmJqTWrDLRIp9LIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:578918117408:android:49d3159bcfc72394eb0c45",
+        "android_client_info": {
+          "package_name": "com.patchbro.worker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeUaALBuWgXhGF2ogWmJqTWrDLRIp9LIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

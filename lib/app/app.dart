@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/network/network_status_provider.dart';
+import '../core/notifications/app_push_notification_service.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/network_status_views.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
@@ -40,6 +41,10 @@ class _PatchBroAppState extends ConsumerState<PatchBroApp> {
       currentUser: () => authRepository.currentUser,
       profileRepository: profileRepository,
     );
+    AppPushNotificationService(
+      ref.read(supabaseClientProvider),
+      widget.config,
+    ).initialize();
   }
 
   @override
