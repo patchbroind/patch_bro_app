@@ -137,7 +137,7 @@ class AppPushNotificationService {
       'app_flavor': _config.isWorker ? 'worker' : 'employer',
       'is_active': true,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'fcm_token');
+    }, onConflict: 'user_id,fcm_token');
 
     _registeredUserId = userId;
 
