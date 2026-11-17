@@ -5,6 +5,7 @@ import 'package:patch_bro/features/worker/invitations/domain/entities/invitation
 import 'package:patch_bro/features/worker/invitations/presentation/controllers/worker_invitations_state.dart';
 import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
+import 'package:patch_bro/features/worker/profile/presentation/providers/worker_profile_providers.dart';
 
 import '../../domain/repository/worker_invitations_repository.dart';
 import '../providers/worker_invitations_providers.dart';
@@ -22,6 +23,8 @@ class WorkerInvitationsController
   bool _initialized = false;
   int _fetchGeneration = 0;
   String? _workerId;
+  String? _workerProfileId;
+  int _reconnectAttempts = 0;
 
   @override
   WorkerInvitationsState build() {
@@ -31,6 +34,8 @@ class WorkerInvitationsController
     ref.listen(currentUserProvider, (previous, next) {
       if (previous?.id == next?.id) return;
       _workerId = next?.id;
+      _workerProfileId = null;
+      _reconnectAttempts = 0;
       _initialized = false;
       _fetchGeneration++;
       _eventTimer?.cancel();
@@ -44,6 +49,7 @@ class WorkerInvitationsController
     ref.onDispose(() {
       _disposed = true;
       _eventTimer?.cancel();
+      _reconnectTimer?.cancel();
       _subscription?.cancel();
     });
 
@@ -57,17 +63,49 @@ class WorkerInvitationsController
     }
     if (_initialized) return;
     _initialized = true;
+    try {
+      final profile = await ref.read(workerProfileRepositoryProvider).getCurrentProfile();
+      if (_disposed || _workerId != ref.read(currentUserProvider)?.id) return;
+      final profileId = profile?.id.trim() ?? '';
+      if (profileId.isEmpty) {
+        _initialized = false;
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'Your worker profile could not be loaded. Retry to reconnect.',
+        );
+        return;
+      }
+      _workerProfileId = profileId;
+    } catch (error) {
+      _initialized = false;
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Unable to load your worker profile: $error',
+      );
+      return;
+    }
     await _subscription?.cancel();
-    _subscription = _repository.watchInvitations().listen(
+    _subscription = _repository.watchInvitations(workerProfileId: _workerProfileId!).listen(
       (event) {
-      if (event.isConnected || event.eventType != null) {
-        _reconnectTimer?.cancel();
+        if (event.isConnected) {
+          _reconnectAttempts = 0;
+          _reconnectTimer?.cancel();
+          _scheduleRefresh();
+        } else if (event.eventType != null) {
           _scheduleRefresh();
         } else if (event.error != null) {
-          state = state.copyWith(errorMessage: 'Invitation realtime error: ${event.error}');
-        _scheduleReconnect();
-      } else {
-        _scheduleReconnect();
+          state = state.copyWith(
+            errorMessage: 'Invitation realtime error: ${event.error}',
+          );
+          if (event.isRecoverable) {
+            _scheduleReconnect();
+          } else {
+            _initialized = false;
+            _subscription?.cancel();
+            _subscription = null;
+          }
+        } else {
+          _scheduleReconnect();
         }
       },
       onError: (Object error, StackTrace stackTrace) {
@@ -86,6 +124,10 @@ class WorkerInvitationsController
 
   Future<void> load() async {
     if (_disposed) return;
+    if (_workerProfileId == null) {
+      await initialize();
+      if (_workerProfileId == null) return;
+    }
     if (_activeFetch != null) {
       _fetchQueued = true;
       await _activeFetch;
@@ -106,11 +148,30 @@ class WorkerInvitationsController
   }
 
   void _scheduleReconnect() {
-    if (_disposed || _workerId == null || _reconnectTimer?.isActive == true) return;
-    _reconnectTimer = Timer(const Duration(seconds: 3), () {
+    const maxAttempts = 5;
+    if (_disposed || _workerProfileId == null || _reconnectTimer?.isActive == true) return;
+    if (_reconnectAttempts >= maxAttempts) {
+      _initialized = false;
+      state = state.copyWith(
+        errorMessage: 'Realtime could not reconnect. Tap Retry to try again.',
+      );
+      return;
+    }
+    final delaySeconds = 1 << _reconnectAttempts;
+    _reconnectAttempts++;
+    _reconnectTimer = Timer(Duration(seconds: delaySeconds), () {
+      _subscription?.cancel();
+      _subscription = null;
       _initialized = false;
       if (!_disposed) initialize();
     });
+  }
+
+  Future<void> retry() async {
+    _reconnectTimer?.cancel();
+    _reconnectAttempts = 0;
+    _initialized = false;
+    await initialize();
   }
 
   Future<void> _fetchLatest() async {

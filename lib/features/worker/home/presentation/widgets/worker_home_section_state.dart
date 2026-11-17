@@ -12,12 +12,14 @@ class WorkerHomeSectionState extends StatelessWidget {
     this.isLoading = false,
     this.isEmpty = false,
     this.errorMessage,
+    this.onRetry,
   });
 
   final Widget child;
   final bool isLoading;
   final bool isEmpty;
   final String? errorMessage;
+  final VoidCallback? onRetry;
   final String emptyMessage;
   final IconData emptyIcon;
 
@@ -35,12 +37,17 @@ class WorkerHomeSectionState extends StatelessWidget {
     }
 
     if (errorMessage != null) {
-      return AppEmptyState(
-        layout: AppEmptyStateLayout.inline,
-        message: errorMessage!,
-        icon: Icons.error_outline_rounded,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        iconToContentSpacing: 10,
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: WorkerColors.error),
+            const SizedBox(width: 10),
+            Expanded(child: Text(errorMessage!)),
+            if (onRetry != null)
+              TextButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
       );
     }
 

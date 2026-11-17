@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:patch_bro/features/auth/presentation/providers/auth_providers.dart';
+
 import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
 
 import '../../domain/repository/employer_invitations_repository.dart';

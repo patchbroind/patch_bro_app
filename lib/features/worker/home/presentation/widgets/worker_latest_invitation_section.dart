@@ -14,6 +14,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
     required this.invitation,
     required this.isLoading,
     required this.errorMessage,
+    this.onRetry,
     required this.respondingInvitationId,
     required this.onAccept,
     required this.onDecline,
@@ -24,6 +25,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
   final JobInvitationEntity? invitation;
   final bool isLoading;
   final String? errorMessage;
+  final VoidCallback? onRetry;
   final String? respondingInvitationId;
   final Future<void> Function(String) onAccept;
   final Future<void> Function(String) onDecline;
@@ -48,6 +50,7 @@ class WorkerLatestInvitationSection extends StatelessWidget {
       child: WorkerHomeSectionState(
         isLoading: isLoading,
         errorMessage: errorMessage,
+        onRetry: onRetry,
         isEmpty: !isLoading && errorMessage == null && invitation == null,
         emptyMessage: 'No active invitations right now.',
         emptyIcon: Icons.event_busy_rounded,

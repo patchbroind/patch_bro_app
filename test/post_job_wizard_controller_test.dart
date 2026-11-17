@@ -18,6 +18,7 @@ import 'package:patch_bro/features/employer/workers/domain/repository/employer_w
 import 'package:patch_bro/features/employer/workers/presentation/providers/employer_workers_providers.dart';
 import 'package:patch_bro/features/profile/domain/entities/profile_location.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
+import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -599,7 +600,8 @@ class _FakeEmployerInvitationsRepository
   ) async => const [];
 
   @override
-  Stream<void> watchJobInvitations(String jobId) => const Stream.empty();
+  Stream<RealtimeSyncEvent> watchJobInvitations(String jobId) =>
+      const Stream.empty();
 }
 
 class _FakeEmployerWorkersRepository implements EmployerWorkersRepository {
