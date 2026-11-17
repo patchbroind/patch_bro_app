@@ -45,6 +45,8 @@ import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/presentation/pages/profile_details_page.dart';
 import '../config/app_config.dart';
 import 'route_names.dart';
+import 'package:patch_bro/features/worker/home/domain/entities/worker_home_job_entity.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/pages/worker_job_details_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -352,6 +354,26 @@ class AppRouter {
           name: RouteNames.workerJobs,
           builder: (context, state) {
             return const WorkerJobsPage();
+          },
+        ),
+
+        // ==========================================================
+        // WORKER JOB DETAILS
+        //
+        // Full-screen route outside the Worker bottom-navigation shell.
+        // The selected job is passed as a typed route extra.
+        // ==========================================================
+        GoRoute(
+          path: '/worker/jobs/:jobId',
+          name: RouteNames.workerJobDetails,
+          builder: (context, state) {
+            final job = state.extra as WorkerHomeJobEntity?;
+
+            if (job == null || job.id != state.pathParameters['jobId']) {
+              return const Scaffold(body: Center(child: Text('Job details are unavailable.')));
+            }
+
+            return WorkerJobDetailsPage(job: job);
           },
         ),
 

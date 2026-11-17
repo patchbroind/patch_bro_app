@@ -38,6 +38,7 @@ abstract final class RouteNames {
 
   static const workerInvitations = 'worker-invitations';
   static const workerInvitationDetails = 'worker-invitation-details';
+  static const workerJobDetails = 'worker-job-details';
 
   // ============================================================
   // Employer
