@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,108 +18,53 @@ class WorkerInvitationRealtimeListener extends ConsumerStatefulWidget {
 
 class _WorkerInvitationRealtimeListenerState
     extends ConsumerState<WorkerInvitationRealtimeListener> {
-  StreamSubscription<void>? _subscription;
-
   final Set<String> _knownInvitationIds = {};
-
+  final List<JobInvitationEntity> _pendingDialogs = [];
   bool _showingDialog = false;
+  bool _hasObservedInitialState = false;
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _initialize();
-      }
+      if (!mounted) return;
+      ref.read(workerInvitationsControllerProvider.notifier).initialize();
     });
   }
 
-  Future<void> _initialize() async {
-    final repository = ref.read(workerInvitationsRepositoryProvider);
-
-    try {
-      final initial = await repository.getInvitations();
-
-      for (final invitation in initial) {
-        _knownInvitationIds.add(invitation.id);
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(workerInvitationsControllerProvider, (previous, next) {
+      final invitations = next.invitations;
+      if (!_hasObservedInitialState) {
+        _hasObservedInitialState = true;
+        _knownInvitationIds.addAll(invitations.map((item) => item.id));
+        return;
       }
 
-      // Show currently active invitations
-      // when the worker enters the app.
-      final active = initial.where((item) => item.isActive).toList();
-
-      if (active.isNotEmpty) {
-        await _showInvitations(active);
+      for (final invitation in invitations) {
+        final isNew = _knownInvitationIds.add(invitation.id);
+        if (isNew && invitation.isActive) _pendingDialogs.add(invitation);
       }
-
-      _subscription = repository.watchInvitations().listen((_) async {
-        if (!mounted) {
-          return;
-        }
-
-        try {
-          final invitations = await repository.getInvitations();
-
-          final newInvitations = invitations
-              .where(
-                (item) =>
-                    !_knownInvitationIds.contains(item.id) && item.isActive,
-              )
-              .toList();
-
-          for (final invitation in invitations) {
-            _knownInvitationIds.add(invitation.id);
-          }
-
-          if (newInvitations.isNotEmpty) {
-            await _showInvitations(newInvitations);
-          }
-        } catch (_) {
-          // The worker invitation page/
-          // controller will retry separately.
-        }
-      });
-    } catch (_) {
-      // The normal worker invitation
-      // controller handles errors.
-    }
+      if (_pendingDialogs.isNotEmpty) _showPendingDialogs();
+    });
+    return widget.child;
   }
 
-  Future<void> _showInvitations(List<JobInvitationEntity> invitations) async {
-    if (_showingDialog || !mounted) {
-      return;
-    }
-
+  Future<void> _showPendingDialogs() async {
+    if (_showingDialog || !mounted) return;
     _showingDialog = true;
-
     try {
-      for (final invitation in invitations) {
-        if (!mounted) {
-          break;
-        }
-
+      while (_pendingDialogs.isNotEmpty && mounted) {
+        final invitation = _pendingDialogs.removeAt(0);
         await showDialog<void>(
           context: context,
           barrierDismissible: false,
-          builder: (_) {
-            return WorkerJobInvitationDialog(invitation: invitation);
-          },
+          builder: (_) => WorkerJobInvitationDialog(invitation: invitation),
         );
       }
     } finally {
       _showingDialog = false;
     }
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
   }
 }

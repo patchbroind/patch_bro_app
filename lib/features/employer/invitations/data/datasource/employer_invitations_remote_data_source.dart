@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
 
 import '../../../../../shared/invitations/data/model/job_invitation_model.dart';
 
@@ -60,10 +61,10 @@ class EmployerInvitationsRemoteDataSource {
         .toList(growable: false);
   }
 
-  Stream<void> watchJobInvitations(String jobId) {
-    final controller = StreamController<void>.broadcast();
+  Stream<RealtimeSyncEvent> watchJobInvitations(String jobId) {
+    final controller = StreamController<RealtimeSyncEvent>.broadcast();
 
-    final channel = _supabase.channel('employer-job-invitations-$jobId');
+    final channel = _supabase.channel('employer-job-invitations-$jobId-${DateTime.now().microsecondsSinceEpoch}');
 
     channel.onPostgresChanges(
       event: PostgresChangeEvent.all,
@@ -74,14 +75,24 @@ class EmployerInvitationsRemoteDataSource {
         column: 'job_id',
         value: jobId,
       ),
-      callback: (_) {
+      callback: (payload) {
         if (!controller.isClosed) {
-          controller.add(null);
+          controller.add(RealtimeSyncEvent.change(payload.eventType));
         }
       },
     );
 
-    channel.subscribe();
+    channel.subscribe((status, error) {
+      if (controller.isClosed) return;
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        controller.add(const RealtimeSyncEvent.connected());
+      } else if (status == RealtimeSubscribeStatus.channelError ||
+          status == RealtimeSubscribeStatus.timedOut) {
+        controller.add(RealtimeSyncEvent.error(error?.toString() ?? status.name));
+      } else if (status == RealtimeSubscribeStatus.closed) {
+        controller.add(const RealtimeSyncEvent.disconnected());
+      }
+    });
 
     controller.onCancel = () async {
       await _supabase.removeChannel(channel);
@@ -90,3 +101,4 @@ class EmployerInvitationsRemoteDataSource {
     return controller.stream;
   }
 }
+
