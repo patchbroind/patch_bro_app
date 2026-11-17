@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +24,7 @@ class PatchBroApp extends ConsumerStatefulWidget {
 
 class _PatchBroAppState extends ConsumerState<PatchBroApp> {
   late final GoRouter _appRouter;
+  late final AppPushNotificationService _pushNotificationService;
 
   // This remains false for an offline launch. Once the app has started while
   // online, later outages keep the current route visible and show a banner.
@@ -41,20 +44,23 @@ class _PatchBroAppState extends ConsumerState<PatchBroApp> {
       currentUser: () => authRepository.currentUser,
       profileRepository: profileRepository,
     );
-    AppPushNotificationService(
+    _pushNotificationService = AppPushNotificationService(
       ref.read(supabaseClientProvider),
       widget.config,
-    ).initialize();
+    );
+    unawaited(_pushNotificationService.initialize());
   }
 
   @override
   void dispose() {
+    unawaited(_pushNotificationService.dispose());
     _appRouter.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _pushNotificationService.attachRouter(_appRouter);
     final theme = AppTheme.fromFlavor(widget.config.flavor);
     final connectionStatus = ref.watch(networkConnectionStatusProvider);
 

@@ -17,12 +17,12 @@ class AppConfig {
   bool get isEmployer => flavor == AppFlavor.employer;
 
   static AppConfig fromEnvironment() {
-    const flavor = String.fromEnvironment(
+    const resolvedFlavor = String.fromEnvironment(
       'APP_FLAVOR',
       defaultValue: 'worker',
     );
 
-    switch (flavor) {
+    switch (resolvedFlavor) {
       case 'employer':
         return const AppConfig(
           flavor: AppFlavor.employer,
