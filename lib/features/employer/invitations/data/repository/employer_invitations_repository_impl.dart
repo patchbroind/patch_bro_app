@@ -1,4 +1,5 @@
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
+import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
 
 import '../../domain/repository/employer_invitations_repository.dart';
 import '../datasource/employer_invitations_remote_data_source.dart';
@@ -33,7 +34,7 @@ class EmployerInvitationsRepositoryImpl implements EmployerInvitationsRepository
   }
 
   @override
-  Stream<void> watchJobInvitations(String jobId) {
+  Stream<RealtimeSyncEvent> watchJobInvitations(String jobId) {
     return _remoteDataSource.watchJobInvitations(jobId);
   }
 }

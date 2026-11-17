@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:patch_bro/core/network/api_client.dart';
 import 'package:patch_bro/core/network/api_endpoinds.dart';
 import 'package:patch_bro/features/worker/invitations/domain/entities/worker_invitation_media.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:patch_bro/shared/invitations/data/model/job_invitation_model.dart';
+import 'package:patch_bro/shared/invitations/domain/entities/realtime_sync_event.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WorkerInvitationsRemoteDataSource {
   WorkerInvitationsRemoteDataSource(this._supabase, this._apiClient);
@@ -49,17 +49,18 @@ class WorkerInvitationsRemoteDataSource {
     );
   }
 
-  Stream<void> watchInvitations() {
-    final controller = StreamController<void>.broadcast();
+  Stream<RealtimeSyncEvent> watchInvitations() {
+    final controller = StreamController<RealtimeSyncEvent>.broadcast();
 
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
+      controller.add(const RealtimeSyncEvent.error('No authenticated user found.'));
       controller.close();
       return controller.stream;
     }
 
-    final channel = _supabase.channel('worker-job-invitations-${user.id}');
+    final channel = _supabase.channel('worker-job-invitations-${user.id}-${DateTime.now().microsecondsSinceEpoch}');
 
     channel.onPostgresChanges(
       event: PostgresChangeEvent.all,
@@ -70,14 +71,24 @@ class WorkerInvitationsRemoteDataSource {
         column: 'worker_id',
         value: user.id,
       ),
-      callback: (_) {
+      callback: (payload) {
         if (!controller.isClosed) {
-          controller.add(null);
+          controller.add(RealtimeSyncEvent.change(payload.eventType));
         }
       },
     );
 
-    channel.subscribe();
+    channel.subscribe((status, error) {
+      if (controller.isClosed) return;
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        controller.add(const RealtimeSyncEvent.connected());
+      } else if (status == RealtimeSubscribeStatus.channelError ||
+          status == RealtimeSubscribeStatus.timedOut) {
+        controller.add(RealtimeSyncEvent.error(error?.toString() ?? status.name));
+      } else if (status == RealtimeSubscribeStatus.closed) {
+        controller.add(const RealtimeSyncEvent.disconnected());
+      }
+    });
 
     controller.onCancel = () async {
       await _supabase.removeChannel(channel);
@@ -85,6 +96,8 @@ class WorkerInvitationsRemoteDataSource {
 
     return controller.stream;
   }
+
+  String? get authenticatedUserId => _supabase.auth.currentUser?.id;
 
 
   Future<WorkerInvitationMedia> getInvitationMedia(
@@ -111,3 +124,4 @@ class WorkerInvitationsRemoteDataSource {
     );
   }
 }
+
