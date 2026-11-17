@@ -118,7 +118,7 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               jobs: upcomingJobs,
               isLoading: homeState.isLoading,
               errorMessage: homeState.errorMessage,
-              onViewAll: () => context.goNamed(RouteNames.workerJobs),
+              onViewAll: () => context.pushNamed(RouteNames.workerJobs),
             ),
             const SizedBox(height: 16),
             WorkerEliteProgressBanner(

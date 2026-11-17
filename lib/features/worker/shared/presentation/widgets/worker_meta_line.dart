@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 
-class MetaLine extends StatelessWidget {
-  const MetaLine({super.key, required this.icon, required this.text});
+class WorkerMetaLine extends StatelessWidget {
+  const WorkerMetaLine({super.key, required this.icon, required this.text});
 
   final IconData icon;
   final String text;

@@ -341,6 +341,21 @@ class AppRouter {
         ),
 
         // ==========================================================
+        // WORKER WORKS
+        //
+        // Full-screen page outside the Worker bottom-navigation
+        // shell. This keeps the Home tab selected underneath and
+        // allows the system back button to return to Home.
+        // ==========================================================
+        GoRoute(
+          path: '/worker/jobs',
+          name: RouteNames.workerJobs,
+          builder: (context, state) {
+            return const WorkerJobsPage();
+          },
+        ),
+
+        // ==========================================================
         // EMPLOYER TRUST
         // ==========================================================
         GoRoute(
@@ -529,21 +544,6 @@ class AppRouter {
               name: RouteNames.workerHome,
               builder: (context, state) {
                 return const WorkerHomePage();
-              },
-            ),
-          ],
-        ),
-
-        // ==========================================================
-        // WORKER JOBS
-        // ==========================================================
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/worker/jobs',
-              name: RouteNames.workerJobs,
-              builder: (context, state) {
-                return const WorkerJobsPage();
               },
             ),
           ],

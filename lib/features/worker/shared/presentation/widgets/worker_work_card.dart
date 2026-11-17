@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_network_image.dart';
-import 'package:patch_bro/features/worker/home/presentation/widgets/meta_line.dart';
+import 'package:patch_bro/features/worker/shared/presentation/widgets/worker_meta_line.dart';
 
 class WorkerWorkCard extends StatelessWidget {
   const WorkerWorkCard({super.key, required this.job});
@@ -11,7 +11,11 @@ class WorkerWorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = _relativeDateLabel(job.scheduledDate as DateTime);
+    final scheduledDate = job.scheduledDate as DateTime;
+    final status = job.status?.toString() ?? '';
+
+    final dateLabel = _dateBadgeLabel(scheduledDate, status);
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -29,10 +33,7 @@ class WorkerWorkCard extends StatelessWidget {
               height: 74,
               fit: BoxFit.cover,
               backgroundColor: WorkerColors.imagePlaceholder,
-              fallback: const Icon(
-                Icons.work_outline_rounded,
-                color: WorkerColors.textSecondary,
-              ),
+              fallback: const Icon(Icons.work_outline_rounded, color: WorkerColors.textSecondary),
             ),
           ),
           const SizedBox(width: 10),
@@ -49,22 +50,14 @@ class WorkerWorkCard extends StatelessWidget {
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 6),
-                MetaLine(
-                  icon: Icons.location_on_outlined,
-                  text: job.locationAddress as String,
-                ),
+                WorkerMetaLine(icon: Icons.location_on_outlined, text: job.locationAddress as String),
                 const SizedBox(height: 4),
-                MetaLine(
+                WorkerMetaLine(
                   icon: Icons.calendar_month_outlined,
-                  text: DateFormat(
-                    'EEE, d MMM',
-                  ).format(job.scheduledDate as DateTime),
+                  text: DateFormat('EEE, d MMM').format(scheduledDate),
                 ),
                 const SizedBox(height: 4),
-                MetaLine(
-                  icon: Icons.access_time_rounded,
-                  text: job.scheduledTime as String,
-                ),
+                WorkerMetaLine(icon: Icons.access_time_rounded, text: job.scheduledTime as String),
               ],
             ),
           ),
@@ -88,10 +81,7 @@ class WorkerWorkCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: WorkerColors.textSecondary,
-              ),
+              const Icon(Icons.chevron_right_rounded, color: WorkerColors.textSecondary),
             ],
           ),
         ],
@@ -99,11 +89,48 @@ class WorkerWorkCard extends StatelessWidget {
     );
   }
 
-  String _relativeDateLabel(DateTime scheduledDate) {
-    final difference = scheduledDate.difference(DateTime.now());
-    if (difference.inDays == 0) return 'Today';
-    if (difference.inDays == 1) return 'Tomorrow';
-    if (difference.inDays < 7) return 'In ${difference.inDays} days';
+  String _dateBadgeLabel(DateTime scheduledDate, String status) {
+    final normalizedStatus = status.trim().toLowerCase();
+
+    // Preserve actual job statuses.
+    if (normalizedStatus == 'completed') {
+      return 'Completed';
+    }
+
+    if (normalizedStatus == 'cancelled' || normalizedStatus == 'canceled') {
+      return 'Cancelled';
+    }
+
+    if (normalizedStatus == 'expired') {
+      return 'Expired';
+    }
+
+    // Compare calendar dates, not hours.
+    // This avoids negative day values and 24-hour edge cases.
+    final today = DateTime.now();
+
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    final jobDate = DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
+
+    final difference = jobDate.difference(todayDate).inDays;
+
+    if (difference < 0) {
+      return 'Expired';
+    }
+
+    if (difference == 0) {
+      return 'Today';
+    }
+
+    if (difference == 1) {
+      return 'Tomorrow';
+    }
+
+    if (difference < 7) {
+      return 'In $difference days';
+    }
+
     return DateFormat('d MMM').format(scheduledDate);
   }
 }

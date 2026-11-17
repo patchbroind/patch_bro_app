@@ -5,7 +5,7 @@ import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_network_image.dart';
 import 'package:patch_bro/core/widgets/app_primary_filled_icon_button.dart';
 import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
-import 'package:patch_bro/features/worker/home/presentation/widgets/meta_line.dart';
+import 'package:patch_bro/features/worker/shared/presentation/widgets/worker_meta_line.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 class WorkerJobInvitationCard extends StatelessWidget {
@@ -141,7 +141,7 @@ class WorkerJobInvitationCard extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        MetaLine(
+                        WorkerMetaLine(
                           icon: Icons.location_on_outlined,
                           text: invitation.locationAddress.isNotEmpty
                               ? invitation.locationAddress
@@ -150,7 +150,7 @@ class WorkerJobInvitationCard extends StatelessWidget {
 
                         const SizedBox(height: 4),
 
-                        MetaLine(
+                        WorkerMetaLine(
                           icon: Icons.calendar_month_outlined,
                           text: invitation.scheduledDate == null
                               ? 'Date unavailable'
@@ -159,7 +159,7 @@ class WorkerJobInvitationCard extends StatelessWidget {
 
                         const SizedBox(height: 4),
 
-                        MetaLine(
+                        WorkerMetaLine(
                           icon: Icons.access_time_rounded,
                           text: invitation.scheduledTime.isNotEmpty
                               ? invitation.scheduledTime
