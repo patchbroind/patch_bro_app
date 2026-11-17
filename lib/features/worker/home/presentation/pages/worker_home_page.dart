@@ -99,6 +99,7 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               invitation: latestInvitation,
               isLoading: invitationState.isLoading,
               errorMessage: invitationState.errorMessage,
+              onRetry: () => ref.read(workerInvitationsControllerProvider.notifier).retry(),
               respondingInvitationId: invitationState.respondingInvitationId,
 
               respondingAction: invitationState.respondingAction,

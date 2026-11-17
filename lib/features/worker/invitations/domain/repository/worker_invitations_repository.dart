@@ -9,7 +9,7 @@ abstract class WorkerInvitationsRepository {
 
   Future<void> rejectInvitation(String invitationId);
 
-  Stream<RealtimeSyncEvent> watchInvitations();
+  Stream<RealtimeSyncEvent> watchInvitations({required String workerProfileId});
 
    Future<WorkerInvitationMedia> getInvitationMedia(
     String invitationId,

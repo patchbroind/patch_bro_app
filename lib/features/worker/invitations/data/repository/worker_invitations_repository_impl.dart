@@ -28,8 +28,8 @@ class WorkerInvitationsRepositoryImpl implements WorkerInvitationsRepository {
   }
 
   @override
-  Stream<RealtimeSyncEvent> watchInvitations() {
-    return _remoteDataSource.watchInvitations();
+  Stream<RealtimeSyncEvent> watchInvitations({required String workerProfileId}) {
+    return _remoteDataSource.watchInvitations(workerProfileId: workerProfileId);
   }
 
     @override

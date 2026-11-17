@@ -49,18 +49,16 @@ class WorkerInvitationsRemoteDataSource {
     );
   }
 
-  Stream<RealtimeSyncEvent> watchInvitations() {
+  Stream<RealtimeSyncEvent> watchInvitations({required String workerProfileId}) {
     final controller = StreamController<RealtimeSyncEvent>.broadcast();
 
-    final user = _supabase.auth.currentUser;
-
-    if (user == null) {
-      controller.add(const RealtimeSyncEvent.error('No authenticated user found.'));
+    if (workerProfileId.trim().isEmpty) {
+      controller.add(const RealtimeSyncEvent.error('Worker profile ID is missing.'));
       controller.close();
       return controller.stream;
     }
 
-    final channel = _supabase.channel('worker-job-invitations-${user.id}-${DateTime.now().microsecondsSinceEpoch}');
+    final channel = _supabase.channel('worker-job-invitations-$workerProfileId-${DateTime.now().microsecondsSinceEpoch}');
 
     channel.onPostgresChanges(
       event: PostgresChangeEvent.all,
@@ -69,7 +67,7 @@ class WorkerInvitationsRemoteDataSource {
       filter: PostgresChangeFilter(
         type: PostgresChangeFilterType.eq,
         column: 'worker_id',
-        value: user.id,
+        value: workerProfileId,
       ),
       callback: (payload) {
         if (!controller.isClosed) {
@@ -84,7 +82,11 @@ class WorkerInvitationsRemoteDataSource {
         controller.add(const RealtimeSyncEvent.connected());
       } else if (status == RealtimeSubscribeStatus.channelError ||
           status == RealtimeSubscribeStatus.timedOut) {
-        controller.add(RealtimeSyncEvent.error(error?.toString() ?? status.name));
+        final message = error?.toString() ?? status.name;
+        controller.add(RealtimeSyncEvent.error(
+          message,
+          isRecoverable: !_isFilterConfigurationError(message),
+        ));
       } else if (status == RealtimeSubscribeStatus.closed) {
         controller.add(const RealtimeSyncEvent.disconnected());
       }
@@ -97,7 +99,12 @@ class WorkerInvitationsRemoteDataSource {
     return controller.stream;
   }
 
-  String? get authenticatedUserId => _supabase.auth.currentUser?.id;
+  bool _isFilterConfigurationError(String message) {
+    final normalized = message.toLowerCase();
+    return normalized.contains('invalid column for filter') ||
+        normalized.contains('p0001') ||
+        normalized.contains('worker_id');
+  }
 
 
   Future<WorkerInvitationMedia> getInvitationMedia(
