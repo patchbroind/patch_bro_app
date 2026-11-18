@@ -1,6 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:patch_bro/app/router/route_names.dart';
 
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_error_view.dart';
@@ -16,8 +17,7 @@ class WorkerJobsPage extends ConsumerStatefulWidget {
   const WorkerJobsPage({super.key});
 
   @override
-  ConsumerState<WorkerJobsPage> createState() =>
-      _WorkerJobsPageState();
+  ConsumerState<WorkerJobsPage> createState() => _WorkerJobsPageState();
 }
 
 class _WorkerJobsPageState extends ConsumerState<WorkerJobsPage> {
@@ -34,9 +34,7 @@ class _WorkerJobsPageState extends ConsumerState<WorkerJobsPage> {
 
   Future<void> _refresh() async {
     try {
-      await ref
-          .read(workerJobsControllerProvider.notifier)
-          .refreshJobs();
+      await ref.read(workerJobsControllerProvider.notifier).refreshJobs();
     } catch (_) {
       // Existing jobs remain visible if refresh fails.
     }
@@ -63,25 +61,16 @@ class _WorkerJobsPageState extends ConsumerState<WorkerJobsPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                8,
-                16,
-                16,
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: WorkerJobsTabBar(
                 selectedTab: state.selectedTab,
                 onTabSelected: (tab) {
-                  ref
-                      .read(workerJobsControllerProvider.notifier)
-                      .selectTab(tab);
+                  ref.read(workerJobsControllerProvider.notifier).selectTab(tab);
                 },
               ),
             ),
 
-            Expanded(
-              child: _buildContent(state),
-            ),
+            Expanded(child: _buildContent(state)),
           ],
         ),
       ),
@@ -90,11 +79,7 @@ class _WorkerJobsPageState extends ConsumerState<WorkerJobsPage> {
 
   Widget _buildContent(WorkerJobsState state) {
     if (state.isLoading && !state.hasJobs) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: WorkerColors.homePrimary,
-        ),
-      );
+      return const Center(child: CircularProgressIndicator(color: WorkerColors.homePrimary));
     }
 
     if (state.hasError && !state.hasJobs) {
@@ -118,29 +103,28 @@ class _WorkerJobsPageState extends ConsumerState<WorkerJobsPage> {
               children: [
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.45,
-                  child: WorkerJobsEmptyState(
-                    tab: state.selectedTab,
-                  ),
+                  child: WorkerJobsEmptyState(tab: state.selectedTab),
                 ),
               ],
             )
           : ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                4,
-                16,
-                24,
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
               itemCount: jobs.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final job = jobs[index];
 
                 return WorkerWorkCard(
                   key: ValueKey(job.id),
                   job: job,
+                  onTap: () {
+                    context.pushNamed(
+                      RouteNames.workerJobDetails,
+                      pathParameters: {'jobId': job.id},
+                      extra: job,
+                    );
+                  },
                 );
               },
             ),

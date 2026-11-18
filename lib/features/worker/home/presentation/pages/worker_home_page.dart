@@ -5,6 +5,7 @@ import 'package:patch_bro/app/router/route_names.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:patch_bro/features/profile/presentation/providers/profile_providers.dart';
+import 'package:patch_bro/features/worker/home/domain/entities/worker_home_job_entity.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/promotional_ad_banner.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_elite_progress_banner.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_header_section.dart';
@@ -15,6 +16,7 @@ import 'package:patch_bro/features/worker/profile/presentation/providers/worker_
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';
 
 import '../providers/worker_home_providers.dart';
+
 
 class WorkerHomePage extends ConsumerStatefulWidget {
   const WorkerHomePage({super.key});
@@ -119,6 +121,13 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
               isLoading: homeState.isLoading,
               errorMessage: homeState.errorMessage,
               onViewAll: () => context.pushNamed(RouteNames.workerJobs),
+              onJobTap: (job) {
+                context.pushNamed(
+                  RouteNames.workerJobDetails,
+                  pathParameters: {'jobId': job.id},
+                  extra: job,
+                );
+              },
             ),
             const SizedBox(height: 16),
             WorkerEliteProgressBanner(
@@ -143,17 +152,21 @@ class _WorkerHomePageState extends ConsumerState<WorkerHomePage> {
     return eligible.first;
   }
 
-  List<dynamic> _upcomingJobs(List<dynamic> jobs) {
-    final normalized = List<dynamic>.from(jobs);
-    normalized.sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
-    return normalized
-        .where((job) {
-          final status = (job.status as String).toLowerCase();
-          if (status == 'completed' || status == 'cancelled' || status == 'expired') {
-            return false;
-          }
-          return true;
-        })
-        .toList(growable: false);
+  List<WorkerHomeJobEntity> _upcomingJobs(List<WorkerHomeJobEntity> jobs) {
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+
+    return jobs.where((job) {
+      final status = job.status.toLowerCase();
+
+      final jobDate = DateTime(
+        job.scheduledDate.year,
+        job.scheduledDate.month,
+        job.scheduledDate.day,
+      );
+
+      return !{'completed', 'cancelled', 'canceled', 'expired'}.contains(status) &&
+          !jobDate.isBefore(startOfToday);
+    }).toList()..sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
   }
 }

@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
-
+import 'package:patch_bro/features/worker/home/domain/entities/worker_home_job_entity.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section.dart';
 import 'package:patch_bro/features/worker/home/presentation/widgets/worker_home_section_state.dart';
 import 'package:patch_bro/features/worker/shared/presentation/widgets/worker_work_card.dart';
@@ -13,12 +13,14 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.onViewAll,
+    required this.onJobTap,
   });
 
-  final List<dynamic> jobs;
+  final List<WorkerHomeJobEntity> jobs;
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback onViewAll;
+  final ValueChanged<WorkerHomeJobEntity> onJobTap;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,10 @@ class WorkerUpcomingWorksSection extends StatelessWidget {
           children: jobs.take(3).map((job) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: WorkerWorkCard(job: job),
+              child: WorkerWorkCard(
+                job: job,
+                onTap: () => onJobTap(job),
+              ),
             );
           }).toList(),
         ),
