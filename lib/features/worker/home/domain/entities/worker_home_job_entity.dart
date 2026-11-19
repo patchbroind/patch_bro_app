@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -21,6 +20,9 @@ class WorkerHomeJobEntity {
     this.audioStoragePath,
     this.createdAt,
     this.updatedAt,
+    this.workerProgressStatus = 'not_started',
+    this.workerOnTheWayAt,
+    this.workerReachedAt,
   });
 
   final String id;
@@ -47,18 +49,21 @@ class WorkerHomeJobEntity {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  bool get hasLocation =>
-      latitude != null && longitude != null;
+  final String workerProgressStatus;
+  final DateTime? workerOnTheWayAt;
+  final DateTime? workerReachedAt;
 
-  bool get hasDescription =>
-      description.trim().isNotEmpty;
+  bool get hasLocation => latitude != null && longitude != null;
 
-  bool get hasVoiceNote =>
-      audioUrl != null && audioUrl!.trim().isNotEmpty;
+  bool get hasDescription => description.trim().isNotEmpty;
 
-  bool get hasImages =>
-      imageUrls.isNotEmpty ||
-      (imageUrl != null && imageUrl!.trim().isNotEmpty);
+  bool get hasVoiceNote => audioUrl != null && audioUrl!.trim().isNotEmpty;
+
+  bool get hasImages => imageUrls.isNotEmpty || (imageUrl != null && imageUrl!.trim().isNotEmpty);
+
+  bool get hasStartedJourney => workerProgressStatus == 'on_the_way';
+
+  bool get hasReachedLocation => workerProgressStatus == 'reached';
 
   List<String> get effectiveImageUrls {
     if (imageUrls.isNotEmpty) {
@@ -72,18 +77,12 @@ class WorkerHomeJobEntity {
     return const [];
   }
 
-  bool get isCompleted =>
-      status.trim().toLowerCase() == 'completed';
+  bool get isCompleted => status.trim().toLowerCase() == 'completed';
 
   bool get isUpcomingOrActive {
     final normalized = status.trim().toLowerCase();
 
-    return !const {
-      'completed',
-      'cancelled',
-      'canceled',
-      'expired',
-    }.contains(normalized);
+    return !const {'completed', 'cancelled', 'canceled', 'expired'}.contains(normalized);
   }
 
   WorkerHomeJobEntity copyWith({
@@ -104,6 +103,9 @@ class WorkerHomeJobEntity {
     String? audioStoragePath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? workerProgressStatus,
+    DateTime? workerOnTheWayAt,
+    DateTime? workerReachedAt,
   }) {
     return WorkerHomeJobEntity(
       id: id ?? this.id,
@@ -123,6 +125,9 @@ class WorkerHomeJobEntity {
       audioStoragePath: audioStoragePath ?? this.audioStoragePath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      workerProgressStatus: workerProgressStatus ?? this.workerProgressStatus,
+      workerOnTheWayAt: workerOnTheWayAt ?? this.workerOnTheWayAt,
+      workerReachedAt: workerReachedAt ?? this.workerReachedAt,
     );
   }
 }

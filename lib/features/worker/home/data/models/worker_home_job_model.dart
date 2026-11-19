@@ -1,4 +1,3 @@
-
 import '../../domain/entities/worker_home_job_entity.dart';
 
 class WorkerHomeJobModel {
@@ -20,6 +19,9 @@ class WorkerHomeJobModel {
     this.audioStoragePath,
     this.createdAt,
     this.updatedAt,
+    this.workerProgressStatus = 'not_started',
+    this.workerOnTheWayAt,
+    this.workerReachedAt,
   });
 
   final String id;
@@ -44,17 +46,15 @@ class WorkerHomeJobModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  factory WorkerHomeJobModel.fromMap(
-    Map<String, dynamic> map,
-  ) {
-    final scheduledDate = DateTime.tryParse(
-      map['scheduled_date']?.toString() ?? '',
-    );
+  final String workerProgressStatus;
+  final DateTime? workerOnTheWayAt;
+  final DateTime? workerReachedAt;
+
+  factory WorkerHomeJobModel.fromMap(Map<String, dynamic> map) {
+    final scheduledDate = DateTime.tryParse(map['scheduled_date']?.toString() ?? '');
 
     if (scheduledDate == null) {
-      throw const FormatException(
-        'Invalid scheduled date received for worker job.',
-      );
+      throw const FormatException('Invalid scheduled date received for worker job.');
     }
 
     return WorkerHomeJobModel(
@@ -66,9 +66,7 @@ class WorkerHomeJobModel {
       scheduledTime: map['scheduled_time']?.toString() ?? '',
       status: map['status']?.toString() ?? '',
 
-      scheduledSlotIds: _parseStringList(
-        map['scheduled_slots'],
-      ),
+      scheduledSlotIds: _parseStringList(map['scheduled_slots']),
 
       latitude: _toDouble(map['latitude']),
       longitude: _toDouble(map['longitude']),
@@ -79,12 +77,16 @@ class WorkerHomeJobModel {
       imageUrls: _parseStringList(map['image_urls']),
 
       audioUrl: _nullableString(map['audio_url']),
-      audioStoragePath: _nullableString(
-        map['audio_storage_path'],
-      ),
+      audioStoragePath: _nullableString(map['audio_storage_path']),
 
       createdAt: _parseDateTime(map['created_at']),
       updatedAt: _parseDateTime(map['updated_at']),
+
+      workerProgressStatus: map['worker_progress_status']?.toString() ?? 'not_started',
+
+      workerOnTheWayAt: DateTime.tryParse(map['worker_on_the_way_at']?.toString() ?? '')?.toLocal(),
+
+      workerReachedAt: DateTime.tryParse(map['worker_reached_at']?.toString() ?? '')?.toLocal(),
     );
   }
 
@@ -107,6 +109,9 @@ class WorkerHomeJobModel {
       audioStoragePath: audioStoragePath,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      workerProgressStatus: workerProgressStatus,
+      workerOnTheWayAt: workerOnTheWayAt,
+      workerReachedAt: workerReachedAt,
     );
   }
 
