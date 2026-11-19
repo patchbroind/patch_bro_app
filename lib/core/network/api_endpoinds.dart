@@ -42,6 +42,10 @@ abstract final class ApiEndpoints {
   return '/worker/invitations/${Uri.encodeComponent(invitationId)}/media';
 }
 
+static String workerJobProgress(String jobId) {
+  return '/worker/jobs/${Uri.encodeComponent(jobId)}/progress';
+}
+
   // ================================================================
   // JOBS
   // ================================================================

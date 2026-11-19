@@ -46,6 +46,10 @@ type JobRow = {
   status: string;
   created_at: string;
   updated_at: string;
+  accepted_worker_id: string | null;
+  worker_progress_status: string;
+  worker_on_the_way_at: string | null;
+  worker_reached_at: string | null;
 };
 
 type JobMediaRow = {
@@ -860,6 +864,10 @@ Deno.serve(
         url.pathname.endsWith(
           "/worker/jobs",
         );
+      
+      const workerJobProgressMatch = url.pathname.match(
+          /\/worker\/jobs\/([^/]+)\/progress$/,
+        );
 
       const workerInvitationMediaMatch =
         url.pathname.match(
@@ -910,6 +918,7 @@ Deno.serve(
         !categoriesRoute &&
         !workerProfileRoute &&
         !workerJobsRoute &&
+        !workerJobProgressMatch &&
         !workerInvitationMediaMatch &&
         !employerProfileRoute &&
         !employerAddressesRoute &&
@@ -2092,9 +2101,205 @@ Deno.serve(
 
         return jsonCorsResponse({
           success: true,
-          message:
-            "Worker profile loaded successfully",
+                message:
+                  "Worker profile loaded successfully",
           data: workerProfile,
+              });
+            }
+
+          
+      //      ============================================================
+      // PATCH WORKER JOB PROGRESS
+      //      ============================================================
+          
+      if (
+        req.method === "PATCH" &&
+        workerJobProgressMatch
+      ) {
+        const jobId = workerJobProgressMatch[1];
+      
+        let body: { status?: string };
+      
+        try {
+          body = await req.json();
+        } catch {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid request body",
+            },
+            400,
+          );
+        }
+      
+        const nextStatus = body.status;
+      
+        if (
+          nextStatus !== "on_the_way" &&
+          nextStatus !== "reached"
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid worker progress status",
+            },
+            400,
+          );
+        }
+      
+        // Verify job ownership and current state.
+        const {
+          data: job,
+          error: jobError,
+        } = await supabaseAdmin
+          .from("jobs")
+          .select(`
+            id,
+            status,
+            scheduled_date,
+            accepted_worker_id,
+            worker_progress_status
+          `)
+          .eq("id", jobId)
+          .eq("accepted_worker_id", userId)
+          .maybeSingle();
+          
+        if (jobError) {
+          console.error(
+            "Worker job progress lookup failed:",
+            jobError,
+          );
+        
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Unable to verify job",
+            },
+            500,
+          );
+        }
+      
+        if (!job) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Job not found or not assigned to you",
+            },
+            404,
+          );
+        }
+      
+        const jobStatus = String(job.status).toLowerCase();
+      
+        if (
+          !["assigned", "in_progress"].includes(jobStatus)
+        ) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "This job is no longer active",
+            },
+            409,
+          );
+        }
+      
+        // Patch Bro currently uses India as its operating timezone.
+        const today = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+        }).format(new Date());
+      
+        if (String(job.scheduled_date) < today) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "This job has expired",
+            },
+            409,
+          );
+        }
+      
+        const currentStatus =
+          job.worker_progress_status ?? "not_started";
+      
+        const expectedNextStatus =
+          currentStatus === "not_started"
+            ? "on_the_way"
+            : currentStatus === "on_the_way"
+              ? "reached"
+              : null;
+      
+        if (nextStatus !== expectedNextStatus) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Invalid progress transition",
+            },
+            409,
+          );
+        }
+      
+        const now = new Date().toISOString();
+      
+        const updateData: Record<string, unknown> = {
+          worker_progress_status: nextStatus,
+        };
+      
+        if (nextStatus === "on_the_way") {
+          updateData.worker_on_the_way_at = now;
+        }
+
+        if (nextStatus === "reached") {
+          updateData.worker_reached_at = now;
+        }
+      
+        // Conditional update prevents duplicate or out-of-order      requests.
+        const {
+          data: updatedJob,
+          error: updateError,
+        } = await supabaseAdmin
+          .from("jobs")
+          .update(updateData)
+          .eq("id", jobId)
+          .eq("accepted_worker_id", userId)
+          .eq("worker_progress_status", currentStatus)
+          .in("status", ["assigned", "in_progress"])
+          .select(`
+            id,
+            worker_progress_status,
+            worker_on_the_way_at,
+            worker_reached_at
+          `)
+          .maybeSingle();
+          
+        if (updateError) {
+          console.error(
+            "Worker progress update failed:",
+            updateError,
+          );
+        
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Failed to update job progress",
+            },
+            500,
+          );
+        }
+
+        if (!updatedJob) {
+          return jsonCorsResponse(
+            {
+              success: false,
+              message: "Job progress was already updated. Please refresh.",
+            },
+            409,
+          );
+        }
+      
+        return jsonCorsResponse({
+          success: true,
+          message: "Job progress updated successfully",
+          data: updatedJob,
         });
       }
 
@@ -2126,7 +2331,10 @@ Deno.serve(
             status,
             created_at,
             updated_at,
-            accepted_worker_id
+            accepted_worker_id,
+            worker_progress_status,
+            worker_on_the_way_at,
+            worker_reached_at
           `)
           .eq("accepted_worker_id", userId)
           .order("scheduled_date", { ascending: true })
@@ -2211,6 +2419,9 @@ Deno.serve(
             status: job.status,
             created_at: job.created_at,
             updated_at: job.updated_at,
+            worker_progress_status: job.worker_progress_status ?? "not_started",
+            worker_on_the_way_at: job.worker_on_the_way_at,
+            worker_reached_at: job.worker_reached_at,
             image_url: signedMedia.images[0]?.url ?? null,
             image_urls: signedMedia.images.map((item) => item.url),
             image_media: signedMedia.images.map((item) => ({

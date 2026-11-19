@@ -1,8 +1,15 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
+import 'package:patch_bro/core/widgets/app_primary_button.dart';
+
 import 'package:patch_bro/features/worker/home/domain/entities/worker_home_job_entity.dart';
+
+import 'package:patch_bro/features/worker/jobs/presentation/controllers/worker_job_progress_state.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/providers/worker_job_progress_providers.dart';
+
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_detail_section.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_description_card.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_images.dart';
@@ -10,7 +17,7 @@ import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_l
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_schedule_card.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_voice_player.dart';
 
-class WorkerJobDetailsPage extends StatelessWidget {
+class WorkerJobDetailsPage extends ConsumerWidget {
   const WorkerJobDetailsPage({
     super.key,
     required this.job,
@@ -18,22 +25,32 @@ class WorkerJobDetailsPage extends StatelessWidget {
 
   final WorkerHomeJobEntity job;
 
+  // ----------------------------------------------------------
+  // JOB STATUS
+  // ----------------------------------------------------------
+
   String get _statusLabel {
     final status = job.status.trim().toLowerCase();
 
     switch (status) {
       case 'completed':
         return 'Completed';
+
       case 'cancelled':
       case 'canceled':
         return 'Cancelled';
+
       case 'expired':
         return 'Expired';
+
       case 'in_progress':
       case 'in-progress':
         return 'In Progress';
+
       case 'accepted':
+      case 'assigned':
         return 'Accepted';
+
       default:
         return 'Upcoming';
     }
@@ -43,22 +60,112 @@ class WorkerJobDetailsPage extends StatelessWidget {
     switch (job.status.trim().toLowerCase()) {
       case 'completed':
         return WorkerColors.success;
+
       case 'cancelled':
       case 'canceled':
       case 'expired':
         return WorkerColors.error;
+
       default:
         return WorkerColors.homePrimary;
     }
   }
 
+  // ----------------------------------------------------------
+  // CHECK WHETHER JOB IS ACTIVE
+  // ----------------------------------------------------------
+
+  bool get _isJobActive {
+    final status = job.status.trim().toLowerCase();
+
+    // These job statuses should never show progress actions.
+    if (const {
+      'completed',
+      'cancelled',
+      'canceled',
+      'expired',
+    }.contains(status)) {
+      return false;
+    }
+
+    // A job whose scheduled date has passed is expired.
+    final now = DateTime.now();
+
+    final today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    );
+
+    final jobDate = DateTime(
+      job.scheduledDate.year,
+      job.scheduledDate.month,
+      job.scheduledDate.day,
+    );
+
+    return !jobDate.isBefore(today);
+  }
+
+  // ----------------------------------------------------------
+  // PROGRESS BUTTON LABEL
+  // ----------------------------------------------------------
+
+  String _progressButtonLabel(String status) {
+    switch (status) {
+      case 'not_started':
+        return 'On the way';
+
+      case 'on_the_way':
+        return 'Reached';
+
+      case 'reached':
+        return 'Create Job Sheet';
+
+      default:
+        return 'On the way';
+    }
+  }
+
+  // ----------------------------------------------------------
+  // PROGRESS BUTTON ICON
+  // ----------------------------------------------------------
+
+  IconData _progressButtonIcon(String status) {
+    switch (status) {
+      case 'not_started':
+        return Icons.navigation_rounded;
+
+      case 'on_the_way':
+        return Icons.location_on_rounded;
+
+      case 'reached':
+        return Icons.description_outlined;
+
+      default:
+        return Icons.navigation_rounded;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // BUILD
+  // ----------------------------------------------------------
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final horizontalPadding =
         MediaQuery.sizeOf(context).width >= 700 ? 28.0 : 16.0;
 
+    // Each job gets its own progress controller.
+    final progressProvider = workerJobProgressControllerProvider((
+      job.id,
+      job.workerProgressStatus,
+    ));
+
+    final progressState = ref.watch(progressProvider);
+
     return Scaffold(
       backgroundColor: WorkerColors.homeBackground,
+
       appBar: AppBar(
         title: const Text('Job Details'),
         centerTitle: false,
@@ -67,6 +174,7 @@ class WorkerJobDetailsPage extends StatelessWidget {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
@@ -81,9 +189,12 @@ class WorkerJobDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Job header
                   _buildHeader(context),
+
                   const SizedBox(height: 16),
 
+                  // Job images
                   if (job.hasImages) ...[
                     WorkerJobImages(
                       imageUrls: job.effectiveImageUrls,
@@ -91,12 +202,17 @@ class WorkerJobDetailsPage extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
+                  // Job schedule
                   WorkerJobScheduleCard(job: job),
+
                   const SizedBox(height: 16),
 
+                  // Job location and Google Maps
                   WorkerJobLocationCard(job: job),
+
                   const SizedBox(height: 16),
 
+                  // Job description
                   if (job.hasDescription) ...[
                     WorkerJobDescriptionCard(
                       description: job.description,
@@ -104,6 +220,7 @@ class WorkerJobDetailsPage extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
+                  // Voice note
                   if (job.hasVoiceNote) ...[
                     WorkerJobVoicePlayer(
                       audioUrl: job.audioUrl!,
@@ -111,7 +228,59 @@ class WorkerJobDetailsPage extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
+                  // Additional information
                   _buildInformation(context),
+
+                  // Worker progress action
+                  if (_isJobActive) ...[
+                    const SizedBox(height: 24),
+
+                    _buildProgressAction(
+                      context,
+                      progressState,
+                      () async {
+                        final success = await ref
+                            .read(progressProvider.notifier)
+                            .advance();
+
+                        if (!context.mounted) return;
+
+                        if (success) {
+                          final message =
+                              progressState.status == 'not_started'
+                                  ? 'You are on the way!'
+                                  : 'You have reached the job location!';
+
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(message),
+                                backgroundColor:
+                                    WorkerColors.homePrimary,
+                              ),
+                            );
+                        } else {
+                          final errorMessage = ref
+                              .read(progressProvider)
+                              .errorMessage;
+
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  errorMessage ??
+                                      'Unable to update job progress.',
+                                ),
+                                backgroundColor:
+                                    WorkerColors.error,
+                              ),
+                            );
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -121,6 +290,64 @@ class WorkerJobDetailsPage extends StatelessWidget {
     );
   }
 
+  // ----------------------------------------------------------
+  // WORKER PROGRESS ACTION
+  // ----------------------------------------------------------
+
+  Widget _buildProgressAction(
+    BuildContext context,
+    WorkerJobProgressState progressState,
+    VoidCallback onPressed,
+  ) {
+    final isReached = progressState.status == 'reached';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppPrimaryButton(
+          label: _progressButtonLabel(progressState.status),
+
+          backgroundColor: WorkerColors.homePrimary,
+
+          labelStyle: const TextStyle(
+            color: WorkerColors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+
+          leadingIcon: Icon(
+            _progressButtonIcon(progressState.status),
+            color: WorkerColors.white,
+            size: 21,
+          ),
+
+          isLoading: progressState.isLoading,
+
+          // Job Sheet functionality will be added later.
+          onPressed: isReached ? null : onPressed,
+        ),
+
+        if (isReached) ...[
+          const SizedBox(height: 12),
+
+          Text(
+            'You have reached the job location. '
+            'Job Sheet creation will be available soon.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: WorkerColors.textSecondary,
+                  height: 1.5,
+                ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ----------------------------------------------------------
+  // JOB HEADER
+  // ----------------------------------------------------------
+
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -128,7 +355,9 @@ class WorkerJobDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: WorkerColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: WorkerColors.border),
+        border: Border.all(
+          color: WorkerColors.border,
+        ),
         boxShadow: const [
           BoxShadow(
             color: WorkerColors.cardShadow,
@@ -160,7 +389,9 @@ class WorkerJobDetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
+
               const Spacer(),
+
               Text(
                 'Job #${job.id.length > 8 ? job.id.substring(0, 8) : job.id}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -169,7 +400,9 @@ class WorkerJobDetailsPage extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 16),
+
           Text(
             job.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -177,7 +410,9 @@ class WorkerJobDetailsPage extends StatelessWidget {
                   color: WorkerColors.textPrimary,
                 ),
           ),
+
           const SizedBox(height: 12),
+
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -186,6 +421,7 @@ class WorkerJobDetailsPage extends StatelessWidget {
                 icon: Icons.category_outlined,
                 label: job.category,
               ),
+
               _CategoryChip(
                 icon: Icons.handyman_outlined,
                 label: job.title,
@@ -197,6 +433,10 @@ class WorkerJobDetailsPage extends StatelessWidget {
     );
   }
 
+  // ----------------------------------------------------------
+  // JOB INFORMATION
+  // ----------------------------------------------------------
+
   Widget _buildInformation(BuildContext context) {
     return WorkerJobDetailSection(
       title: 'Job Information',
@@ -207,20 +447,24 @@ class WorkerJobDetailsPage extends StatelessWidget {
             label: 'Category',
             value: job.category,
           ),
+
           _InformationRow(
             label: 'Skill',
             value: job.title,
           ),
+
           _InformationRow(
             label: 'Status',
             value: _statusLabel,
           ),
+
           if (job.createdAt != null)
             _InformationRow(
               label: 'Posted On',
               value: MaterialLocalizations.of(context)
                   .formatMediumDate(job.createdAt!),
             ),
+
           if (job.updatedAt != null)
             _InformationRow(
               label: 'Last Updated',
@@ -232,6 +476,10 @@ class WorkerJobDetailsPage extends StatelessWidget {
     );
   }
 }
+
+// ============================================================
+// CATEGORY CHIP
+// ============================================================
 
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
@@ -261,7 +509,9 @@ class _CategoryChip extends StatelessWidget {
             size: 15,
             color: WorkerColors.homePrimary,
           ),
+
           const SizedBox(width: 6),
+
           Text(
             label.isEmpty ? 'Not specified' : label,
             style: const TextStyle(
@@ -275,6 +525,10 @@ class _CategoryChip extends StatelessWidget {
     );
   }
 }
+
+// ============================================================
+// INFORMATION ROW
+// ============================================================
 
 class _InformationRow extends StatelessWidget {
   const _InformationRow({
@@ -301,7 +555,9 @@ class _InformationRow extends StatelessWidget {
                   ),
             ),
           ),
+
           const SizedBox(width: 8),
+
           Expanded(
             child: Text(
               value.isEmpty ? 'Not available' : value,

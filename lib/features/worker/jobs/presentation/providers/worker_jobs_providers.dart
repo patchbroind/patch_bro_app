@@ -8,3 +8,4 @@ final workerJobsControllerProvider =
     NotifierProvider<WorkerJobsController, WorkerJobsState>(
   WorkerJobsController.new,
 );
+
