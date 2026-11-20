@@ -21,14 +21,45 @@ val appFlavor = gradle.startParameter.taskNames
         }
     }
 
-// Supply APP_FLAVOR to Dart's String.fromEnvironment.
+// Add the selected flavor's public client configuration to Dart defines.
+// Explicit --dart-define values from the Flutter command take precedence.
 if (appFlavor != null) {
-    val encodedFlavor = Base64.getEncoder()
-        .encodeToString(
-            "APP_FLAVOR=$appFlavor".toByteArray(Charsets.UTF_8)
-        )
+    val flavorConfig = Properties()
+    val flavorConfigFile = file("flavors/$appFlavor.properties")
+    require(flavorConfigFile.isFile) {
+        "Missing app flavor configuration: ${flavorConfigFile.path}"
+    }
+    flavorConfigFile.inputStream().use(flavorConfig::load)
 
-    extensions.extraProperties["dart-defines"] = encodedFlavor
+    val dartDefines = gradle.startParameter.projectProperties["dart-defines"]
+        ?.split(',')
+        ?.filter(String::isNotBlank)
+        ?.toMutableList()
+        ?: mutableListOf()
+
+    val definedNames = dartDefines.mapNotNull { encoded ->
+        runCatching {
+            String(Base64.getDecoder().decode(encoded), Charsets.UTF_8)
+                .substringBefore('=')
+        }.getOrNull()
+    }.toMutableSet()
+
+    val flavorDefines = buildMap {
+        put("APP_FLAVOR", appFlavor)
+        for (name in listOf("SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "API_BASE_URL")) {
+            put(name, flavorConfig.getProperty(name).orEmpty())
+        }
+    }
+
+    for ((name, value) in flavorDefines) {
+        require(value.isNotBlank()) { "Missing $name in ${flavorConfigFile.path}" }
+        if (definedNames.add(name)) {
+            dartDefines += Base64.getEncoder()
+                .encodeToString("$name=$value".toByteArray(Charsets.UTF_8))
+        }
+    }
+
+    extensions.extraProperties["dart-defines"] = dartDefines.joinToString(",")
 }
 
 // Core library desugaring for flutter_local_notifications.
