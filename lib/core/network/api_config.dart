@@ -15,15 +15,8 @@ abstract final class ApiConfig {
 
   /// Base URL for the application's HTTP API.
   ///
-  /// For now this can remain empty because we are NOT migrating
-  /// the existing Supabase data sources yet.
-  ///
-  /// When the first Dio-based endpoint is ready, provide:
-  ///
-  /// --dart-define=API_BASE_URL=https://your-api-url.com
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: '',
   );
 
   /// API version prefix.
