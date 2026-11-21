@@ -1,11 +1,9 @@
-
 import java.io.FileInputStream
 import java.util.Properties
 import java.util.Base64
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
@@ -22,13 +20,14 @@ val appFlavor = gradle.startParameter.taskNames
     }
 
 // Add the selected flavor's public client configuration to Dart defines.
-// Explicit --dart-define values from the Flutter command take precedence.
 if (appFlavor != null) {
     val flavorConfig = Properties()
     val flavorConfigFile = file("flavors/$appFlavor.properties")
+
     require(flavorConfigFile.isFile) {
         "Missing app flavor configuration: ${flavorConfigFile.path}"
     }
+
     flavorConfigFile.inputStream().use(flavorConfig::load)
 
     val dartDefines = gradle.startParameter.projectProperties["dart-defines"]
@@ -46,25 +45,38 @@ if (appFlavor != null) {
 
     val flavorDefines = buildMap {
         put("APP_FLAVOR", appFlavor)
-        for (name in listOf("SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "API_BASE_URL")) {
+
+        for (name in listOf(
+            "SUPABASE_URL",
+            "SUPABASE_PUBLISHABLE_KEY",
+            "API_BASE_URL"
+        )) {
             put(name, flavorConfig.getProperty(name).orEmpty())
         }
     }
 
     for ((name, value) in flavorDefines) {
-        require(value.isNotBlank()) { "Missing $name in ${flavorConfigFile.path}" }
+        require(value.isNotBlank()) {
+            "Missing $name in ${flavorConfigFile.path}"
+        }
+
         if (definedNames.add(name)) {
             dartDefines += Base64.getEncoder()
-                .encodeToString("$name=$value".toByteArray(Charsets.UTF_8))
+                .encodeToString(
+                    "$name=$value".toByteArray(Charsets.UTF_8)
+                )
         }
     }
 
-    extensions.extraProperties["dart-defines"] = dartDefines.joinToString(",")
+    extensions.extraProperties["dart-defines"] =
+        dartDefines.joinToString(",")
 }
 
 // Core library desugaring for flutter_local_notifications.
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    coreLibraryDesugaring(
+        "com.android.tools:desugar_jdk_libs:2.1.4"
+    )
 }
 
 // Load values from android/local.properties.
@@ -129,6 +141,7 @@ android {
     }
 }
 
+// Built-in Kotlin compiler configuration.
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

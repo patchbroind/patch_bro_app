@@ -1,3 +1,6 @@
+
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,7 +15,7 @@ class ApiClient {
   Dio get dio => _dio;
 
   static Dio _createDio() {
-    print('API BASE URL: ${ApiConfig.fullBaseUrl}');
+    log('API BASE URL: ${ApiConfig.fullBaseUrl}');
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.fullBaseUrl,
