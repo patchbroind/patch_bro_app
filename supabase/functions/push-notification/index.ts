@@ -41,7 +41,8 @@ function getPreferenceKey(
 
   if (
     normalized.startsWith("job_") ||
-    normalized.startsWith("invitation_")
+    normalized.startsWith("invitation_") ||
+    normalized.startsWith("worker_")
   ) {
     return "job_updates";
   }
