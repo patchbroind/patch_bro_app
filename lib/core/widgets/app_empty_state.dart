@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A consistent no-content message that can be used in full-page and compact
 /// section contexts.

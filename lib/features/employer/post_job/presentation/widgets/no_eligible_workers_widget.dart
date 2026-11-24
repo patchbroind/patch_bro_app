@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 
 class NoEligibleWorkersWidget extends StatelessWidget {

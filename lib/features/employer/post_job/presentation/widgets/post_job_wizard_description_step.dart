@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/controllers/post_job_state.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_section.dart';
 import 'package:patch_bro/features/employer/post_job/presentation/widgets/post_job_description_fields.dart';
