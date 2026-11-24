@@ -39,12 +39,12 @@ abstract final class ApiEndpoints {
   static const workerJobs = '/worker/jobs';
 
   static String workerInvitationMedia(String invitationId) {
-  return '/worker/invitations/${Uri.encodeComponent(invitationId)}/media';
-}
+    return '/worker/invitations/${Uri.encodeComponent(invitationId)}/media';
+  }
 
-static String workerJobProgress(String jobId) {
-  return '/worker/jobs/${Uri.encodeComponent(jobId)}/progress';
-}
+  static String workerJobProgress(String jobId) {
+    return '/worker/jobs/${Uri.encodeComponent(jobId)}/progress';
+  }
 
   // ================================================================
   // JOBS
@@ -55,6 +55,10 @@ static String workerJobProgress(String jobId) {
   static String jobById(String id) => '/jobs/$id';
 
   static String jobCancel(String id) => '/employer/jobs/$id/cancel';
+
+  static String jobSheet(String jobId) {
+    return '/jobs/${Uri.encodeComponent(jobId)}/job-sheet';
+  }
 
   // ================================================================
   // EMPLOYER
