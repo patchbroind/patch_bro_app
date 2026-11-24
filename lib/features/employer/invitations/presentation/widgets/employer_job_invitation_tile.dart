@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/features/employer/invitations/presentation/widgets/employer_job_invitation_expirey_text.dart';
 import 'package:patch_bro/shared/invitations/domain/entities/job_invitation_entity.dart';

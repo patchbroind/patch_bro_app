@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/core/theme/app_colors.dart';
 import 'package:patch_bro/core/widgets/job_status_badge.dart';
 import 'package:patch_bro/features/employer/jobs/domain/entities/employer_job_entity.dart';

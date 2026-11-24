@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/widgets/employer_job_audio_player.dart';
 import 'package:patch_bro/features/employer/jobs/presentation/widgets/job_detail_section_card.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/features/worker/invitations/domain/entities/invitation_response_action.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_empty_state.dart';
 import 'package:patch_bro/features/worker/invitations/presentation/widgets/worker_invitation_list_item.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'employer_project_card.dart';
 import 'employer_section_header.dart';

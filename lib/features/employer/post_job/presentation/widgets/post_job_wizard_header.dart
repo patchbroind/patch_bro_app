@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class PostJobWizardHeader extends StatelessWidget {
   const PostJobWizardHeader({super.key, required this.step});
