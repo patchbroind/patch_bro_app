@@ -78,10 +78,10 @@ function optionalString(form: FormData, key: string): string | null {
   return result.length > 0 ? result : null;
 }
 
-async function signMedia(return result.isEmpty ? null : result;
+async function signMedia(
   admin: SupabaseAdmin,
   rows: Record<string, unknown>[],
-) {
+): Promise<Record<string, unknown>[]> {
   const result: Record<string, unknown>[] = [];
 
   for (const row of rows) {
