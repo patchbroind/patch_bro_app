@@ -1,5 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { handleJobSheetRequest } from "./job_sheet_handler.ts";
 
+const MAX_JOB_SHEET_IMAGES = 5;
 const JOB_MEDIA_BUCKET = "job-media";
 
 const MAX_IMAGES = 2;
@@ -909,6 +911,10 @@ Deno.serve(
           /\/employer\/jobs\/([^/]+)\/cancel$/,
         );
 
+      const jobSheetMatch = url.pathname.match(
+          /\/jobs\/([^/]+)\/job-sheet$/,
+        );
+
       if (
         !profileRoute &&
         !profileLocationRoute &&
@@ -926,7 +932,8 @@ Deno.serve(
         !employerWorkerFavouriteMatch &&
         !employerJobsRoute &&
         !employerJobMatch &&
-        !employerJobCancelMatch
+        !employerJobCancelMatch &&
+        !jobSheetMatch
       ) {
         return jsonCorsResponse(
           {
@@ -1041,7 +1048,18 @@ Deno.serve(
       const userId =
         authData.user.id;
 
-        // ============================================================
+
+      if (jobSheetMatch) {
+        return await handleJobSheetRequest({
+          req,
+          jobId: decodeURIComponent(jobSheetMatch[1]),
+          userId,
+          supabaseAdmin,
+          jsonCorsResponse,
+        });
+      }
+
+      // ============================================================
       // GET CATEGORIES
       // ============================================================
 
