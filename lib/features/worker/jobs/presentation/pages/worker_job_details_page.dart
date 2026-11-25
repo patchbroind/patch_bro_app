@@ -1,27 +1,24 @@
-
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:material_ui/material_ui.dart';
 import 'package:patch_bro/core/theme/worker/worker_colors.dart';
 import 'package:patch_bro/core/widgets/app_primary_button.dart';
-
+import 'package:patch_bro/features/job_sheets/presentation/pages/job_sheet_view_page.dart';
+import 'package:patch_bro/features/job_sheets/presentation/pages/worker_create_job_sheet_page.dart';
+import 'package:patch_bro/features/job_sheets/presentation/providers/job_sheet_providers.dart';
 import 'package:patch_bro/features/worker/home/domain/entities/worker_home_job_entity.dart';
-
 import 'package:patch_bro/features/worker/jobs/presentation/controllers/worker_job_progress_state.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/providers/worker_job_progress_providers.dart';
-
-import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_detail_section.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_description_card.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_detail_section.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_details_category_chip.dart';
+import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_details_information_row.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_images.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_location_card.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_schedule_card.dart';
 import 'package:patch_bro/features/worker/jobs/presentation/widgets/worker_job_voice_player.dart';
 
 class WorkerJobDetailsPage extends ConsumerWidget {
-  const WorkerJobDetailsPage({
-    super.key,
-    required this.job,
-  });
+  const WorkerJobDetailsPage({super.key, required this.job});
 
   final WorkerHomeJobEntity job;
 
@@ -79,23 +76,14 @@ class WorkerJobDetailsPage extends ConsumerWidget {
     final status = job.status.trim().toLowerCase();
 
     // These job statuses should never show progress actions.
-    if (const {
-      'completed',
-      'cancelled',
-      'canceled',
-      'expired',
-    }.contains(status)) {
+    if (const {'completed', 'cancelled', 'canceled', 'expired'}.contains(status)) {
       return false;
     }
 
     // A job whose scheduled date has passed is expired.
     final now = DateTime.now();
 
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = DateTime(now.year, now.month, now.day);
 
     final jobDate = DateTime(
       job.scheduledDate.year,
@@ -152,8 +140,7 @@ class WorkerJobDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final horizontalPadding =
-        MediaQuery.sizeOf(context).width >= 700 ? 28.0 : 16.0;
+    final horizontalPadding = MediaQuery.sizeOf(context).width >= 700 ? 28.0 : 16.0;
 
     // Each job gets its own progress controller.
     final progressProvider = workerJobProgressControllerProvider((
@@ -162,6 +149,12 @@ class WorkerJobDetailsPage extends ConsumerWidget {
     ));
 
     final progressState = ref.watch(progressProvider);
+
+    final jobSheetAsync = ref.watch(jobSheetProvider(job.id));
+
+    final jobSheet = jobSheetAsync.asData?.value;
+
+    final hasJobSheet = jobSheet != null;
 
     return Scaffold(
       backgroundColor: WorkerColors.homeBackground,
@@ -177,12 +170,7 @@ class WorkerJobDetailsPage extends ConsumerWidget {
 
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            12,
-            horizontalPadding,
-            32,
-          ),
+          padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 32),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 850),
@@ -196,9 +184,7 @@ class WorkerJobDetailsPage extends ConsumerWidget {
 
                   // Job images
                   if (job.hasImages) ...[
-                    WorkerJobImages(
-                      imageUrls: job.effectiveImageUrls,
-                    ),
+                    WorkerJobImages(imageUrls: job.effectiveImageUrls),
                     const SizedBox(height: 16),
                   ],
 
@@ -214,17 +200,13 @@ class WorkerJobDetailsPage extends ConsumerWidget {
 
                   // Job description
                   if (job.hasDescription) ...[
-                    WorkerJobDescriptionCard(
-                      description: job.description,
-                    ),
+                    WorkerJobDescriptionCard(description: job.description),
                     const SizedBox(height: 16),
                   ],
 
                   // Voice note
                   if (job.hasVoiceNote) ...[
-                    WorkerJobVoicePlayer(
-                      audioUrl: job.audioUrl!,
-                    ),
+                    WorkerJobVoicePlayer(audioUrl: job.audioUrl!),
                     const SizedBox(height: 16),
                   ],
 
@@ -238,43 +220,35 @@ class WorkerJobDetailsPage extends ConsumerWidget {
                     _buildProgressAction(
                       context,
                       progressState,
+                      hasJobSheet,
+                      jobSheetAsync.isLoading,
                       () async {
-                        final success = await ref
-                            .read(progressProvider.notifier)
-                            .advance();
+                        final success = await ref.read(progressProvider.notifier).advance();
 
                         if (!context.mounted) return;
 
                         if (success) {
-                          final message =
-                              progressState.status == 'not_started'
-                                  ? 'You are on the way!'
-                                  : 'You have reached the job location!';
+                          final message = progressState.status == 'not_started'
+                              ? 'You are on the way!'
+                              : 'You have reached the job location!';
 
                           ScaffoldMessenger.of(context)
                             ..hideCurrentSnackBar()
                             ..showSnackBar(
                               SnackBar(
                                 content: Text(message),
-                                backgroundColor:
-                                    WorkerColors.homePrimary,
+                                backgroundColor: WorkerColors.homePrimary,
                               ),
                             );
                         } else {
-                          final errorMessage = ref
-                              .read(progressProvider)
-                              .errorMessage;
+                          final errorMessage = ref.read(progressProvider).errorMessage;
 
                           ScaffoldMessenger.of(context)
                             ..hideCurrentSnackBar()
                             ..showSnackBar(
                               SnackBar(
-                                content: Text(
-                                  errorMessage ??
-                                      'Unable to update job progress.',
-                                ),
-                                backgroundColor:
-                                    WorkerColors.error,
+                                content: Text(errorMessage ?? 'Unable to update job progress.'),
+                                backgroundColor: WorkerColors.error,
                               ),
                             );
                         }
@@ -297,47 +271,62 @@ class WorkerJobDetailsPage extends ConsumerWidget {
   Widget _buildProgressAction(
     BuildContext context,
     WorkerJobProgressState progressState,
+    bool hasJobSheet,
+    bool isJobSheetLoading,
     VoidCallback onPressed,
   ) {
     final isReached = progressState.status == 'reached';
+
+    final buttonLabel = isReached
+        ? (isJobSheetLoading
+              ? 'Checking Job Sheet...'
+              : hasJobSheet
+              ? 'Job Sheet Created'
+              : 'Create Job Sheet')
+        : _progressButtonLabel(progressState.status);
+
+    final buttonIcon = isReached
+        ? hasJobSheet
+              ? Icons.description
+              : Icons.note_add_outlined
+        : _progressButtonIcon(progressState.status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppPrimaryButton(
-          label: _progressButtonLabel(progressState.status),
-
+          label: buttonLabel,
           backgroundColor: WorkerColors.homePrimary,
-
           labelStyle: const TextStyle(
             color: WorkerColors.white,
             fontSize: 17,
             fontWeight: FontWeight.w700,
           ),
+          leadingIcon: Icon(buttonIcon, color: WorkerColors.white, size: 21),
+          isLoading: progressState.isLoading || (isReached && isJobSheetLoading),
+          onPressed: isReached
+              ? isJobSheetLoading
+                    ? null
+                    : () async {
+                        final page = hasJobSheet
+                            ? JobSheetViewPage(jobId: job.id)
+                            : WorkerCreateJobSheetPage(jobId: job.id);
 
-          leadingIcon: Icon(
-            _progressButtonIcon(progressState.status),
-            color: WorkerColors.white,
-            size: 21,
-          ),
-
-          isLoading: progressState.isLoading,
-
-          // Job Sheet functionality will be added later.
-          onPressed: isReached ? null : onPressed,
+                        await Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+                      }
+              : onPressed,
         ),
 
         if (isReached) ...[
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 10),
           Text(
-            'You have reached the job location. '
-            'Job Sheet creation will be available soon.',
+            hasJobSheet
+                ? 'Your Job Sheet has been submitted and is available to the employer.'
+                : 'Complete the Job Sheet to record the work performed.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: WorkerColors.textSecondary,
-                  height: 1.5,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: WorkerColors.textSecondary, height: 1.5),
           ),
         ],
       ],
@@ -355,15 +344,9 @@ class WorkerJobDetailsPage extends ConsumerWidget {
       decoration: BoxDecoration(
         color: WorkerColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: WorkerColors.border,
-        ),
+        border: Border.all(color: WorkerColors.border),
         boxShadow: const [
-          BoxShadow(
-            color: WorkerColors.cardShadow,
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
+          BoxShadow(color: WorkerColors.cardShadow, blurRadius: 12, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -372,21 +355,14 @@ class WorkerJobDetailsPage extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 7,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                 decoration: BoxDecoration(
                   color: _statusColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   _statusLabel,
-                  style: TextStyle(
-                    color: _statusColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: _statusColor, fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ),
 
@@ -394,9 +370,9 @@ class WorkerJobDetailsPage extends ConsumerWidget {
 
               Text(
                 'Job #${job.id.length > 8 ? job.id.substring(0, 8) : job.id}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: WorkerColors.textSecondary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: WorkerColors.textSecondary),
               ),
             ],
           ),
@@ -406,9 +382,9 @@ class WorkerJobDetailsPage extends ConsumerWidget {
           Text(
             job.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: WorkerColors.textPrimary,
-                ),
+              fontWeight: FontWeight.w800,
+              color: WorkerColors.textPrimary,
+            ),
           ),
 
           const SizedBox(height: 12),
@@ -417,15 +393,9 @@ class WorkerJobDetailsPage extends ConsumerWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _CategoryChip(
-                icon: Icons.category_outlined,
-                label: job.category,
-              ),
+              WorkerJobDetailsCategoryChip(icon: Icons.category_outlined, label: job.category),
 
-              _CategoryChip(
-                icon: Icons.handyman_outlined,
-                label: job.title,
-              ),
+              WorkerJobDetailsCategoryChip(icon: Icons.handyman_outlined, label: job.title),
             ],
           ),
         ],
@@ -443,130 +413,23 @@ class WorkerJobDetailsPage extends ConsumerWidget {
       icon: Icons.info_outline_rounded,
       child: Column(
         children: [
-          _InformationRow(
-            label: 'Category',
-            value: job.category,
-          ),
+          WorkerJobDetailsInformationRow(label: 'Category', value: job.category),
 
-          _InformationRow(
-            label: 'Skill',
-            value: job.title,
-          ),
+          WorkerJobDetailsInformationRow(label: 'Skill', value: job.title),
 
-          _InformationRow(
-            label: 'Status',
-            value: _statusLabel,
-          ),
+          WorkerJobDetailsInformationRow(label: 'Status', value: _statusLabel),
 
           if (job.createdAt != null)
-            _InformationRow(
+            WorkerJobDetailsInformationRow(
               label: 'Posted On',
-              value: MaterialLocalizations.of(context)
-                  .formatMediumDate(job.createdAt!),
+              value: MaterialLocalizations.of(context).formatMediumDate(job.createdAt!),
             ),
 
           if (job.updatedAt != null)
-            _InformationRow(
+            WorkerJobDetailsInformationRow(
               label: 'Last Updated',
-              value: MaterialLocalizations.of(context)
-                  .formatMediumDate(job.updatedAt!),
+              value: MaterialLocalizations.of(context).formatMediumDate(job.updatedAt!),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// CATEGORY CHIP
-// ============================================================
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: WorkerColors.homePrimaryLight,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 15,
-            color: WorkerColors.homePrimary,
-          ),
-
-          const SizedBox(width: 6),
-
-          Text(
-            label.isEmpty ? 'Not specified' : label,
-            style: const TextStyle(
-              color: WorkerColors.homePrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// INFORMATION ROW
-// ============================================================
-
-class _InformationRow extends StatelessWidget {
-  const _InformationRow({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 13),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 105,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: WorkerColors.textSecondary,
-                  ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Expanded(
-            child: Text(
-              value.isEmpty ? 'Not available' : value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: WorkerColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
         ],
       ),
     );
